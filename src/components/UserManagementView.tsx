@@ -35,11 +35,13 @@ import {
 import { User, UserRole, MenuKey, MenuDefinition } from '../types';
 import { APP_MENUS, DEFAULT_ROLE_MENUS, DEPARTMENTS, getUserAllowedMenus } from '../data/mockData';
 import { ProfilePhotoModal } from './ProfilePhotoModal';
+import { BulkAddUsersModal } from './BulkAddUsersModal';
 
 interface UserManagementViewProps {
   users: User[];
   currentUser: User;
   onAddUser: (user: Omit<User, 'id'>) => void;
+  onBulkAddUsers?: (newUsers: Omit<User, 'id'>[]) => void;
   onUpdateUser: (id: string, data: Partial<User>) => void;
   onDeleteUser: (id: string) => void;
   onSwitchUser?: (user: User) => void;
@@ -93,6 +95,7 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({
   users,
   currentUser,
   onAddUser,
+  onBulkAddUsers,
   onUpdateUser,
   onDeleteUser,
   onSwitchUser
@@ -104,6 +107,7 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({
 
   // Modals state
   const [isAddEditModalOpen, setIsAddEditModalOpen] = useState(false);
+  const [isBulkModalOpen, setIsBulkModalOpen] = useState(false);
   const [editingUserId, setEditingUserId] = useState<string | null>(null);
   const [permissionTargetUser, setPermissionTargetUser] = useState<User | null>(null);
   const [photoModalUser, setPhotoModalUser] = useState<User | null>(null);
@@ -310,13 +314,24 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({
             </p>
           </div>
 
-          <button
-            onClick={handleOpenAddModal}
-            className="self-start md:self-center px-4 py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 active:scale-98 text-white rounded-xl text-xs font-bold shadow-lg shadow-purple-600/30 flex items-center space-x-2 transition cursor-pointer"
-          >
-            <UserPlus className="w-4 h-4" />
-            <span>เพิ่มผู้ใช้งานใหม่</span>
-          </button>
+          <div className="self-start md:self-center flex items-center space-x-2.5 flex-wrap gap-y-2">
+            <button
+              onClick={() => setIsBulkModalOpen(true)}
+              className="px-4 py-2.5 bg-white/10 hover:bg-white/20 active:scale-98 text-white rounded-xl text-xs font-bold border border-white/20 flex items-center space-x-2 transition cursor-pointer backdrop-blur-xs shadow-xs"
+              title="นำเข้าผู้ใช้งานจาก Excel / CSV หรือกรอกทีละหลายคน"
+            >
+              <Users className="w-4 h-4 text-purple-200" />
+              <span>เพิ่มทีละหลายคน (Excel/CSV)</span>
+            </button>
+
+            <button
+              onClick={handleOpenAddModal}
+              className="px-4 py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 active:scale-98 text-white rounded-xl text-xs font-bold shadow-lg shadow-purple-600/30 flex items-center space-x-2 transition cursor-pointer"
+            >
+              <UserPlus className="w-4 h-4" />
+              <span>เพิ่มผู้ใช้งานใหม่</span>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -1130,6 +1145,20 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({
           </div>
         </div>
       )}
+
+      {/* Bulk Add Users Modal */}
+      <BulkAddUsersModal
+        isOpen={isBulkModalOpen}
+        onClose={() => setIsBulkModalOpen(false)}
+        existingUsers={users}
+        onBulkAdd={(newUsers) => {
+          if (onBulkAddUsers) {
+            onBulkAddUsers(newUsers);
+          } else {
+            newUsers.forEach((u) => onAddUser(u));
+          }
+        }}
+      />
 
       {/* Profile Photo Modal */}
       <ProfilePhotoModal

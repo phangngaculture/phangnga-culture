@@ -476,6 +476,21 @@ export default function App() {
     showToast(`เพิ่มผู้ใช้งาน "${newUser.name}" เรียบร้อยแล้ว`, 'success');
   };
 
+  // Bulk Add Multiple Users
+  const handleBulkAddUsers = (newUsersData: Omit<User, 'id'>[]) => {
+    if (!newUsersData || newUsersData.length === 0) return;
+    const timestamp = Date.now();
+    const createdUsers: User[] = newUsersData.map((u, index) => ({
+      ...u,
+      id: `usr-${timestamp}-${index}`,
+      createdAt: new Date().toISOString()
+    }));
+    const updated = [...createdUsers, ...users];
+    setUsers(updated);
+    playAppSound('success', soundEnabled);
+    showToast(`เพิ่มผู้ใช้งานสำเร็จจำนวน ${createdUsers.length} ท่าน`, 'success');
+  };
+
   // Update User
   const handleUpdateUser = (id: string, data: Partial<User>) => {
     const updated = users.map((u) => (u.id === id ? ({ ...u, ...data } as User) : u));
@@ -1090,6 +1105,7 @@ export default function App() {
             users={users}
             currentUser={currentUser}
             onAddUser={handleAddUser}
+            onBulkAddUsers={handleBulkAddUsers}
             onUpdateUser={handleUpdateUser}
             onDeleteUser={handleDeleteUser}
             onSwitchUser={handleSwitchUser}
