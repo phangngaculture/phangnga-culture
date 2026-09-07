@@ -1,5 +1,8 @@
 import {
+  initializeFirestore,
   getFirestore,
+  persistentLocalCache,
+  persistentMultipleTabManager,
   collection,
   doc,
   setDoc,
@@ -19,10 +22,26 @@ import {
   NotificationItem
 } from '../types';
 
-// Initialize Firestore using named database ID if configured
-export const db: Firestore = (firebaseConfig as any).firestoreDatabaseId
-  ? getFirestore(app, (firebaseConfig as any).firestoreDatabaseId)
-  : getFirestore(app);
+// Initialize Firestore with robust persistent offline cache support
+const databaseId = (firebaseConfig as any).firestoreDatabaseId;
+
+let firestoreInstance: Firestore;
+try {
+  firestoreInstance = initializeFirestore(
+    app,
+    {
+      localCache: persistentLocalCache({
+        tabManager: persistentMultipleTabManager()
+      })
+    },
+    databaseId || undefined
+  );
+} catch {
+  // If already initialized, retrieve instance
+  firestoreInstance = databaseId ? getFirestore(app, databaseId) : getFirestore(app);
+}
+
+export const db: Firestore = firestoreInstance;
 
 export interface FirestoreSyncCallbacks {
   onBookingsChange?: (bookings: BookingRequest[]) => void;
@@ -81,9 +100,15 @@ export const subscribeToFirestore = (
         }
         callbacks.onStatusChange?.('connected');
       },
-      (error) => {
-        console.warn('Firestore bookings snapshot error:', error);
-        callbacks.onStatusChange?.('error');
+      (error: any) => {
+        // Handle code=unavailable gracefully (offline or transient connectivity)
+        if (error?.code === 'unavailable') {
+          console.info('Firestore is operating in offline mode with cached data.');
+          callbacks.onStatusChange?.('connected');
+        } else {
+          console.warn('Firestore bookings snapshot error:', error);
+          callbacks.onStatusChange?.('error');
+        }
       }
     );
     unsubscribers.push(unsubBookings);
