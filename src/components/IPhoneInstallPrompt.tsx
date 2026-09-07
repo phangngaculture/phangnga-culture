@@ -40,18 +40,20 @@ export const IPhoneInstallPrompt: React.FC = () => {
     >
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-center space-x-3">
-          <img
-            src="/apple-touch-icon.png"
-            alt="App Icon"
-            className="w-12 h-12 rounded-xl shadow-md border border-slate-600 shrink-0 object-cover"
-          />
+          <div className="w-12 h-12 rounded-xl bg-slate-950 border border-slate-700 flex items-center justify-center p-1 shrink-0 shadow-md">
+            <img
+              src="/logo_mculture.svg"
+              alt="ตรากระทรวงวัฒนธรรม"
+              className="w-full h-full object-contain"
+            />
+          </div>
           <div>
             <h3 className="text-sm font-bold flex items-center gap-1.5 text-white">
               <Smartphone className="w-4 h-4 text-orange-400" />
-              ติดตั้งบน iPhone / iPad
+              ติดตั้งบน iPhone / iPad (รองรับแจ้งเตือนบนไอคอน)
             </h3>
             <p className="text-xs text-slate-300 mt-0.5">
-              เปิดเป็นแอปเต็มจอได้ทันทีโดยไม่ต้องโหลดผ่าน App Store
+              เปิดเต็มจอได้ทันที และแสดงตัวเลขแจ้งเตือนสีแดงบนหน้าจอโฮม
             </p>
           </div>
         </div>

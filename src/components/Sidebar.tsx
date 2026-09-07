@@ -118,11 +118,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
         {/* Header */}
         <div className="p-5 border-b border-slate-800 flex justify-between items-center">
           <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-gradient-to-tr from-orange-500 to-amber-600 rounded-xl flex items-center justify-center font-bold text-white shadow-md shadow-orange-500/30">
-              <Car className="w-5 h-5" />
-            </div>
+            <img
+              src="/logo_mculture.svg"
+              alt="ตรากระทรวงวัฒนธรรม"
+              className="w-10 h-12 object-contain drop-shadow-md shrink-0"
+            />
             <div>
-              <h2 className="font-bold text-sm tracking-wide">M-Culture Phangnga</h2>
+              <h2 className="font-bold text-sm tracking-wide text-white">สนง.วัฒนธรรมจังหวัดพังงา</h2>
               <p className="text-[11px] text-slate-400">ระบบบริหารยานพาหนะราชการ</p>
             </div>
           </div>

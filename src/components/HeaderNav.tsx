@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { User, NotificationItem } from '../types';
 import { SYSTEM_USERS, getUserAllowedMenus } from '../data/mockData';
 import { ProfilePhotoModal } from './ProfilePhotoModal';
@@ -14,8 +14,17 @@ import {
   ChevronDown,
   Users,
   Camera,
-  Cloud
+  Cloud,
+  Smartphone,
+  CheckCircle2,
+  AlertCircle
 } from 'lucide-react';
+import {
+  isBadgingSupported,
+  getNotificationPermission,
+  requestNotificationPermission,
+  updateAppBadge
+} from '../services/badgingService';
 
 interface HeaderNavProps {
   currentUser: User;
@@ -51,8 +60,21 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showNotifMenu, setShowNotifMenu] = useState(false);
   const [showProfilePhotoModal, setShowProfilePhotoModal] = useState(false);
+  const [badgePermission, setBadgePermission] = useState<NotificationPermission | 'unsupported'>('default');
 
   const unreadCount = notifications.filter((n) => !n.read).length;
+
+  useEffect(() => {
+    setBadgePermission(getNotificationPermission());
+  }, []);
+
+  const handleEnableBadging = async () => {
+    const result = await requestNotificationPermission();
+    setBadgePermission(result);
+    if (result === 'granted') {
+      updateAppBadge(unreadCount);
+    }
+  };
 
   const getRoleBadge = (role: string) => {
     switch (role) {
@@ -85,9 +107,11 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
             onClick={() => onTabChange('dashboard')}
             className="cursor-pointer select-none flex items-center space-x-2.5"
           >
-            <div className="w-9 h-9 bg-gradient-to-tr from-slate-900 to-slate-800 text-white rounded-xl flex items-center justify-center font-bold text-sm shadow border border-orange-500/40">
-              <Car className="w-5 h-5 text-orange-400" />
-            </div>
+            <img
+              src="/logo_mculture.svg"
+              alt="ตรากระทรวงวัฒนธรรม"
+              className="w-9 h-11 object-contain drop-shadow-xs shrink-0"
+            />
             <div>
               <div className="flex items-center space-x-2">
                 <h1 className="font-bold text-sm md:text-base text-slate-900 leading-tight">
@@ -218,6 +242,51 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
                       </div>
                     ))
                   )}
+                </div>
+
+                {/* Mobile App Icon Badging Section */}
+                <div className="p-3 bg-slate-50 border-t border-slate-100 rounded-b-2xl">
+                  <div className="flex items-start space-x-2.5">
+                    <div className="w-8 h-8 rounded-xl bg-orange-100 text-orange-600 flex items-center justify-center shrink-0 mt-0.5">
+                      <Smartphone className="w-4 h-4" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-bold text-slate-800">แจ้งเตือนบนไอคอนมือถือ</span>
+                        {badgePermission === 'granted' ? (
+                          <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full">
+                            <CheckCircle2 className="w-3 h-3" /> เปิดแล้ว
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full">
+                            <AlertCircle className="w-3 h-3" /> รอเปิด
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-[11px] text-slate-500 mt-0.5 leading-snug">
+                        แสดงตัวเลขสีแดงบนไอคอนหน้าจอโฮม iPhone/Android เมื่อมีคำขอหรือข้อความใหม่
+                      </p>
+
+                      <div className="mt-2 flex items-center justify-between gap-2">
+                        {badgePermission !== 'granted' ? (
+                          <button
+                            onClick={handleEnableBadging}
+                            className="w-full py-1.5 px-3 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white rounded-lg text-xs font-bold shadow-xs transition flex items-center justify-center space-x-1.5 cursor-pointer"
+                          >
+                            <Bell className="w-3 h-3" />
+                            <span>กดเปิดตัวเลขแจ้งเตือนบนไอคอน</span>
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => updateAppBadge(unreadCount || 1)}
+                            className="text-[11px] text-orange-600 hover:text-orange-700 font-semibold hover:underline cursor-pointer"
+                          >
+                            🔄 ซิงค์ตัวเลขไอคอน ({unreadCount} รายการ)
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             )}

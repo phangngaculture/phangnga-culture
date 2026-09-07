@@ -58,6 +58,7 @@ import { IPhoneInstallPrompt } from './components/IPhoneInstallPrompt';
 import { ToastBanner } from './components/ToastBanner';
 import { LoginScreen } from './components/LoginScreen';
 import { ShieldAlert } from 'lucide-react';
+import { registerServiceWorker, updateAppBadge, clearAppBadge } from './services/badgingService';
 
 export default function App() {
   // Authentication State
@@ -249,6 +250,38 @@ export default function App() {
       if (typeof unsubscribe === 'function') unsubscribe();
     };
   }, []);
+
+  // Register Service Worker for PWA badging and background sync
+  useEffect(() => {
+    registerServiceWorker();
+  }, []);
+
+  // Automatically synchronize notification count to Mobile App Icon Badge (iOS / Android)
+  useEffect(() => {
+    if (!isAuthenticated || !currentUser) {
+      clearAppBadge();
+      return;
+    }
+
+    const unreadNotifCount = notifications.filter((n) => !n.read).length;
+    let pendingActionCount = 0;
+
+    if (currentUser.role === 'director') {
+      // Pending requests waiting for director's approval
+      pendingActionCount = bookings.filter((b) => b.status === 'pending_director').length;
+    } else if (currentUser.role === 'admin') {
+      // Pending requests waiting for vehicle/driver assignment
+      pendingActionCount = bookings.filter((b) => b.status === 'pending_admin').length;
+    } else if (currentUser.role === 'driver') {
+      // Missions assigned to current driver
+      pendingActionCount = bookings.filter(
+        (b) => b.driverId === currentUser.id && (b.status === 'approved' || b.status === 'in_progress')
+      ).length;
+    }
+
+    const totalBadgeCount = unreadNotifCount + pendingActionCount;
+    updateAppBadge(totalBadgeCount);
+  }, [isAuthenticated, currentUser, notifications, bookings]);
 
   // Sync to LocalStorage
   useEffect(() => {
@@ -1190,6 +1223,7 @@ export default function App() {
       <footer className="border-t border-slate-200 bg-white/70 backdrop-blur-xs py-4 px-6 text-center text-xs text-slate-500 no-print">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-2">
           <div className="flex items-center space-x-2">
+            <img src="/logo_mculture.svg" alt="ตราสัญลักษณ์กระทรวงวัฒนธรรม" className="w-4 h-5 object-contain inline-block" />
             <span className="font-semibold text-slate-700">
               สำนักงานวัฒนธรรมจังหวัดพังงา (Phangnga Provincial Cultural Office)
             </span>

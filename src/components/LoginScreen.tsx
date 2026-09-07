@@ -93,9 +93,13 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ users, onLogin }) => {
           <div className="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 text-white p-6 sm:p-8 text-center relative border-b border-orange-500/30">
             <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-orange-500 via-amber-400 to-teal-400" />
             
-            {/* Royal Garuda Emblem */}
-            <div className="inline-flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 bg-white/95 rounded-2xl shadow-lg shadow-black/30 p-2 mb-3 border border-orange-200/50">
-              <GarudaIcon className="w-full h-full text-red-700" />
+            {/* Ministry of Culture Official Seal Emblem */}
+            <div className="inline-flex items-center justify-center mb-2">
+              <img
+                src="/logo_mculture.svg"
+                alt="ตราสัญลักษณ์กระทรวงวัฒนธรรม"
+                className="w-20 h-28 sm:w-24 sm:h-32 object-contain drop-shadow-xl animate-in zoom-in-95 duration-500"
+              />
             </div>
 
             <div className="space-y-1">
