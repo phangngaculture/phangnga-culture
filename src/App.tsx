@@ -54,6 +54,7 @@ import { DriverMissionView } from './components/DriverMissionView';
 import { OfficialMemoModal } from './components/OfficialMemoModal';
 import { ApprovalSignatureModal } from './components/ApprovalSignatureModal';
 import { GoogleSheetsSyncModal } from './components/GoogleSheetsSyncModal';
+import { IPhoneInstallPrompt } from './components/IPhoneInstallPrompt';
 import { ToastBanner } from './components/ToastBanner';
 import { LoginScreen } from './components/LoginScreen';
 import { ShieldAlert } from 'lucide-react';
@@ -958,6 +959,7 @@ export default function App() {
       <div className="min-h-screen bg-slate-900 selection:bg-orange-500 selection:text-white">
         <ToastBanner message={toast.message} type={toast.type} />
         <LoginScreen users={users} onLogin={handleLogin} />
+        <IPhoneInstallPrompt />
       </div>
     );
   }
@@ -1199,6 +1201,9 @@ export default function App() {
           </div>
         </div>
       </footer>
+
+      {/* iPhone PWA Install Helper */}
+      <IPhoneInstallPrompt />
 
     </div>
   );

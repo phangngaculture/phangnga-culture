@@ -1,0 +1,33 @@
+{
+  "name": "ระบบยานพาหนะราชการ - สนง.วัฒนธรรมจังหวัดพังงา",
+  "short_name": "รถราชการ พังงา",
+  "description": "ระบบเบิกใช้รถยนต์ราชการ บันทึกภารกิจและคุมพัสดุ สำนักงานวัฒนธรรมจังหวัดพังงา",
+  "start_url": "/",
+  "id": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0f172a",
+  "theme_color": "#0f172a",
+  "lang": "th",
+  "icons": [
+    {
+      "src": "/assets/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/assets/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/assets/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
