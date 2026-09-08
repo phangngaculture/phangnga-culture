@@ -18,7 +18,8 @@ import {
   Smartphone,
   CheckCircle2,
   AlertCircle,
-  Database
+  Database,
+  ShieldCheck
 } from 'lucide-react';
 import {
   isBadgingSupported,
@@ -143,6 +144,22 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
             >
               <Car className={`w-3.5 h-3.5 ${activeTab === 'driver_mission' ? 'text-white' : 'text-amber-600'}`} />
               <span className="hidden sm:inline">ภารกิจคนขับ</span>
+            </button>
+          )}
+
+          {/* Quick Inspection Button for Logistics Officer / Permitted Users */}
+          {getUserAllowedMenus(currentUser).includes('asset_inspection') && (
+            <button
+              onClick={() => onTabChange('asset_inspection')}
+              className={`h-9 px-2.5 sm:px-3 rounded-xl flex items-center space-x-1.5 transition border text-xs font-semibold shadow-xs ${
+                activeTab === 'asset_inspection'
+                  ? 'bg-emerald-600 text-white border-emerald-500 shadow-md shadow-emerald-600/30'
+                  : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-900 border-emerald-200'
+              }`}
+              title="เปิดหน้าตรวจรับรถเสร็จสิ้นภารกิจ (งานพัสดุ)"
+            >
+              <ShieldCheck className={`w-3.5 h-3.5 ${activeTab === 'asset_inspection' ? 'text-white' : 'text-emerald-600'}`} />
+              <span className="hidden md:inline">พัสดุตรวจรับรถ</span>
             </button>
           )}
 

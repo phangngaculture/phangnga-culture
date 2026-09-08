@@ -20,7 +20,8 @@ import {
   Fuel,
   ArrowUpRight,
   Users,
-  Gauge
+  Gauge,
+  ShieldCheck
 } from 'lucide-react';
 import { getUserAllowedMenus } from '../data/mockData';
 
@@ -35,6 +36,7 @@ interface DashboardViewProps {
   onOpenFleet?: () => void;
   onOpenUsers?: () => void;
   onOpenDriverMissions?: () => void;
+  onOpenAssetInspection?: () => void;
   onViewMemo: (booking: BookingRequest) => void;
   onEditBooking: (booking: BookingRequest) => void;
   onDeleteBooking: (bookingId: string) => void;

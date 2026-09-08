@@ -37,6 +37,13 @@ export const APP_MENUS: MenuDefinition[] = [
     color: 'text-amber-500 bg-amber-500/10'
   },
   {
+    id: 'asset_inspection',
+    label: 'ตรวจรับรถเสร็จสิ้นภารกิจ (พัสดุ)',
+    desc: 'ตรวจสภาพ ตรวจสอบเลขไมล์ไป-กลับ และลงชื่อตรวจรับรถโดยเจ้าหน้าที่พัสดุ',
+    badge: 'เจ้าหน้าที่พัสดุ',
+    color: 'text-emerald-500 bg-emerald-500/10'
+  },
+  {
     id: 'fuel',
     label: 'บันทึกไมล์และเชื้อเพลิง',
     desc: 'บันทึกเลขไมล์ ค่าน้ำมัน และตรวจสภาพรถ',
@@ -81,9 +88,9 @@ export const APP_MENUS: MenuDefinition[] = [
 ];
 
 export const DEFAULT_ROLE_MENUS: Record<string, MenuKey[]> = {
-  admin: ['dashboard', 'calendar', 'booking', 'director', 'driver_mission', 'fuel', 'fleet', 'analytics', 'tracking', 'backup', 'users'],
-  director: ['dashboard', 'calendar', 'booking', 'director', 'driver_mission', 'analytics', 'tracking', 'backup'],
-  officer: ['dashboard', 'calendar', 'booking', 'tracking'],
+  admin: ['dashboard', 'calendar', 'booking', 'director', 'driver_mission', 'asset_inspection', 'fuel', 'fleet', 'analytics', 'tracking', 'backup', 'users'],
+  director: ['dashboard', 'calendar', 'booking', 'director', 'driver_mission', 'asset_inspection', 'analytics', 'tracking', 'backup'],
+  officer: ['dashboard', 'calendar', 'booking', 'asset_inspection', 'tracking'],
   driver: ['driver_mission', 'dashboard', 'calendar', 'fuel', 'fleet', 'tracking']
 };
 

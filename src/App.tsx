@@ -53,6 +53,8 @@ import { FleetMaintenanceView } from './components/FleetMaintenanceView';
 import { UserManagementView } from './components/UserManagementView';
 import { BackupRestoreView } from './components/BackupRestoreView';
 import { DriverMissionView } from './components/DriverMissionView';
+import { AssetInspectionView } from './components/AssetInspectionView';
+import { AssetInspectionModal } from './components/AssetInspectionModal';
 import { OfficialMemoModal } from './components/OfficialMemoModal';
 import { ApprovalSignatureModal } from './components/ApprovalSignatureModal';
 import { GoogleSheetsSyncModal } from './components/GoogleSheetsSyncModal';
@@ -171,6 +173,8 @@ export default function App() {
   const [isSignatureModalOpen, setIsSignatureModalOpen] = useState<boolean>(false);
   const [signatureInitialComment, setSignatureInitialComment] = useState<string>('');
   const [memoJustSigned, setMemoJustSigned] = useState<boolean>(false);
+  const [inspectingBooking, setInspectingBooking] = useState<BookingRequest | null>(null);
+  const [isInspectionModalOpen, setIsInspectionModalOpen] = useState<boolean>(false);
   const [editingBooking, setEditingBooking] = useState<BookingRequest | null>(null);
   const [initialBookingDate, setInitialBookingDate] = useState<string | undefined>(undefined);
 
@@ -851,6 +855,76 @@ export default function App() {
     }
   };
 
+  // Handle Open Asset Inspection Modal
+  const handleOpenInspectionModal = (booking: BookingRequest) => {
+    setInspectingBooking(booking);
+    setIsInspectionModalOpen(true);
+  };
+
+  // Handle Confirm Asset Inspection by Logistics Officer
+  const handleConfirmInspection = async (
+    bookingId: string,
+    data: {
+      assetInspectorName: string;
+      assetInspectorPosition: string;
+      assetInspectedAt: string;
+      assetInspectionStatus: 'accepted' | 'rejected' | 'pending';
+      assetInspectionNote?: string;
+      assetInspectionVehicleCondition: 'normal' | 'needs_cleaning' | 'needs_maintenance';
+      assetInspectionSignature: string;
+      assetInspectionSignatureType: 'draw' | 'electronic';
+    }
+  ) => {
+    let updatedTargetBooking: BookingRequest | undefined;
+    const updated = bookings.map((b) => {
+      if (b.id === bookingId) {
+        const item: BookingRequest = {
+          ...b,
+          assetInspectorName: data.assetInspectorName,
+          assetInspectorPosition: data.assetInspectorPosition,
+          assetInspectedAt: data.assetInspectedAt,
+          assetInspectionStatus: data.assetInspectionStatus,
+          assetInspectionNote: data.assetInspectionNote,
+          assetInspectionVehicleCondition: data.assetInspectionVehicleCondition,
+          assetInspectionSignature: data.assetInspectionSignature,
+          assetInspectionSignatureType: data.assetInspectionSignatureType
+        };
+        updatedTargetBooking = item;
+        return item;
+      }
+      return b;
+    });
+
+    setBookings(updated);
+    saveLocalData(STORAGE_KEYS.BOOKINGS, updated);
+    if (updatedTargetBooking) {
+      await saveBookingToFirestore(updatedTargetBooking);
+    }
+    triggerAutoSync(updated);
+
+    const inspectionNotif: NotificationItem = {
+      id: `notif-${Date.now()}`,
+      title: 'เจ้าหน้าที่พัสดุตรวจรับรถแล้ว',
+      desc: `${data.assetInspectorName} (${data.assetInspectorPosition}) ได้ตรวจรับรถและลงลายมือชื่อในใบบันทึกขอใช้รถ ${bookingId} เรียบร้อยแล้ว`,
+      time: 'เมื่อสักครู่',
+      read: false,
+      type: 'approved'
+    };
+    setNotifications((prev) => [inspectionNotif, ...prev]);
+    await saveNotificationToFirestore(inspectionNotif);
+
+    playAppSound('success', soundEnabled);
+    showToast(`เจ้าหน้าที่พัสดุตรวจรับรถและลงชื่อในใบบันทึกขอใช้รถ ${bookingId} สำเร็จ`, 'success');
+
+    setIsInspectionModalOpen(false);
+    setInspectingBooking(null);
+
+    // Open Memo Modal to review updated official memo with logistics signature
+    if (updatedTargetBooking) {
+      setSelectedBookingForMemo(updatedTargetBooking);
+    }
+  };
+
   // Handle Approve by Director (Direct fallback)
   const handleApproveBooking = (bookingId: string, comment: string) => {
     const target = bookings.find((b) => b.id === bookingId);
@@ -1235,6 +1309,16 @@ export default function App() {
           />
         )}
 
+        {activeTab === 'asset_inspection' && (
+          <AssetInspectionView
+            bookings={bookings}
+            vehicles={vehicles}
+            currentUser={currentUser}
+            onOpenInspectionModal={handleOpenInspectionModal}
+            onViewMemo={(b) => setSelectedBookingForMemo(b)}
+          />
+        )}
+
         {activeTab === 'calendar' && (
           <CalendarView
             bookings={bookings}
@@ -1371,6 +1455,22 @@ export default function App() {
           setSelectedBookingForMemo(null);
           handleOpenSignatureModal(b);
         }}
+        onOpenInspectionModal={(b) => {
+          setSelectedBookingForMemo(null);
+          handleOpenInspectionModal(b);
+        }}
+      />
+
+      {/* Asset Inspection Sign-off Modal (Logistics Officer) */}
+      <AssetInspectionModal
+        isOpen={isInspectionModalOpen}
+        onClose={() => {
+          setIsInspectionModalOpen(false);
+          setInspectingBooking(null);
+        }}
+        booking={inspectingBooking}
+        currentUser={currentUser}
+        onConfirmInspection={handleConfirmInspection}
       />
 
       {/* Approval Signature Modal (Draw or Electronic) */}

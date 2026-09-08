@@ -6,6 +6,7 @@ export type MenuKey =
   | 'booking'
   | 'director'
   | 'driver_mission'
+  | 'asset_inspection'
   | 'fuel'
   | 'fleet'
   | 'analytics'
@@ -115,6 +116,16 @@ export interface BookingRequest {
   tripRating?: string;
   registeredInAssetControl?: boolean;
   assetControlRecordedAt?: string;
+
+  // Asset Inspection & Vehicle Handover (การตรวจรับรถเสร็จสิ้นภารกิจโดยเจ้าหน้าที่พัสดุ)
+  assetInspectorName?: string;
+  assetInspectorPosition?: string;
+  assetInspectedAt?: string;
+  assetInspectionStatus?: 'pending' | 'accepted' | 'issue_found';
+  assetInspectionNote?: string;
+  assetInspectionSignature?: string; // Digital signature data URL or electronic sign
+  assetInspectionSignatureType?: 'draw' | 'electronic';
+  assetInspectionVehicleCondition?: 'normal' | 'needs_cleaning' | 'needs_repair';
 }
 
 export interface Vehicle {

@@ -71,6 +71,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
       color: 'text-amber-400 bg-amber-500/10'
     },
     {
+      id: 'asset_inspection',
+      label: 'พัสดุตรวจรับรถเสร็จสิ้นภารกิจ',
+      desc: 'ตรวจรับรถ คุมไมล์ ลงลายเซ็นในใบบันทึก',
+      icon: ShieldCheck,
+      color: 'text-emerald-400 bg-emerald-500/10'
+    },
+    {
       id: 'fuel',
       label: 'บันทึกไมล์และเชื้อเพลิง',
       desc: 'เลขไมล์ ค่าน้ำมัน ตรวจสภาพรถ',
