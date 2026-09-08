@@ -29,5 +29,10 @@ service cloud.firestore {
     match /notifications/{notificationId} {
       allow read, write: if true;
     }
+
+    // Health check & connection validation collection
+    match /test/{docId} {
+      allow read, write: if true;
+    }
   }
 }

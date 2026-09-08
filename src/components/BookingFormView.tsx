@@ -18,6 +18,14 @@ import {
   formatThaiDateRange
 } from '../utils/thaiDate';
 import {
+  DEFAULT_OFFICE_ORIGIN,
+  FREQUENT_ORIGINS,
+  GpsCoordinate,
+  getCurrentBrowserGps,
+  resolveCoordinatesFromAddress,
+  calculateTripGpsDistance
+} from '../utils/gpsDistance';
+import {
   FileText,
   MapPin,
   Calendar,
@@ -39,13 +47,22 @@ import {
   CornerDownLeft,
   ChevronRight,
   Route,
-  UserPlus
+  UserPlus,
+  AlertTriangle,
+  LocateFixed,
+  Compass,
+  Crosshair,
+  ShieldAlert,
+  CheckCircle2,
+  AlertCircle,
+  RefreshCw
 } from 'lucide-react';
 
 interface BookingFormViewProps {
   currentUser: User;
   vehicles: Vehicle[];
   users?: User[];
+  bookings?: BookingRequest[];
   editingBooking: BookingRequest | null;
   initialDate?: string;
   onSaveBooking: (data: Partial<BookingRequest>, isEdit: boolean) => void;
@@ -56,6 +73,7 @@ export const BookingFormView: React.FC<BookingFormViewProps> = ({
   currentUser,
   vehicles,
   users = [],
+  bookings = [],
   editingBooking,
   initialDate,
   onSaveBooking,
@@ -196,6 +214,134 @@ export const BookingFormView: React.FC<BookingFormViewProps> = ({
       setAttachmentName(editingBooking.attachmentName || '');
     }
   }, [editingBooking]);
+
+  // GPS Calculator State
+  const [originGps, setOriginGps] = useState<GpsCoordinate>(DEFAULT_OFFICE_ORIGIN);
+  const [isGettingGps, setIsGettingGps] = useState(false);
+  const [gpsError, setGpsError] = useState<string | null>(null);
+  const [gpsSuccessMsg, setGpsSuccessMsg] = useState<string | null>(null);
+  const [isRoundTrip, setIsRoundTrip] = useState<boolean>(true);
+  const [gpsCalculationResult, setGpsCalculationResult] = useState<{
+    oneWayKm: number;
+    totalDistanceKm: number;
+    straightLineKm: number;
+    estimatedDurationText: string;
+    legs: Array<{ from: string; to: string; distanceKm: number }>;
+  } | null>(null);
+
+  // Real-time Collision Detection: Checks whenever carId, date, endDate, startTime, or endTime changes
+  const conflictingBookings = useMemo(() => {
+    if (!carId || !date) return [];
+    const reqStart = new Date(`${date}T${startTime || '00:00'}:00`).getTime();
+    const reqEnd = new Date(`${endDate || date}T${endTime || '23:59'}:00`).getTime();
+
+    return bookings.filter((b) => {
+      if (editingBooking && b.id === editingBooking.id) return false;
+      if (b.status === 'rejected' || b.status === 'cancelled') return false;
+      if (b.carId !== carId) return false;
+
+      const bStart = new Date(`${b.date}T${b.startTime || '00:00'}:00`).getTime();
+      const bEnd = new Date(`${b.endDate || b.date}T${b.endTime || '23:59'}:00`).getTime();
+
+      // Check overlap: StartA < EndB && EndA > StartB
+      return reqStart < bEnd && reqEnd > bStart;
+    });
+  }, [bookings, carId, date, endDate, startTime, endTime, editingBooking]);
+
+  const hasCollision = conflictingBookings.length > 0;
+
+  // Vehicle Availability Map for the current selected time window
+  const vehicleAvailability = useMemo(() => {
+    const map = new Map<string, { isAvailable: boolean; conflict?: BookingRequest }>();
+    const reqStart = new Date(`${date}T${startTime || '00:00'}:00`).getTime();
+    const reqEnd = new Date(`${endDate || date}T${endTime || '23:59'}:00`).getTime();
+
+    vehicles.forEach((v) => {
+      const conflict = bookings.find((b) => {
+        if (editingBooking && b.id === editingBooking.id) return false;
+        if (b.status === 'rejected' || b.status === 'cancelled') return false;
+        if (b.carId !== v.id) return false;
+
+        const bStart = new Date(`${b.date}T${b.startTime || '00:00'}:00`).getTime();
+        const bEnd = new Date(`${b.endDate || b.date}T${b.endTime || '23:59'}:00`).getTime();
+        return reqStart < bEnd && reqEnd > bStart;
+      });
+
+      map.set(v.id, {
+        isAvailable: !conflict,
+        conflict
+      });
+    });
+    return map;
+  }, [vehicles, bookings, date, endDate, startTime, endTime, editingBooking]);
+
+  // First available alternative vehicle without collision
+  const availableAlternativeVehicle = useMemo(() => {
+    return vehicles.find((v) => vehicleAvailability.get(v.id)?.isAvailable && v.id !== carId);
+  }, [vehicles, vehicleAvailability, carId]);
+
+  const [showCollisionModal, setShowCollisionModal] = useState(false);
+
+  // Switch to suggested available vehicle
+  const handleSwitchToAvailableVehicle = (altVehicle: Vehicle) => {
+    setCarId(altVehicle.id);
+    if (driverType === 'driver') {
+      setDriverName(altVehicle.driverName);
+    }
+    setShowCollisionModal(false);
+  };
+
+  // GPS geolocation fetcher
+  const handleGetBrowserGps = async () => {
+    setIsGettingGps(true);
+    setGpsError(null);
+    setGpsSuccessMsg(null);
+    try {
+      const gps = await getCurrentBrowserGps();
+      const newOrigin: GpsCoordinate = {
+        name: `ตำแหน่งปัจจุบัน (${gps.lat.toFixed(4)}, ${gps.lng.toFixed(4)})`,
+        lat: gps.lat,
+        lng: gps.lng,
+        description: `พิกัดดาวเทียม GPS ความแม่นยำ ±${gps.accuracy} ม.`
+      };
+      setOriginGps(newOrigin);
+      setGpsSuccessMsg(`รับสัญญาณ GPS สำเร็จ: ละติจูด ${gps.lat}, ลองจิจูด ${gps.lng} (±${gps.accuracy} ม.)`);
+      setTimeout(() => setGpsSuccessMsg(null), 5000);
+    } catch (err: any) {
+      setGpsError(err.message || 'ไม่สามารถดึงตำแหน่ง GPS ได้');
+      setTimeout(() => setGpsError(null), 6000);
+    } finally {
+      setIsGettingGps(false);
+    }
+  };
+
+  // GPS route & distance calculator
+  const handleCalculateGpsDistance = () => {
+    const stops = destinations.length > 0 ? destinations : (destDetail ? [destDetail] : []);
+    let destCoords: Array<{ lat: number; lng: number; name: string }> = [];
+
+    if (stops.length > 0) {
+      destCoords = stops.map((s) => {
+        const resolved = resolveCoordinatesFromAddress(destProvince, destAmphoe, s);
+        return {
+          lat: resolved.lat,
+          lng: resolved.lng,
+          name: s
+        };
+      });
+    } else {
+      const resolved = resolveCoordinatesFromAddress(destProvince, destAmphoe);
+      destCoords = [{
+        lat: resolved.lat,
+        lng: resolved.lng,
+        name: resolved.name
+      }];
+    }
+
+    const result = calculateTripGpsDistance(originGps, destCoords, isRoundTrip);
+    setGpsCalculationResult(result);
+    setEstimatedDistance(result.totalDistanceKm);
+  };
 
   // When vehicle changes, auto set driver
   const handleCarChange = (newCarId: string) => {
@@ -352,9 +498,9 @@ export const BookingFormView: React.FC<BookingFormViewProps> = ({
     return res;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const [bypassCollisionConfirm, setBypassCollisionConfirm] = useState(false);
 
+  const executeSaveBooking = () => {
     // Include any remaining typed destination in input if not yet added
     let finalDestinations = [...destinations];
     if (currentDestInput.trim() && !finalDestinations.includes(currentDestInput.trim())) {
@@ -393,6 +539,19 @@ export const BookingFormView: React.FC<BookingFormViewProps> = ({
     };
 
     onSaveBooking(bookingData, !!editingBooking);
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    // Real-time collision check: If a collision exists, show modal warning first
+    if (hasCollision && !bypassCollisionConfirm) {
+      setShowCollisionModal(true);
+      return;
+    }
+
+    setBypassCollisionConfirm(false);
+    executeSaveBooking();
   };
 
   return (
@@ -756,6 +915,213 @@ export const BookingFormView: React.FC<BookingFormViewProps> = ({
               </div>
             )}
 
+            {/* GPS Geolocation & Route Distance Calculator */}
+            <div className="bg-gradient-to-br from-indigo-900/5 via-blue-900/5 to-slate-50 p-4 rounded-2xl border border-indigo-200/80 shadow-xs space-y-3.5">
+              <div className="flex flex-wrap items-center justify-between gap-2 border-b border-indigo-100 pb-2.5">
+                <div className="flex items-center space-x-2">
+                  <div className="w-8 h-8 rounded-lg bg-indigo-600 text-white flex items-center justify-center shadow-xs">
+                    <LocateFixed className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h4 className="text-xs md:text-sm font-bold text-indigo-950 flex items-center space-x-1.5">
+                      <span>เครื่องมือคำนวณระยะทางจากดาวเทียม GPS</span>
+                      <span className="text-[10px] px-2 py-0.5 bg-indigo-100 text-indigo-700 font-semibold rounded-full">
+                        GPS Geolocation
+                      </span>
+                    </h4>
+                    <p className="text-[11px] text-slate-500">
+                      คำนวณระยะทางขับขี่จริงตามเส้นทางและเวลาเดินทางโดยดึงพิกัด GPS ต้นทาง-ปลายทาง
+                    </p>
+                  </div>
+                </div>
+
+                {/* Mode toggle: ไป-กลับ / เที่ยวเดียว */}
+                <div className="flex items-center bg-white border border-indigo-200 rounded-xl p-1 text-xs shadow-2xs">
+                  <button
+                    type="button"
+                    onClick={() => setIsRoundTrip(true)}
+                    className={`px-3 py-1 rounded-lg font-medium transition ${
+                      isRoundTrip
+                        ? 'bg-indigo-600 text-white shadow-xs'
+                        : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                  >
+                    ไป-กลับ (Round trip)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setIsRoundTrip(false)}
+                    className={`px-3 py-1 rounded-lg font-medium transition ${
+                      !isRoundTrip
+                        ? 'bg-indigo-600 text-white shadow-xs'
+                        : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                  >
+                    เที่ยวเดียว (One way)
+                  </button>
+                </div>
+              </div>
+
+              {/* Origin configuration */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <label className="text-[11px] font-semibold text-slate-700 flex items-center space-x-1">
+                      <MapPin className="w-3.5 h-3.5 text-indigo-600" />
+                      <span>จุดเริ่มต้น / ต้นทาง (Origin GPS)</span>
+                    </label>
+                    <button
+                      type="button"
+                      onClick={handleGetBrowserGps}
+                      disabled={isGettingGps}
+                      className="text-[11px] font-bold text-indigo-700 hover:text-indigo-900 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 px-2.5 py-1 rounded-lg flex items-center space-x-1 transition shadow-2xs disabled:opacity-50"
+                      title="กดเพื่อดึงพิกัดดาวเทียม GPS จากอุปกรณ์ปัจจุบัน"
+                    >
+                      {isGettingGps ? (
+                        <>
+                          <RefreshCw className="w-3 h-3 animate-spin text-indigo-600" />
+                          <span>กำลังจับสัญญาณ GPS...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Crosshair className="w-3 h-3 text-indigo-600" />
+                          <span>📍 ดึงพิกัด GPS ปัจจุบัน</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+
+                  <select
+                    value={originGps.name}
+                    onChange={(e) => {
+                      const found = FREQUENT_ORIGINS.find((o) => o.name === e.target.value);
+                      if (found) setOriginGps(found);
+                    }}
+                    className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 font-medium focus:ring-2 focus:ring-indigo-500 focus:outline-none shadow-2xs"
+                  >
+                    {FREQUENT_ORIGINS.map((orig) => (
+                      <option key={orig.name} value={orig.name}>
+                        {orig.name}
+                      </option>
+                    ))}
+                    {originGps.name.startsWith('ตำแหน่งปัจจุบัน') && (
+                      <option value={originGps.name}>{originGps.name}</option>
+                    )}
+                  </select>
+
+                  <div className="flex items-center space-x-2 text-[10px] text-slate-500 bg-white/80 px-2.5 py-1 rounded-lg border border-slate-200/60">
+                    <span className="font-mono text-indigo-700 font-semibold">
+                      Lat: {originGps.lat.toFixed(4)}°, Lng: {originGps.lng.toFixed(4)}°
+                    </span>
+                    <span>•</span>
+                    <span className="truncate">{originGps.description || 'พิกัดเริ่มต้น'}</span>
+                  </div>
+                </div>
+
+                {/* Destination overview & trigger */}
+                <div className="space-y-1.5 flex flex-col justify-between">
+                  <div>
+                    <label className="text-[11px] font-semibold text-slate-700 flex items-center space-x-1 mb-1">
+                      <Navigation className="w-3.5 h-3.5 text-emerald-600" />
+                      <span>จุดหมายปลายทาง (Destinations GPS)</span>
+                    </label>
+                    <div className="p-2 bg-white rounded-xl border border-slate-200 text-xs text-slate-700 min-h-[42px] flex items-center justify-between">
+                      <span className="truncate">
+                        {destinations.length > 0
+                          ? `${destinations.join(' ➔ ')} (${destProvince})`
+                          : `จ.${destProvince} อ.${destAmphoe} ต.${destTambon}`}
+                      </span>
+                      <span className="text-[10px] bg-emerald-50 text-emerald-700 font-bold px-2 py-0.5 rounded-md shrink-0 border border-emerald-200 ml-2">
+                        {destinations.length > 0 ? `${destinations.length} จุดหมาย` : '1 จุดหมาย'}
+                      </span>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={handleCalculateGpsDistance}
+                    className="w-full py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition shadow-xs flex items-center justify-center space-x-1.5"
+                  >
+                    <Sparkles className="w-4 h-4 text-indigo-200" />
+                    <span>⚡ คำนวณระยะทางจากพิกัด GPS</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Success / Error alerts */}
+              {gpsSuccessMsg && (
+                <div className="flex items-center space-x-2 p-2.5 bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-xl text-xs animate-in fade-in">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                  <span>{gpsSuccessMsg}</span>
+                </div>
+              )}
+              {gpsError && (
+                <div className="flex items-center space-x-2 p-2.5 bg-rose-50 text-rose-800 border border-rose-200 rounded-xl text-xs animate-in fade-in">
+                  <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+                  <span>{gpsError}</span>
+                </div>
+              )}
+
+              {/* Calculated Results Card */}
+              {gpsCalculationResult && (
+                <div className="bg-white p-3.5 rounded-xl border border-indigo-200 shadow-xs space-y-2.5 animate-in fade-in">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-center">
+                    <div className="p-2 bg-indigo-50/60 rounded-lg border border-indigo-100">
+                      <span className="text-[10px] text-indigo-700 font-semibold block">ระยะทางขับขี่รวม</span>
+                      <b className="text-base text-indigo-950 font-mono font-bold">
+                        {gpsCalculationResult.totalDistanceKm} กม.
+                      </b>
+                    </div>
+                    <div className="p-2 bg-blue-50/60 rounded-lg border border-blue-100">
+                      <span className="text-[10px] text-blue-700 font-semibold block">เวลาเดินทางประมาณ</span>
+                      <b className="text-sm text-blue-950 font-bold">
+                        {gpsCalculationResult.estimatedDurationText}
+                      </b>
+                    </div>
+                    <div className="col-span-2 sm:col-span-1 p-2 bg-slate-50 rounded-lg border border-slate-100">
+                      <span className="text-[10px] text-slate-500 font-semibold block">ระยะทางเส้นตรงดาวเทียม</span>
+                      <span className="text-xs text-slate-700 font-mono font-medium">
+                        {gpsCalculationResult.straightLineKm} กม.
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Legs breakdown */}
+                  {gpsCalculationResult.legs.length > 0 && (
+                    <div className="text-[11px] text-slate-600 space-y-1 bg-slate-50/70 p-2.5 rounded-lg border border-slate-100">
+                      <span className="font-bold text-slate-800 block text-[10px] uppercase tracking-wide">
+                        รายละเอียดเส้นทางเดินรถ (Route Legs):
+                      </span>
+                      {gpsCalculationResult.legs.map((leg, lIdx) => (
+                        <div key={lIdx} className="flex items-center justify-between py-0.5 border-b border-slate-200/50 last:border-0">
+                          <span className="truncate pr-2">
+                            {lIdx + 1}. {leg.from} ➔ {leg.to}
+                          </span>
+                          <span className="font-mono font-bold text-indigo-700 shrink-0">
+                            {leg.distanceKm} กม.
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  <div className="flex items-center justify-between pt-1">
+                    <span className="text-[11px] text-emerald-700 font-semibold flex items-center space-x-1">
+                      <Check className="w-3.5 h-3.5" />
+                      <span>อัปเดตระยะทาง {gpsCalculationResult.totalDistanceKm} กม. ลงในแบบฟอร์มคำขอแล้ว</span>
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setEstimatedDistance(gpsCalculationResult.totalDistanceKm)}
+                      className="text-[11px] text-indigo-600 font-bold hover:underline"
+                    >
+                      คำนวณใหม่
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+
             {/* Distance Input & Summary */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
               <div>
@@ -879,6 +1245,103 @@ export const BookingFormView: React.FC<BookingFormViewProps> = ({
             </div>
           </div>
 
+          {/* Real-time Booking Collision Alert Banner */}
+          {hasCollision ? (
+            <div className="bg-rose-50 border-2 border-rose-400 rounded-2xl p-4 shadow-sm space-y-3 animate-in fade-in slide-in-from-top-2 duration-200">
+              <div className="flex items-start justify-between">
+                <div className="flex items-start space-x-3">
+                  <div className="w-10 h-10 rounded-xl bg-rose-500 text-white flex items-center justify-center shrink-0 shadow-xs animate-pulse">
+                    <AlertTriangle className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <div className="flex items-center space-x-2">
+                      <span className="text-xs md:text-sm font-bold text-rose-900">
+                        ⚠️ ตรวจพบการจองรถยนต์ซ้ำซ้อนในเวลานี้ (Real-time Collision Alert)
+                      </span>
+                      <span className="text-[10px] bg-rose-200 text-rose-800 font-bold px-2 py-0.5 rounded-md">
+                        {conflictingBookings.length} คำขอชนเวลา
+                      </span>
+                    </div>
+                    <p className="text-xs text-rose-700 mt-0.5">
+                      รถยนต์คันที่ท่านเลือก มีการจองคิวใช้งานในช่วงเวลาดังกล่าวแล้ว โปรดสลับไปใช้รถยนต์คันอื่นหรือปรับเปลี่ยนเวลาเดินทาง
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* List of conflicting bookings */}
+              <div className="space-y-2">
+                {conflictingBookings.map((cb) => (
+                  <div
+                    key={cb.id}
+                    className="bg-white/95 rounded-xl p-3 border border-rose-200 shadow-2xs flex flex-wrap items-center justify-between gap-2 text-xs"
+                  >
+                    <div className="space-y-0.5">
+                      <div className="flex items-center space-x-2">
+                        <span className="font-mono font-bold text-rose-700 bg-rose-100 px-2 py-0.5 rounded text-[11px]">
+                          {cb.id}
+                        </span>
+                        <b className="text-slate-800">{cb.carName}</b>
+                        <span className="text-slate-500">โดย</span>
+                        <span className="font-semibold text-slate-800">{cb.name}</span>
+                        <span className="text-[11px] text-slate-500">({cb.department})</span>
+                      </div>
+                      <div className="text-[11px] text-slate-600 flex items-center space-x-2">
+                        <span>กำหนดการ: <b>{formatThaiDateRange(cb.date, cb.endDate)}</b> ({cb.startTime} - {cb.endTime} น.)</span>
+                        <span>•</span>
+                        <span className="text-slate-500 truncate max-w-xs">ภารกิจ: {cb.purpose}</span>
+                      </div>
+                    </div>
+
+                    <span
+                      className={`text-[11px] font-bold px-2.5 py-1 rounded-lg ${
+                        cb.status === 'approved'
+                          ? 'bg-emerald-100 text-emerald-800'
+                          : 'bg-amber-100 text-amber-800'
+                      }`}
+                    >
+                      {cb.status === 'approved' ? 'อนุมัติใช้งานแล้ว' : 'รอพิจารณาอนุมัติ'}
+                    </span>
+                  </div>
+                ))}
+              </div>
+
+              {/* Auto suggestion & Quick switch button */}
+              {availableAlternativeVehicle && (
+                <div className="bg-emerald-50/90 border border-emerald-300 rounded-xl p-3 flex flex-wrap items-center justify-between gap-2">
+                  <div className="flex items-center space-x-2">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                    <div className="text-xs text-emerald-950">
+                      <span>แนะนำสลับไปใช้รถที่ว่าง: </span>
+                      <b className="text-emerald-800 font-bold">
+                        {availableAlternativeVehicle.name} ({availableAlternativeVehicle.plate})
+                      </b>
+                      <span className="text-slate-500 ml-1">
+                        - {availableAlternativeVehicle.fuelType} (พนักงานขับรถ: {availableAlternativeVehicle.driverName})
+                      </span>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => handleSwitchToAvailableVehicle(availableAlternativeVehicle)}
+                    className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition shadow-xs flex items-center space-x-1"
+                  >
+                    <RefreshCw className="w-3.5 h-3.5" />
+                    <span>🔄 สลับเป็นคันนี้ทันที</span>
+                  </button>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="bg-emerald-50/70 border border-emerald-200/80 rounded-xl p-3 flex items-center space-x-2.5 text-xs text-emerald-900">
+              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+              <span>
+                <b>สถานะความพร้อม:</b> ไม่มีคำขอที่เวลาซ้ำซ้อน รถยนต์คันนี้พร้อมให้บริการในช่วงวัน-เวลาที่ระบุ
+              </span>
+            </div>
+          )}
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
             <div>
               <label className="block text-xs font-medium text-slate-700 mb-1.5">
@@ -888,14 +1351,70 @@ export const BookingFormView: React.FC<BookingFormViewProps> = ({
                 required
                 value={carId}
                 onChange={(e) => handleCarChange(e.target.value)}
-                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs md:text-sm text-slate-800 focus:bg-white focus:ring-2 focus:ring-orange-500"
+                className={`w-full bg-slate-50 border rounded-xl px-3.5 py-2.5 text-xs md:text-sm text-slate-800 focus:bg-white focus:ring-2 ${
+                  hasCollision
+                    ? 'border-rose-400 focus:ring-rose-500 bg-rose-50/40 text-rose-900'
+                    : 'border-slate-200 focus:ring-orange-500'
+                }`}
               >
-                {vehicles.map((v) => (
-                  <option key={v.id} value={v.id}>
-                    {v.name} ({v.plate}) - {v.fuelType}
-                  </option>
-                ))}
+                {vehicles.map((v) => {
+                  const avail = vehicleAvailability.get(v.id);
+                  const isAvail = avail?.isAvailable !== false;
+                  return (
+                    <option key={v.id} value={v.id}>
+                      {isAvail ? '✅ [ว่าง พร้อมใช้]' : `⚠️ [เวลาชนกับ ${avail?.conflict?.id || 'คิวอื่น'}]`}{' '}
+                      {v.name} ({v.plate}) - {v.fuelType}
+                    </option>
+                  );
+                })}
               </select>
+
+              {/* Quick Vehicle Fleet Availability Selector Cards */}
+              <div className="mt-2.5 space-y-1.5">
+                <span className="text-[10px] text-slate-500 font-semibold block">
+                  สถานะความพร้อมของรถยนต์ส่วนกลางทั้งหมดในช่วงเวลานี้ (คลิกเพื่อเลือกคันที่ว่าง):
+                </span>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                  {vehicles.map((v) => {
+                    const avail = vehicleAvailability.get(v.id);
+                    const isAvail = avail?.isAvailable !== false;
+                    const isSelected = v.id === carId;
+                    return (
+                      <button
+                        key={v.id}
+                        type="button"
+                        onClick={() => handleCarChange(v.id)}
+                        className={`p-2.5 rounded-xl border text-left transition flex flex-col justify-between space-y-1.5 ${
+                          isSelected
+                            ? isAvail
+                              ? 'border-orange-500 bg-orange-50/70 ring-2 ring-orange-400'
+                              : 'border-rose-500 bg-rose-50/70 ring-2 ring-rose-400'
+                            : isAvail
+                            ? 'border-slate-200 bg-white hover:border-slate-300'
+                            : 'border-rose-200 bg-rose-50/30 hover:border-rose-300'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="font-bold text-xs text-slate-800 truncate">{v.name}</span>
+                          {isAvail ? (
+                            <span className="text-[9px] px-1.5 py-0.5 bg-emerald-100 text-emerald-800 font-bold rounded">
+                              ว่าง
+                            </span>
+                          ) : (
+                            <span className="text-[9px] px-1.5 py-0.5 bg-rose-100 text-rose-800 font-bold rounded">
+                              ติดจอง
+                            </span>
+                          )}
+                        </div>
+                        <div className="text-[10px] text-slate-500 flex items-center justify-between">
+                          <span>{v.plate}</span>
+                          <span className="text-[9px]">{v.fuelType}</span>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
             </div>
 
             <div>
@@ -1212,6 +1731,110 @@ export const BookingFormView: React.FC<BookingFormViewProps> = ({
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal: Real-time Booking Collision Alert & Action Dialog */}
+      {showCollisionModal && (
+        <div className="fixed inset-0 z-50 bg-slate-900/70 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-2xl border border-rose-200 w-full max-w-lg overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+            <div className="px-6 py-4 bg-gradient-to-r from-rose-700 to-red-600 text-white flex items-center justify-between">
+              <div className="flex items-center space-x-2.5">
+                <AlertTriangle className="w-5 h-5 text-amber-300 animate-bounce" />
+                <div>
+                  <h3 className="font-bold text-sm">แจ้งเตือน: ตรวจพบการจองรถยนต์ซ้ำซ้อน</h3>
+                  <p className="text-[10px] text-rose-100">Real-time Booking Collision Detected</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowCollisionModal(false)}
+                className="text-white/80 hover:text-white p-1"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-4">
+              <div className="bg-rose-50 border border-rose-200 rounded-xl p-3.5 space-y-2">
+                <p className="text-xs text-rose-900 leading-relaxed font-medium">
+                  รถยนต์คันที่ท่านเลือกมีคิวการปฏิบัติงานในช่วงเวลา <b>{formatThaiDateRange(date, endDate)}</b> ({startTime} - {endTime} น.) ชนกับคำขอเดิมในระบบ:
+                </p>
+
+                <div className="space-y-1.5 pt-1">
+                  {conflictingBookings.map((b) => (
+                    <div
+                      key={b.id}
+                      className="bg-white p-2.5 rounded-lg border border-rose-100 text-xs shadow-2xs space-y-1"
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="font-bold text-rose-700">{b.id}</span>
+                        <span className="text-[10px] px-2 py-0.5 bg-amber-100 text-amber-800 font-semibold rounded">
+                          {b.status === 'approved' ? 'อนุมัติแล้ว' : 'รอพิจารณา'}
+                        </span>
+                      </div>
+                      <div className="text-slate-700">
+                        ผู้ขอ: <b>{b.name}</b> ({b.department})
+                      </div>
+                      <div className="text-[11px] text-slate-500 truncate">
+                        ภารกิจ: {b.purpose}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Action Choices */}
+              <div className="space-y-2 pt-1">
+                {availableAlternativeVehicle && (
+                  <button
+                    type="button"
+                    onClick={() => handleSwitchToAvailableVehicle(availableAlternativeVehicle)}
+                    className="w-full p-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition shadow-xs flex items-center justify-between"
+                  >
+                    <div className="flex items-center space-x-2 text-left">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-200 shrink-0" />
+                      <div>
+                        <div>🔄 สลับไปใช้ {availableAlternativeVehicle.name} ({availableAlternativeVehicle.plate})</div>
+                        <div className="text-[10px] text-emerald-100 font-normal">
+                          คันนี้ว่าง ไม่มีคิวชนในเวลาดังกล่าว (พนักงานขับรถ: {availableAlternativeVehicle.driverName})
+                        </div>
+                      </div>
+                    </div>
+                    <span className="text-[11px] bg-white/20 px-2 py-0.5 rounded">แนะนำ</span>
+                  </button>
+                )}
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowCollisionModal(false);
+                    setBypassCollisionConfirm(true);
+                    executeSaveBooking();
+                  }}
+                  className="w-full p-3 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-xs font-bold transition shadow-xs flex items-center justify-between"
+                >
+                  <div className="flex items-center space-x-2 text-left">
+                    <Send className="w-4 h-4 text-amber-100 shrink-0" />
+                    <div>
+                      <div>ยืนยันส่งคำขอต่อไป (ระบุเหตุจำเป็นเร่งด่วน)</div>
+                      <div className="text-[10px] text-amber-100 font-normal">
+                        ส่งให้ ผอ. หรือผู้มีอำนาจพิจารณาจัดสรรลำดับความสำคัญ
+                      </div>
+                    </div>
+                  </div>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setShowCollisionModal(false)}
+                  className="w-full py-2.5 border border-slate-300 text-slate-700 rounded-xl text-xs font-medium hover:bg-slate-50 transition"
+                >
+                  กลับไปแก้ไขวันหรือเวลาเดินทาง
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}

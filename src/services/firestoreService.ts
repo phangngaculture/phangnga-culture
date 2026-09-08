@@ -9,9 +9,10 @@ import {
   deleteDoc,
   onSnapshot,
   writeBatch,
+  getDocFromServer,
   Firestore
 } from 'firebase/firestore';
-import { app } from './googleAuth';
+import { app, auth } from './googleAuth';
 import firebaseConfig from '../../firebase-applet-config.json';
 import {
   BookingRequest,
@@ -22,26 +23,107 @@ import {
   NotificationItem
 } from '../types';
 
-// Initialize Firestore with robust persistent offline cache support
-const databaseId = (firebaseConfig as any).firestoreDatabaseId;
-
-let firestoreInstance: Firestore;
-try {
-  firestoreInstance = initializeFirestore(
-    app,
-    {
-      localCache: persistentLocalCache({
-        tabManager: persistentMultipleTabManager()
-      })
-    },
-    databaseId || undefined
-  );
-} catch {
-  // If already initialized, retrieve instance
-  firestoreInstance = databaseId ? getFirestore(app, databaseId) : getFirestore(app);
+export enum OperationType {
+  CREATE = 'create',
+  UPDATE = 'update',
+  DELETE = 'delete',
+  LIST = 'list',
+  GET = 'get',
+  WRITE = 'write',
 }
 
-export const db: Firestore = firestoreInstance;
+export interface FirestoreErrorInfo {
+  error: string;
+  operationType: OperationType;
+  path: string | null;
+  authInfo: {
+    userId?: string | null;
+    email?: string | null;
+    emailVerified?: boolean | null;
+    isAnonymous?: boolean | null;
+    tenantId?: string | null;
+    providerInfo?: {
+      providerId?: string | null;
+      email?: string | null;
+    }[];
+  };
+}
+
+export function handleFirestoreError(error: unknown, operationType: OperationType, path: string | null): FirestoreErrorInfo {
+  const errInfo: FirestoreErrorInfo = {
+    error: error instanceof Error ? error.message : String(error),
+    authInfo: {
+      userId: auth?.currentUser?.uid,
+      email: auth?.currentUser?.email,
+      emailVerified: auth?.currentUser?.emailVerified,
+      isAnonymous: auth?.currentUser?.isAnonymous,
+      tenantId: auth?.currentUser?.tenantId,
+      providerInfo: auth?.currentUser?.providerData?.map((provider) => ({
+        providerId: provider.providerId,
+        email: provider.email,
+      })) || []
+    },
+    operationType,
+    path
+  };
+  console.warn('Firestore Error Context:', JSON.stringify(errInfo));
+  return errInfo;
+}
+
+// Initialize Firestore with robust persistent offline cache support and long-polling for iframe/proxy compatibility
+const databaseId = (firebaseConfig as any).firestoreDatabaseId;
+
+function initFirestoreInstance(): Firestore {
+  try {
+    return initializeFirestore(
+      app,
+      {
+        experimentalForceLongPolling: true,
+        localCache: persistentLocalCache({
+          tabManager: persistentMultipleTabManager()
+        })
+      },
+      databaseId || undefined
+    );
+  } catch {
+    try {
+      return initializeFirestore(
+        app,
+        {
+          experimentalForceLongPolling: true
+        },
+        databaseId || undefined
+      );
+    } catch {
+      return databaseId ? getFirestore(app, databaseId) : getFirestore(app);
+    }
+  }
+}
+
+export const db: Firestore = initFirestoreInstance();
+
+// Health check / connection test as mandated by Firebase integration guidelines
+export async function testConnection(): Promise<boolean> {
+  try {
+    await getDocFromServer(doc(db, 'test', 'connection'));
+    console.log('[Firestore] Backend connection verified successfully.');
+    return true;
+  } catch (error) {
+    if (error instanceof Error && error.message.includes('the client is offline')) {
+      console.warn('[Firestore] Client is operating in offline mode with cached data.');
+    } else {
+      console.info('[Firestore] Connection note (offline-first):', error);
+    }
+    return false;
+  }
+}
+
+// Trigger connection test safely on module boot
+if (typeof window !== 'undefined') {
+  setTimeout(() => {
+    testConnection().catch(() => {});
+  }, 100);
+}
 
 export interface FirestoreSyncCallbacks {
   onBookingsChange?: (bookings: BookingRequest[]) => void;
@@ -57,6 +139,7 @@ export interface FirestoreSyncCallbacks {
 const cleanForFirestore = (obj: any): any => {
   if (obj === undefined) return null;
   if (obj === null || typeof obj !== 'object') return obj;
+  if (obj instanceof Date) return obj.toISOString();
   if (Array.isArray(obj)) return obj.map(cleanForFirestore);
   const copy: Record<string, any> = {};
   for (const [key, val] of Object.entries(obj)) {
@@ -81,6 +164,20 @@ export const subscribeToFirestore = (
 ) => {
   const unsubscribers: (() => void)[] = [];
 
+  const handleSnapshotError = (colName: string, error: any) => {
+    if (
+      error?.code === 'unavailable' ||
+      error?.message?.includes('offline') ||
+      error?.message?.includes('unavailable')
+    ) {
+      console.info(`[Firestore] ${colName} is operating in offline cache mode.`);
+      callbacks.onStatusChange?.('connected');
+    } else {
+      handleFirestoreError(error, OperationType.GET, colName);
+      callbacks.onStatusChange?.('error');
+    }
+  };
+
   try {
     callbacks.onStatusChange?.('syncing');
 
@@ -91,6 +188,14 @@ export const subscribeToFirestore = (
       (snapshot) => {
         if (!snapshot.empty) {
           const items = snapshot.docs.map((d) => d.data() as BookingRequest);
+          if (initialData?.bookings && initialData.bookings.length > 0) {
+            const existingIds = new Set(snapshot.docs.map((d) => d.id));
+            const missing = initialData.bookings.filter((b) => b && b.id && !existingIds.has(b.id));
+            if (missing.length > 0) {
+              seedCollection('bookings', missing);
+              items.push(...missing);
+            }
+          }
           // Sort latest first
           items.sort((a, b) => new Date(b.createdAt || b.date).getTime() - new Date(a.createdAt || a.date).getTime());
           callbacks.onBookingsChange?.(items);
@@ -100,16 +205,7 @@ export const subscribeToFirestore = (
         }
         callbacks.onStatusChange?.('connected');
       },
-      (error: any) => {
-        // Handle code=unavailable gracefully (offline or transient connectivity)
-        if (error?.code === 'unavailable') {
-          console.info('Firestore is operating in offline mode with cached data.');
-          callbacks.onStatusChange?.('connected');
-        } else {
-          console.warn('Firestore bookings snapshot error:', error);
-          callbacks.onStatusChange?.('error');
-        }
-      }
+      (error: any) => handleSnapshotError('bookings', error)
     );
     unsubscribers.push(unsubBookings);
 
@@ -120,14 +216,20 @@ export const subscribeToFirestore = (
       (snapshot) => {
         if (!snapshot.empty) {
           const items = snapshot.docs.map((d) => d.data() as Vehicle);
+          if (initialData?.vehicles && initialData.vehicles.length > 0) {
+            const existingIds = new Set(snapshot.docs.map((d) => d.id));
+            const missing = initialData.vehicles.filter((v) => v && v.id && !existingIds.has(v.id));
+            if (missing.length > 0) {
+              seedCollection('vehicles', missing);
+              items.push(...missing);
+            }
+          }
           callbacks.onVehiclesChange?.(items);
         } else if (initialData?.vehicles && initialData.vehicles.length > 0) {
           seedCollection('vehicles', initialData.vehicles);
         }
       },
-      (error) => {
-        console.warn('Firestore vehicles snapshot error:', error);
-      }
+      (error) => handleSnapshotError('vehicles', error)
     );
     unsubscribers.push(unsubVehicles);
 
@@ -138,15 +240,21 @@ export const subscribeToFirestore = (
       (snapshot) => {
         if (!snapshot.empty) {
           const items = snapshot.docs.map((d) => d.data() as FuelLog);
+          if (initialData?.fuelLogs && initialData.fuelLogs.length > 0) {
+            const existingIds = new Set(snapshot.docs.map((d) => d.id));
+            const missing = initialData.fuelLogs.filter((f) => f && f.id && !existingIds.has(f.id));
+            if (missing.length > 0) {
+              seedCollection('fuelLogs', missing);
+              items.push(...missing);
+            }
+          }
           items.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
           callbacks.onFuelLogsChange?.(items);
         } else if (initialData?.fuelLogs && initialData.fuelLogs.length > 0) {
           seedCollection('fuelLogs', initialData.fuelLogs);
         }
       },
-      (error) => {
-        console.warn('Firestore fuelLogs snapshot error:', error);
-      }
+      (error) => handleSnapshotError('fuelLogs', error)
     );
     unsubscribers.push(unsubFuel);
 
@@ -157,15 +265,21 @@ export const subscribeToFirestore = (
       (snapshot) => {
         if (!snapshot.empty) {
           const items = snapshot.docs.map((d) => d.data() as MaintenanceRecord);
+          if (initialData?.maintenanceRecords && initialData.maintenanceRecords.length > 0) {
+            const existingIds = new Set(snapshot.docs.map((d) => d.id));
+            const missing = initialData.maintenanceRecords.filter((m) => m && m.id && !existingIds.has(m.id));
+            if (missing.length > 0) {
+              seedCollection('maintenanceRecords', missing);
+              items.push(...missing);
+            }
+          }
           items.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
           callbacks.onMaintenanceChange?.(items);
         } else if (initialData?.maintenanceRecords && initialData.maintenanceRecords.length > 0) {
           seedCollection('maintenanceRecords', initialData.maintenanceRecords);
         }
       },
-      (error) => {
-        console.warn('Firestore maintenance snapshot error:', error);
-      }
+      (error) => handleSnapshotError('maintenanceRecords', error)
     );
     unsubscribers.push(unsubMnt);
 
@@ -176,14 +290,20 @@ export const subscribeToFirestore = (
       (snapshot) => {
         if (!snapshot.empty) {
           const items = snapshot.docs.map((d) => d.data() as User);
+          if (initialData?.users && initialData.users.length > 0) {
+            const existingIds = new Set(snapshot.docs.map((d) => d.id));
+            const missing = initialData.users.filter((u) => u && u.id && !existingIds.has(u.id));
+            if (missing.length > 0) {
+              seedCollection('users', missing);
+              items.push(...missing);
+            }
+          }
           callbacks.onUsersChange?.(items);
         } else if (initialData?.users && initialData.users.length > 0) {
           seedCollection('users', initialData.users);
         }
       },
-      (error) => {
-        console.warn('Firestore users snapshot error:', error);
-      }
+      (error) => handleSnapshotError('users', error)
     );
     unsubscribers.push(unsubUsers);
 
@@ -199,9 +319,7 @@ export const subscribeToFirestore = (
           seedCollection('notifications', initialData.notifications);
         }
       },
-      (error) => {
-        console.warn('Firestore notifications snapshot error:', error);
-      }
+      (error) => handleSnapshotError('notifications', error)
     );
     unsubscribers.push(unsubNotif);
 
@@ -238,84 +356,110 @@ export const seedCollection = async (collectionName: string, items: any[]) => {
 };
 
 // Individual write helpers
-export const saveBookingToFirestore = async (booking: BookingRequest) => {
+export const saveBookingToFirestore = async (booking: BookingRequest): Promise<boolean> => {
   try {
     const docRef = doc(db, 'bookings', booking.id);
     await setDoc(docRef, cleanForFirestore(booking), { merge: true });
+    console.log(`[Firestore] Successfully saved booking: ${booking.id}`);
+    return true;
   } catch (err) {
-    console.error('Error saving booking to Firestore:', err);
+    handleFirestoreError(err, OperationType.WRITE, `bookings/${booking.id}`);
+    return false;
   }
 };
 
-export const deleteBookingFromFirestore = async (bookingId: string) => {
+export const deleteBookingFromFirestore = async (bookingId: string): Promise<boolean> => {
   try {
     const docRef = doc(db, 'bookings', bookingId);
     await deleteDoc(docRef);
+    console.log(`[Firestore] Successfully deleted booking: ${bookingId}`);
+    return true;
   } catch (err) {
-    console.error('Error deleting booking from Firestore:', err);
+    handleFirestoreError(err, OperationType.DELETE, `bookings/${bookingId}`);
+    return false;
   }
 };
 
-export const saveVehicleToFirestore = async (vehicle: Vehicle) => {
+export const saveVehicleToFirestore = async (vehicle: Vehicle): Promise<boolean> => {
   try {
     const docRef = doc(db, 'vehicles', vehicle.id);
     await setDoc(docRef, cleanForFirestore(vehicle), { merge: true });
+    console.log(`[Firestore] Successfully saved vehicle: ${vehicle.id}`);
+    return true;
   } catch (err) {
-    console.error('Error saving vehicle to Firestore:', err);
+    handleFirestoreError(err, OperationType.WRITE, `vehicles/${vehicle.id}`);
+    return false;
   }
 };
 
-export const deleteVehicleFromFirestore = async (vehicleId: string) => {
+export const deleteVehicleFromFirestore = async (vehicleId: string): Promise<boolean> => {
   try {
     const docRef = doc(db, 'vehicles', vehicleId);
     await deleteDoc(docRef);
+    console.log(`[Firestore] Successfully deleted vehicle: ${vehicleId}`);
+    return true;
   } catch (err) {
-    console.error('Error deleting vehicle from Firestore:', err);
+    handleFirestoreError(err, OperationType.DELETE, `vehicles/${vehicleId}`);
+    return false;
   }
 };
 
-export const saveFuelLogToFirestore = async (log: FuelLog) => {
+export const saveFuelLogToFirestore = async (log: FuelLog): Promise<boolean> => {
   try {
     const docRef = doc(db, 'fuelLogs', log.id);
     await setDoc(docRef, cleanForFirestore(log), { merge: true });
+    console.log(`[Firestore] Successfully saved fuel log: ${log.id}`);
+    return true;
   } catch (err) {
-    console.error('Error saving fuel log to Firestore:', err);
+    handleFirestoreError(err, OperationType.WRITE, `fuelLogs/${log.id}`);
+    return false;
   }
 };
 
-export const saveMaintenanceToFirestore = async (record: MaintenanceRecord) => {
+export const saveMaintenanceToFirestore = async (record: MaintenanceRecord): Promise<boolean> => {
   try {
     const docRef = doc(db, 'maintenanceRecords', record.id);
     await setDoc(docRef, cleanForFirestore(record), { merge: true });
+    console.log(`[Firestore] Successfully saved maintenance record: ${record.id}`);
+    return true;
   } catch (err) {
-    console.error('Error saving maintenance to Firestore:', err);
+    handleFirestoreError(err, OperationType.WRITE, `maintenanceRecords/${record.id}`);
+    return false;
   }
 };
 
-export const saveUserToFirestore = async (user: User) => {
+export const saveUserToFirestore = async (user: User): Promise<boolean> => {
   try {
     const docRef = doc(db, 'users', user.id);
     await setDoc(docRef, cleanForFirestore(user), { merge: true });
+    console.log(`[Firestore] Successfully saved user: ${user.id}`);
+    return true;
   } catch (err) {
-    console.error('Error saving user to Firestore:', err);
+    handleFirestoreError(err, OperationType.WRITE, `users/${user.id}`);
+    return false;
   }
 };
 
-export const deleteUserFromFirestore = async (userId: string) => {
+export const deleteUserFromFirestore = async (userId: string): Promise<boolean> => {
   try {
     const docRef = doc(db, 'users', userId);
     await deleteDoc(docRef);
+    console.log(`[Firestore] Successfully deleted user: ${userId}`);
+    return true;
   } catch (err) {
-    console.error('Error deleting user from Firestore:', err);
+    handleFirestoreError(err, OperationType.DELETE, `users/${userId}`);
+    return false;
   }
 };
 
-export const saveNotificationToFirestore = async (notification: NotificationItem) => {
+export const saveNotificationToFirestore = async (notification: NotificationItem): Promise<boolean> => {
   try {
     const docRef = doc(db, 'notifications', notification.id);
     await setDoc(docRef, cleanForFirestore(notification), { merge: true });
+    return true;
   } catch (err) {
-    console.error('Error saving notification to Firestore:', err);
+    handleFirestoreError(err, OperationType.WRITE, `notifications/${notification.id}`);
+    return false;
   }
 };
 

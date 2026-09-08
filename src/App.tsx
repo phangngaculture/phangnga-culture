@@ -498,7 +498,7 @@ export default function App() {
   };
 
   // Add User
-  const handleAddUser = (userData: Omit<User, 'id'>) => {
+  const handleAddUser = async (userData: Omit<User, 'id'>) => {
     const newUser: User = {
       ...userData,
       id: `usr-${Date.now()}`,
@@ -506,12 +506,14 @@ export default function App() {
     };
     const updated = [newUser, ...users];
     setUsers(updated);
+    saveLocalData(STORAGE_KEYS.USERS, updated);
+    await saveUserToFirestore(newUser);
     playAppSound('success', soundEnabled);
     showToast(`เพิ่มผู้ใช้งาน "${newUser.name}" เรียบร้อยแล้ว`, 'success');
   };
 
   // Bulk Add Multiple Users
-  const handleBulkAddUsers = (newUsersData: Omit<User, 'id'>[]) => {
+  const handleBulkAddUsers = async (newUsersData: Omit<User, 'id'>[]) => {
     if (!newUsersData || newUsersData.length === 0) return;
     const timestamp = Date.now();
     const createdUsers: User[] = newUsersData.map((u, index) => ({
@@ -521,14 +523,29 @@ export default function App() {
     }));
     const updated = [...createdUsers, ...users];
     setUsers(updated);
+    saveLocalData(STORAGE_KEYS.USERS, updated);
+    for (const u of createdUsers) {
+      await saveUserToFirestore(u);
+    }
     playAppSound('success', soundEnabled);
     showToast(`เพิ่มผู้ใช้งานสำเร็จจำนวน ${createdUsers.length} ท่าน`, 'success');
   };
 
   // Update User
-  const handleUpdateUser = (id: string, data: Partial<User>) => {
-    const updated = users.map((u) => (u.id === id ? ({ ...u, ...data } as User) : u));
+  const handleUpdateUser = async (id: string, data: Partial<User>) => {
+    let updatedUserObj: User | undefined;
+    const updated = users.map((u) => {
+      if (u.id === id) {
+        updatedUserObj = { ...u, ...data } as User;
+        return updatedUserObj;
+      }
+      return u;
+    });
     setUsers(updated);
+    saveLocalData(STORAGE_KEYS.USERS, updated);
+    if (updatedUserObj) {
+      await saveUserToFirestore(updatedUserObj);
+    }
     if (currentUser.id === id) {
       setCurrentUser((prev) => ({ ...prev, ...data } as User));
     }
@@ -537,10 +554,12 @@ export default function App() {
   };
 
   // Delete User
-  const handleDeleteUser = (id: string) => {
+  const handleDeleteUser = async (id: string) => {
     const target = users.find((u) => u.id === id);
     const updated = users.filter((u) => u.id !== id);
     setUsers(updated);
+    saveLocalData(STORAGE_KEYS.USERS, updated);
+    await deleteUserFromFirestore(id);
     if (currentUser.id === id) {
       const fallback = updated.find((u) => u.role === 'admin') || updated[0];
       if (fallback) setCurrentUser(fallback);
@@ -550,20 +569,33 @@ export default function App() {
   };
 
   // Vehicle CRUD Handlers
-  const handleAddVehicle = (vehicleData: Omit<Vehicle, 'id'>) => {
+  const handleAddVehicle = async (vehicleData: Omit<Vehicle, 'id'>) => {
     const newVehicle: Vehicle = {
       ...vehicleData,
       id: `v-${Date.now()}`
     };
     const updated = [...vehicles, newVehicle];
     setVehicles(updated);
+    saveLocalData(STORAGE_KEYS.VEHICLES, updated);
+    await saveVehicleToFirestore(newVehicle);
     playAppSound('success', soundEnabled);
     showToast(`เพิ่มรถยนต์ "${newVehicle.name} (${newVehicle.plate})" สำเร็จ`, 'success');
   };
 
-  const handleUpdateVehicle = (vehicleId: string, updatedData: Partial<Vehicle>) => {
-    const updated = vehicles.map((v) => (v.id === vehicleId ? ({ ...v, ...updatedData } as Vehicle) : v));
+  const handleUpdateVehicle = async (vehicleId: string, updatedData: Partial<Vehicle>) => {
+    let updatedVehicleObj: Vehicle | undefined;
+    const updated = vehicles.map((v) => {
+      if (v.id === vehicleId) {
+        updatedVehicleObj = { ...v, ...updatedData } as Vehicle;
+        return updatedVehicleObj;
+      }
+      return v;
+    });
     setVehicles(updated);
+    saveLocalData(STORAGE_KEYS.VEHICLES, updated);
+    if (updatedVehicleObj) {
+      await saveVehicleToFirestore(updatedVehicleObj);
+    }
 
     // Keep booking records consistent if car name or plate changed
     if (updatedData.name || updatedData.plate) {
@@ -583,10 +615,12 @@ export default function App() {
     showToast('บันทึกการแก้ไขข้อมูลรถยนต์สำเร็จ', 'success');
   };
 
-  const handleDeleteVehicle = (vehicleId: string) => {
+  const handleDeleteVehicle = async (vehicleId: string) => {
     const target = vehicles.find((v) => v.id === vehicleId);
     const updated = vehicles.filter((v) => v.id !== vehicleId);
     setVehicles(updated);
+    saveLocalData(STORAGE_KEYS.VEHICLES, updated);
+    await deleteVehicleFromFirestore(vehicleId);
     playAppSound('click', soundEnabled);
     showToast(`ลบข้อมูลรถ "${target?.name || vehicleId}" เรียบร้อยแล้ว`, 'info');
   };
@@ -633,12 +667,15 @@ export default function App() {
   };
 
   // Save Booking (Create or Update)
-  const handleSaveBooking = (data: Partial<BookingRequest>, isEdit: boolean) => {
+  const handleSaveBooking = async (data: Partial<BookingRequest>, isEdit: boolean) => {
     if (isEdit && editingBooking) {
+      const updatedBooking: BookingRequest = { ...editingBooking, ...data } as BookingRequest;
       const updated = bookings.map((item) =>
-        item.id === editingBooking.id ? ({ ...item, ...data } as BookingRequest) : item
+        item.id === editingBooking.id ? updatedBooking : item
       );
       setBookings(updated);
+      saveLocalData(STORAGE_KEYS.BOOKINGS, updated);
+      await saveBookingToFirestore(updatedBooking);
       triggerAutoSync(updated);
       playAppSound('success', soundEnabled);
       showToast(`บันทึกการแก้ไขใบเบิก ${editingBooking.id} สำเร็จ`, 'success');
@@ -665,6 +702,8 @@ export default function App() {
         destAmphoe: data.destAmphoe || 'เมืองพังงา',
         destTambon: data.destTambon || 'ท้ายช้าง',
         destDetail: data.destDetail || '',
+        destinationsList: data.destinationsList || (data.destDetail ? [data.destDetail] : []),
+        estimatedDistance: data.estimatedDistance || 0,
         carId: data.carId || vehicles[0].id,
         carName: data.carName || vehicles[0].name,
         driverType: data.driverType || 'driver',
@@ -678,6 +717,8 @@ export default function App() {
 
       const updated = [newBooking, ...bookings];
       setBookings(updated);
+      saveLocalData(STORAGE_KEYS.BOOKINGS, updated);
+      await saveBookingToFirestore(newBooking);
       triggerAutoSync(updated);
 
       // Push notification
@@ -690,6 +731,7 @@ export default function App() {
         type: 'new'
       };
       setNotifications((prev) => [newNotif, ...prev]);
+      await saveNotificationToFirestore(newNotif);
 
       playAppSound('success', soundEnabled);
       showToast(`ส่งใบเบิก ${newId} สำเร็จ รอดำเนินการอนุมัติ`, 'success');
@@ -700,10 +742,12 @@ export default function App() {
   };
 
   // Handle Delete Booking
-  const handleDeleteBooking = (bookingId: string) => {
+  const handleDeleteBooking = async (bookingId: string) => {
     if (window.confirm(`คุณต้องการลบคำขอ ${bookingId} ใช่หรือไม่?`)) {
       const updated = bookings.filter((b) => b.id !== bookingId);
       setBookings(updated);
+      saveLocalData(STORAGE_KEYS.BOOKINGS, updated);
+      await deleteBookingFromFirestore(bookingId);
       triggerAutoSync(updated);
       playAppSound('click', soundEnabled);
       showToast(`ลบคำขอ ${bookingId} เรียบร้อยแล้ว`, 'info');
@@ -722,7 +766,7 @@ export default function App() {
   };
 
   // Handle Confirmed Approval with Signature (Draw or Electronic)
-  const handleConfirmApprovalWithSignature = (
+  const handleConfirmApprovalWithSignature = async (
     bookingId: string,
     approvalData: {
       comment: string;
@@ -755,16 +799,28 @@ export default function App() {
 
     setBookings(updated);
     saveLocalData(STORAGE_KEYS.BOOKINGS, updated);
+    if (updatedTargetBooking) {
+      await saveBookingToFirestore(updatedTargetBooking);
+    }
     triggerAutoSync(updated);
 
     // Update vehicle status to in_mission
+    let updatedVehicleObj: Vehicle | undefined;
     setVehicles((prev) => {
-      const updatedVehicles = prev.map((v) =>
-        v.id === target.carId ? { ...v, status: 'in_mission' as const } : v
-      );
+      const updatedVehicles = prev.map((v) => {
+        if (v.id === target.carId) {
+          const uv: Vehicle = { ...v, status: 'in_mission' as const };
+          updatedVehicleObj = uv;
+          return uv;
+        }
+        return v;
+      });
       saveLocalData(STORAGE_KEYS.VEHICLES, updatedVehicles);
       return updatedVehicles;
     });
+    if (updatedVehicleObj) {
+      await saveVehicleToFirestore(updatedVehicleObj);
+    }
 
     const approvedNotif: NotificationItem = {
       id: `notif-${Date.now()}`,
@@ -777,6 +833,7 @@ export default function App() {
       type: 'approved'
     };
     setNotifications((prev) => [approvedNotif, ...prev]);
+    await saveNotificationToFirestore(approvedNotif);
 
     playAppSound('success', soundEnabled);
     showToast(`ลงนามอนุมัติคำขอ ${bookingId} เรียบร้อยแล้ว พร้อมแสดงใบคำขอขอใช้รถยนต์ส่วนกลาง`, 'success');
@@ -802,18 +859,25 @@ export default function App() {
   };
 
   // Handle Reject by Director
-  const handleRejectBooking = (bookingId: string, comment: string) => {
-    const updated = bookings.map((b) =>
-      b.id === bookingId
-        ? {
-            ...b,
-            status: 'rejected' as const,
-            directorComment: comment
-          }
-        : b
-    );
+  const handleRejectBooking = async (bookingId: string, comment: string) => {
+    let targetBooking: BookingRequest | undefined;
+    const updated = bookings.map((b) => {
+      if (b.id === bookingId) {
+        targetBooking = {
+          ...b,
+          status: 'rejected' as const,
+          directorComment: comment
+        };
+        return targetBooking;
+      }
+      return b;
+    });
 
     setBookings(updated);
+    saveLocalData(STORAGE_KEYS.BOOKINGS, updated);
+    if (targetBooking) {
+      await saveBookingToFirestore(targetBooking);
+    }
     triggerAutoSync(updated);
 
     const rejNotif: NotificationItem = {
@@ -825,15 +889,18 @@ export default function App() {
       type: 'rejected'
     };
     setNotifications((prev) => [rejNotif, ...prev]);
+    await saveNotificationToFirestore(rejNotif);
 
     playAppSound('alert', soundEnabled);
     showToast(`ส่งกลับ / ปฏิเสธคำขอ ${bookingId}`, 'info');
   };
 
   // Handle Update Booking (Driver Start / Complete Mission, or status changes)
-  const handleUpdateBooking = (updatedBooking: BookingRequest) => {
+  const handleUpdateBooking = async (updatedBooking: BookingRequest) => {
     const updated = bookings.map((b) => (b.id === updatedBooking.id ? updatedBooking : b));
     setBookings(updated);
+    saveLocalData(STORAGE_KEYS.BOOKINGS, updated);
+    await saveBookingToFirestore(updatedBooking);
     triggerAutoSync(updated);
 
     // If started mission
@@ -847,6 +914,7 @@ export default function App() {
         type: 'new'
       };
       setNotifications((prev) => [notif, ...prev]);
+      await saveNotificationToFirestore(notif);
       playAppSound('success', soundEnabled);
       showToast(`เริ่มงานสำเร็จ! บันทึกไมล์ตอนไป ${updatedBooking.startMileage?.toLocaleString()} กม.`, 'success');
     }
@@ -862,28 +930,38 @@ export default function App() {
         type: 'approved'
       };
       setNotifications((prev) => [notif, ...prev]);
+      await saveNotificationToFirestore(notif);
       playAppSound('success', soundEnabled);
       showToast(`ภารกิจเสร็จสิ้น! บันทึกลงสมุดทะเบียนคุมของเจ้าหน้าที่พัสดุแล้ว`, 'success');
     }
   };
 
   // Handle Update Vehicle Odometer from trip completion
-  const handleUpdateVehicleOdometer = (carId: string, newOdometer: number) => {
-    setVehicles((prev) =>
-      prev.map((v) =>
-        v.id === carId
-          ? {
-              ...v,
-              odometer: Math.max(v.odometer, newOdometer),
-              status: 'available'
-            }
-          : v
-      )
-    );
+  const handleUpdateVehicleOdometer = async (carId: string, newOdometer: number) => {
+    let updatedVehicleObj: Vehicle | undefined;
+    setVehicles((prev) => {
+      const updated = prev.map((v) => {
+        if (v.id === carId) {
+          const uv: Vehicle = {
+            ...v,
+            odometer: Math.max(v.odometer, newOdometer),
+            status: 'available'
+          };
+          updatedVehicleObj = uv;
+          return uv;
+        }
+        return v;
+      });
+      saveLocalData(STORAGE_KEYS.VEHICLES, updated);
+      return updated;
+    });
+    if (updatedVehicleObj) {
+      await saveVehicleToFirestore(updatedVehicleObj);
+    }
   };
 
   // Handle Add Fuel Log
-  const handleAddFuelLog = (logData: Omit<FuelLog, 'id'>) => {
+  const handleAddFuelLog = async (logData: Omit<FuelLog, 'id'>) => {
     const newId = `FL-2569-${String(fuelLogs.length + 1).padStart(3, '0')}`;
     const newFuelLog: FuelLog = {
       ...logData,
@@ -892,16 +970,27 @@ export default function App() {
 
     const updatedFuel = [newFuelLog, ...fuelLogs];
     setFuelLogs(updatedFuel);
+    saveLocalData(STORAGE_KEYS.FUEL_LOGS, updatedFuel);
+    await saveFuelLogToFirestore(newFuelLog);
     triggerAutoSync(undefined, updatedFuel);
 
     // Update vehicle odometer
-    setVehicles((prev) =>
-      prev.map((v) =>
-        v.plate.includes(logData.carPlate.split(' ')[0])
-          ? { ...v, odometer: logData.endMileage, status: 'available' }
-          : v
-      )
-    );
+    let updatedVehicleObj: Vehicle | undefined;
+    setVehicles((prev) => {
+      const updated = prev.map((v) => {
+        if (v.plate.includes(logData.carPlate.split(' ')[0])) {
+          const uv: Vehicle = { ...v, odometer: logData.endMileage, status: 'available' };
+          updatedVehicleObj = uv;
+          return uv;
+        }
+        return v;
+      });
+      saveLocalData(STORAGE_KEYS.VEHICLES, updated);
+      return updated;
+    });
+    if (updatedVehicleObj) {
+      await saveVehicleToFirestore(updatedVehicleObj);
+    }
 
     const fuelNotif: NotificationItem = {
       id: `notif-${Date.now()}`,
@@ -912,13 +1001,14 @@ export default function App() {
       type: 'fuel'
     };
     setNotifications((prev) => [fuelNotif, ...prev]);
+    await saveNotificationToFirestore(fuelNotif);
 
     playAppSound('success', soundEnabled);
     showToast(`บันทึกข้อมูลเชื้อเพลิง ${newId} สำเร็จ`, 'success');
   };
 
   // Handle Add Maintenance Record
-  const handleAddMaintenanceRecord = (recordData: Omit<MaintenanceRecord, 'id'>) => {
+  const handleAddMaintenanceRecord = async (recordData: Omit<MaintenanceRecord, 'id'>) => {
     const newId = `MNT-2569-${String(maintenanceRecords.length + 1).padStart(3, '0')}`;
     const newRecord: MaintenanceRecord = {
       ...recordData,
@@ -927,13 +1017,16 @@ export default function App() {
 
     const updatedMnt = [newRecord, ...maintenanceRecords];
     setMaintenanceRecords(updatedMnt);
+    saveLocalData(STORAGE_KEYS.MAINTENANCE, updatedMnt);
+    await saveMaintenanceToFirestore(newRecord);
     triggerAutoSync(undefined, undefined, updatedMnt);
 
     // Update vehicle next service or odometer and expiry dates
-    setVehicles((prev) =>
-      prev.map((v) => {
+    let updatedVehicleObj: Vehicle | undefined;
+    setVehicles((prev) => {
+      const updated = prev.map((v) => {
         if (v.id === recordData.carId) {
-          return {
+          const uv: Vehicle = {
             ...v,
             odometer: Math.max(v.odometer, recordData.mileageAtService),
             nextServiceMileage: recordData.nextDueMileage || v.nextServiceMileage,
@@ -951,10 +1044,17 @@ export default function App() {
                 : v.insuranceExpiry,
             status: recordData.status === 'in_progress' ? 'maintenance' : 'available'
           };
+          updatedVehicleObj = uv;
+          return uv;
         }
         return v;
-      })
-    );
+      });
+      saveLocalData(STORAGE_KEYS.VEHICLES, updated);
+      return updated;
+    });
+    if (updatedVehicleObj) {
+      await saveVehicleToFirestore(updatedVehicleObj);
+    }
 
     const mntNotif: NotificationItem = {
       id: `notif-${Date.now()}`,
@@ -965,23 +1065,42 @@ export default function App() {
       type: 'new'
     };
     setNotifications((prev) => [mntNotif, ...prev]);
+    await saveNotificationToFirestore(mntNotif);
 
     playAppSound('success', soundEnabled);
     showToast(`บันทึกงานซ่อมบำรุง ${newId} สำเร็จ`, 'success');
   };
 
   // Handle Update Vehicle Status
-  const handleUpdateVehicleStatus = (vehicleId: string, status: Vehicle['status']) => {
-    setVehicles((prev) =>
-      prev.map((v) => (v.id === vehicleId ? { ...v, status } : v))
-    );
+  const handleUpdateVehicleStatus = async (vehicleId: string, status: Vehicle['status']) => {
+    let updatedVehicleObj: Vehicle | undefined;
+    setVehicles((prev) => {
+      const updated = prev.map((v) => {
+        if (v.id === vehicleId) {
+          const uv: Vehicle = { ...v, status };
+          updatedVehicleObj = uv;
+          return uv;
+        }
+        return v;
+      });
+      saveLocalData(STORAGE_KEYS.VEHICLES, updated);
+      return updated;
+    });
+    if (updatedVehicleObj) {
+      await saveVehicleToFirestore(updatedVehicleObj);
+    }
     playAppSound('click', soundEnabled);
     showToast(`ปรับปรุงสถานะรถยนต์ราชการเรียบร้อยแล้ว`, 'info');
   };
 
   // Mark all notifications read
-  const handleMarkAllNotificationsRead = () => {
-    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+  const handleMarkAllNotificationsRead = async () => {
+    const updated = notifications.map((n) => ({ ...n, read: true }));
+    setNotifications(updated);
+    saveLocalData(STORAGE_KEYS.NOTIFICATIONS, updated);
+    for (const n of updated) {
+      await saveNotificationToFirestore(n);
+    }
     playAppSound('click', soundEnabled);
     showToast('ทำเครื่องหมายอ่านการแจ้งเตือนทั้งหมดแล้ว', 'info');
   };
@@ -1078,6 +1197,7 @@ export default function App() {
             currentUser={currentUser}
             vehicles={vehicles}
             users={users}
+            bookings={bookings}
             editingBooking={editingBooking}
             initialDate={initialBookingDate}
             onSaveBooking={handleSaveBooking}

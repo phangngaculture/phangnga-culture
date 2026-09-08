@@ -84,6 +84,15 @@
         "title": { "type": "string" }
       },
       "required": ["title"]
+    },
+    "test": {
+      "title": "Test",
+      "description": "Connection test document",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "status": { "type": "string" }
+      }
     }
   }
 }
