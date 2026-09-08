@@ -30,7 +30,8 @@ import {
   Sliders,
   ChevronRight,
   Gauge,
-  Camera
+  Camera,
+  Database
 } from 'lucide-react';
 import { User, UserRole, MenuKey, MenuDefinition } from '../types';
 import { APP_MENUS, DEFAULT_ROLE_MENUS, DEPARTMENTS, getUserAllowedMenus } from '../data/mockData';
@@ -57,6 +58,7 @@ const MENU_ICONS: Record<MenuKey, React.ComponentType<{ className?: string }>> =
   fleet: Wrench,
   analytics: BarChart3,
   tracking: Navigation,
+  backup: Database,
   users: Users
 };
 

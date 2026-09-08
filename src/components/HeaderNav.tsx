@@ -17,7 +17,8 @@ import {
   Cloud,
   Smartphone,
   CheckCircle2,
-  AlertCircle
+  AlertCircle,
+  Database
 } from 'lucide-react';
 import {
   isBadgingSupported,
@@ -145,24 +146,25 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
             </button>
           )}
 
-          {/* Cloud Firestore Status Badge */}
-          <div
-            className={`h-9 px-2.5 sm:px-3 rounded-xl flex items-center space-x-1.5 border text-xs font-semibold shadow-xs select-none ${
-              firestoreStatus === 'connected'
-                ? 'bg-blue-50 text-blue-800 border-blue-200'
+          {/* Cloud Firestore Status Badge & Quick Backup Access */}
+          <button
+            onClick={() => {
+              if (currentUser.role === 'admin' || getUserAllowedMenus(currentUser).includes('backup')) {
+                onTabChange('backup');
+              }
+            }}
+            className={`h-9 px-2.5 sm:px-3 rounded-xl flex items-center space-x-1.5 border text-xs font-semibold shadow-xs transition cursor-pointer ${
+              activeTab === 'backup'
+                ? 'bg-sky-600 text-white border-sky-500 shadow-md shadow-sky-600/30'
+                : firestoreStatus === 'connected'
+                ? 'bg-blue-50 hover:bg-blue-100/80 text-blue-800 border-blue-200'
                 : firestoreStatus === 'syncing'
-                ? 'bg-amber-50 text-amber-800 border-amber-200'
-                : 'bg-slate-50 text-slate-600 border-slate-200'
+                ? 'bg-amber-50 hover:bg-amber-100/80 text-amber-800 border-amber-200'
+                : 'bg-slate-50 hover:bg-slate-100 text-slate-600 border-slate-200'
             }`}
-            title={
-              firestoreStatus === 'connected'
-                ? 'เชื่อมต่อ Cloud Firestore เรียบร้อยแล้ว (อัปเดตแบบ Real-time ข้ามทุกอุปกรณ์)'
-                : firestoreStatus === 'syncing'
-                ? 'กำลังเชื่อมต่อและซิงค์ Cloud Firestore...'
-                : 'ฐานข้อมูล Cloud Firestore พร้อมใช้งาน'
-            }
+            title="คลิกเพื่อเปิดหน้าสำรองข้อมูลและดูสถานะ Cloud Firestore (Backup & Recovery)"
           >
-            <Cloud className="w-4 h-4 text-blue-600" />
+            <Cloud className={`w-4 h-4 ${activeTab === 'backup' ? 'text-white' : 'text-blue-600'}`} />
             <span className="hidden lg:inline">
               {firestoreStatus === 'connected' ? 'Firestore เชื่อมต่อแล้ว' : firestoreStatus === 'syncing' ? 'กำลังซิงก์...' : 'Cloud DB'}
             </span>
@@ -173,7 +175,7 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
                   : 'bg-amber-500 animate-pulse'
               }`}
             />
-          </div>
+          </button>
 
           {/* Sound Toggle */}
           <button

@@ -15,7 +15,8 @@ import {
   Users,
   Sliders,
   Gauge,
-  LogOut
+  LogOut,
+  Database
 } from 'lucide-react';
 import { getUserAllowedMenus } from '../data/mockData';
 
@@ -96,6 +97,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
       desc: 'จำลองเส้นทางพิกัดและความเร็วรถ',
       icon: Navigation,
       color: 'text-purple-400 bg-purple-500/10'
+    },
+    {
+      id: 'backup',
+      label: 'สำรอง & กู้คืนข้อมูล (Backup)',
+      desc: 'ดาวน์โหลด JSON และนำเข้ากู้คืนข้อมูล',
+      icon: Database,
+      color: 'text-sky-400 bg-sky-500/10'
     }
   ].filter((item) => allowedMenus.includes(item.id as MenuKey));
 

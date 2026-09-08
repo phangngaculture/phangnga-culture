@@ -10,7 +10,32 @@ export type MenuKey =
   | 'fleet'
   | 'analytics'
   | 'tracking'
+  | 'backup'
   | 'users';
+
+export interface SystemBackupData {
+  version: string;
+  exportedAt: string;
+  exportedBy: string;
+  source: string;
+  firestoreDatabaseId?: string;
+  summary: {
+    bookingsCount: number;
+    vehiclesCount: number;
+    fuelLogsCount: number;
+    maintenanceRecordsCount: number;
+    usersCount: number;
+    notificationsCount: number;
+  };
+  data: {
+    bookings: BookingRequest[];
+    vehicles: Vehicle[];
+    fuelLogs: FuelLog[];
+    maintenanceRecords: MaintenanceRecord[];
+    users: User[];
+    notifications?: NotificationItem[];
+  };
+}
 
 export interface MenuDefinition {
   id: MenuKey;

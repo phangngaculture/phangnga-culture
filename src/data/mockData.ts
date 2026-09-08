@@ -65,6 +65,13 @@ export const APP_MENUS: MenuDefinition[] = [
     color: 'text-purple-500 bg-purple-500/10'
   },
   {
+    id: 'backup',
+    label: 'สำรอง & กู้คืนข้อมูลระบบ (Backup)',
+    desc: 'ดาวน์โหลดไฟล์ JSON สำรองข้อมูลทั้งหมด และนำเข้ากู้คืนข้อมูล',
+    badge: 'Backup',
+    color: 'text-sky-500 bg-sky-500/10'
+  },
+  {
     id: 'users',
     label: 'จัดการผู้ใช้งาน & สิทธิ์',
     desc: 'เพิ่ม ลบ แก้ไขผู้ใช้ และกำหนดสิทธิ์การเข้าถึงแต่ละเมนู',
@@ -74,8 +81,8 @@ export const APP_MENUS: MenuDefinition[] = [
 ];
 
 export const DEFAULT_ROLE_MENUS: Record<string, MenuKey[]> = {
-  admin: ['dashboard', 'calendar', 'booking', 'director', 'driver_mission', 'fuel', 'fleet', 'analytics', 'tracking', 'users'],
-  director: ['dashboard', 'calendar', 'booking', 'director', 'driver_mission', 'analytics', 'tracking'],
+  admin: ['dashboard', 'calendar', 'booking', 'director', 'driver_mission', 'fuel', 'fleet', 'analytics', 'tracking', 'backup', 'users'],
+  director: ['dashboard', 'calendar', 'booking', 'director', 'driver_mission', 'analytics', 'tracking', 'backup'],
   officer: ['dashboard', 'calendar', 'booking', 'tracking'],
   driver: ['driver_mission', 'dashboard', 'calendar', 'fuel', 'fleet', 'tracking']
 };

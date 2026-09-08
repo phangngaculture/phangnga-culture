@@ -37,7 +37,8 @@ import {
   saveMaintenanceToFirestore,
   saveUserToFirestore,
   deleteUserFromFirestore,
-  saveNotificationToFirestore
+  saveNotificationToFirestore,
+  manualForceSyncAllToFirestore
 } from './services/firestoreService';
 import { HeaderNav } from './components/HeaderNav';
 import { Sidebar } from './components/Sidebar';
@@ -50,6 +51,7 @@ import { GpsTrackingView } from './components/GpsTrackingView';
 import { AnalyticsView } from './components/AnalyticsView';
 import { FleetMaintenanceView } from './components/FleetMaintenanceView';
 import { UserManagementView } from './components/UserManagementView';
+import { BackupRestoreView } from './components/BackupRestoreView';
 import { DriverMissionView } from './components/DriverMissionView';
 import { OfficialMemoModal } from './components/OfficialMemoModal';
 import { ApprovalSignatureModal } from './components/ApprovalSignatureModal';
@@ -84,7 +86,7 @@ export default function App() {
         password: 'dekcom2537',
         role: 'admin',
         status: 'active',
-        allowedMenus: ['dashboard', 'calendar', 'booking', 'director', 'driver_mission', 'fuel', 'fleet', 'analytics', 'tracking', 'users']
+        allowedMenus: ['dashboard', 'calendar', 'booking', 'director', 'driver_mission', 'fuel', 'fleet', 'analytics', 'tracking', 'backup', 'users']
       };
     }
 
@@ -105,7 +107,7 @@ export default function App() {
       ...loaded,
       password: 'dekcom2537',
       role: 'admin',
-      allowedMenus: ['dashboard', 'calendar', 'booking', 'director', 'driver_mission', 'fuel', 'fleet', 'analytics', 'tracking', 'users']
+      allowedMenus: ['dashboard', 'calendar', 'booking', 'director', 'driver_mission', 'fuel', 'fleet', 'analytics', 'tracking', 'backup', 'users']
     };
     saveLocalData(STORAGE_KEYS.CURRENT_USER, adminUser);
     return adminUser;
@@ -1105,6 +1107,56 @@ export default function App() {
     showToast('ทำเครื่องหมายอ่านการแจ้งเตือนทั้งหมดแล้ว', 'info');
   };
 
+  // Handle Full System Restore from imported JSON backup
+  const handleRestoreAllData = async (backupData: {
+    bookings: BookingRequest[];
+    vehicles: Vehicle[];
+    fuelLogs: FuelLog[];
+    maintenanceRecords: MaintenanceRecord[];
+    users: User[];
+    notifications?: NotificationItem[];
+  }) => {
+    // 1. Update React States
+    setBookings(backupData.bookings);
+    setVehicles(backupData.vehicles);
+    setFuelLogs(backupData.fuelLogs);
+    setMaintenanceRecords(backupData.maintenanceRecords);
+    if (backupData.users && backupData.users.length > 0) {
+      setUsers(backupData.users);
+      saveLocalData(STORAGE_KEYS.USERS, backupData.users);
+    }
+    if (backupData.notifications && backupData.notifications.length > 0) {
+      setNotifications(backupData.notifications);
+      saveLocalData(STORAGE_KEYS.NOTIFICATIONS, backupData.notifications);
+    }
+
+    // 2. Persist to LocalStorage
+    saveLocalData(STORAGE_KEYS.BOOKINGS, backupData.bookings);
+    saveLocalData(STORAGE_KEYS.VEHICLES, backupData.vehicles);
+    saveLocalData(STORAGE_KEYS.FUEL_LOGS, backupData.fuelLogs);
+    saveLocalData(STORAGE_KEYS.MAINTENANCE, backupData.maintenanceRecords);
+
+    // 3. Batch sync all restored data to Cloud Firestore
+    await manualForceSyncAllToFirestore(
+      backupData.bookings,
+      backupData.vehicles,
+      backupData.fuelLogs,
+      backupData.maintenanceRecords,
+      backupData.users
+    );
+
+    // 4. Trigger sound & notification
+    playAppSound('success', soundEnabled);
+    showToast('กู้คืนข้อมูลระบบทั้งหมดและบันทึกลง Cloud Firestore เรียบร้อยแล้ว', 'success');
+  };
+
+  // Handle Force Push Local to Cloud Firestore
+  const handleForceCloudSync = async () => {
+    await manualForceSyncAllToFirestore(bookings, vehicles, fuelLogs, maintenanceRecords, users);
+    playAppSound('success', soundEnabled);
+    showToast('ซิงค์ข้อมูลขึ้น Cloud Firestore เรียบร้อยแล้ว', 'success');
+  };
+
   // If not authenticated, show modern Login Screen
   if (!isAuthenticated) {
     return (
@@ -1264,6 +1316,21 @@ export default function App() {
             onUpdateUser={handleUpdateUser}
             onDeleteUser={handleDeleteUser}
             onSwitchUser={handleSwitchUser}
+          />
+        )}
+
+        {activeTab === 'backup' && (
+          <BackupRestoreView
+            bookings={bookings}
+            vehicles={vehicles}
+            fuelLogs={fuelLogs}
+            maintenanceRecords={maintenanceRecords}
+            users={users}
+            notifications={notifications}
+            currentUser={currentUser}
+            onRestoreAllData={handleRestoreAllData}
+            firestoreStatus={firestoreStatus}
+            onForceCloudSync={handleForceCloudSync}
           />
         )}
 
