@@ -31,6 +31,7 @@ import {
   subscribeToFirestore,
   saveBookingToFirestore,
   deleteBookingFromFirestore,
+  clearAllBookingsFromFirestore,
   saveVehicleToFirestore,
   deleteVehicleFromFirestore,
   saveFuelLogToFirestore,
@@ -57,6 +58,7 @@ import { AssetInspectionView } from './components/AssetInspectionView';
 import { AssetInspectionModal } from './components/AssetInspectionModal';
 import { OfficialMemoModal } from './components/OfficialMemoModal';
 import { ApprovalSignatureModal } from './components/ApprovalSignatureModal';
+import { ClearAllBookingsModal } from './components/ClearAllBookingsModal';
 import { GoogleSheetsSyncModal } from './components/GoogleSheetsSyncModal';
 import { IPhoneInstallPrompt } from './components/IPhoneInstallPrompt';
 import { ToastBanner } from './components/ToastBanner';
@@ -116,6 +118,15 @@ export default function App() {
   });
 
   const [bookings, setBookings] = useState<BookingRequest[]>(() => {
+    const isClearedForProduction =
+      typeof window !== 'undefined' &&
+      localStorage.getItem('mculture_bookings_cleared_for_production') === 'true';
+
+    if (isClearedForProduction) {
+      const loaded = loadSavedData<BookingRequest[]>(STORAGE_KEYS.BOOKINGS, []);
+      return Array.isArray(loaded) ? loaded : [];
+    }
+
     let loaded = loadSavedData<BookingRequest[]>(STORAGE_KEYS.BOOKINGS, INITIAL_BOOKINGS);
     
     // If user has existing localStorage with fewer than 10 items, complement with the 10 mock missions
@@ -172,6 +183,7 @@ export default function App() {
   const [signingBooking, setSigningBooking] = useState<BookingRequest | null>(null);
   const [isSignatureModalOpen, setIsSignatureModalOpen] = useState<boolean>(false);
   const [signatureInitialComment, setSignatureInitialComment] = useState<string>('');
+  const [isClearAllBookingsModalOpen, setIsClearAllBookingsModalOpen] = useState<boolean>(false);
   const [memoJustSigned, setMemoJustSigned] = useState<boolean>(false);
   const [inspectingBooking, setInspectingBooking] = useState<BookingRequest | null>(null);
   const [isInspectionModalOpen, setIsInspectionModalOpen] = useState<boolean>(false);
@@ -209,7 +221,7 @@ export default function App() {
     const unsubscribe = subscribeToFirestore(
       {
         onBookingsChange: (cloudBookings) => {
-          if (cloudBookings && cloudBookings.length > 0) {
+          if (cloudBookings) {
             setBookings(cloudBookings);
           }
         },
@@ -760,6 +772,97 @@ export default function App() {
     }
   };
 
+  // Handle Clear All Test Bookings (For launching real production)
+  const handleClearAllBookings = async () => {
+    try {
+      // 1. Mark in localStorage to prevent initial mock re-seeding
+      localStorage.setItem('mculture_bookings_cleared_for_production', 'true');
+
+      // 2. Clear from Cloud Firestore
+      await clearAllBookingsFromFirestore();
+
+      // 3. Clear local state & LocalStorage
+      setBookings([]);
+      saveLocalData(STORAGE_KEYS.BOOKINGS, []);
+
+      // 4. Reset any vehicle that was currently in mission back to available
+      setVehicles((prev) => {
+        const updated = prev.map((v) =>
+          v.status === 'in_mission' ? { ...v, status: 'available' as const } : v
+        );
+        saveLocalData(STORAGE_KEYS.VEHICLES, updated);
+        return updated;
+      });
+
+      // 5. Provide audio & visual feedback
+      playAppSound('success', soundEnabled);
+      showToast('ลบข้อมูลใบคำขอทดสอบทั้งหมดเรียบร้อยแล้ว ระบบพร้อมสำหรับการใช้งานจริง', 'success');
+
+      // 6. Record official notification
+      const prodNotif: NotificationItem = {
+        id: `notif-prod-${Date.now()}`,
+        title: 'ระบบเริ่มใช้งานจริง (ล้างข้อมูลทดสอบแล้ว)',
+        desc: `ผู้ดูแลระบบ (${currentUser.name}) ได้ทำการล้างข้อมูลใบคำขอทดสอบทั้งหมดเรียบร้อยแล้ว ยานพาหนะทุกคันพร้อมใช้งานสำหรับการรับคำขอจริง`,
+        time: 'เมื่อสักครู่',
+        read: false,
+        type: 'system'
+      };
+      setNotifications((prev) => [prodNotif, ...prev]);
+      await saveNotificationToFirestore(prodNotif);
+
+      // 7. Auto sync empty list to Google Sheets if connected
+      triggerAutoSync([]);
+    } catch (err) {
+      console.error('Failed to clear all bookings:', err);
+      playAppSound('alert', soundEnabled);
+      showToast('เกิดข้อผิดพลาดในการล้างข้อมูลใบคำขอ', 'error');
+      throw err;
+    }
+  };
+
+  // Handle Quick Backup JSON export before clearing
+  const handleExportBackupBeforeClear = () => {
+    try {
+      const timestamp = new Date();
+      const dateStr = timestamp.toISOString().split('T')[0];
+      const filename = `mculture-backup-before-clear-${dateStr}.json`;
+      const backupData = {
+        version: '5.2.0',
+        exportedAt: timestamp.toISOString(),
+        exportedBy: `${currentUser.name} (${currentUser.role})`,
+        source: 'M-Culture Phangnga Fleet Management System',
+        summary: {
+          bookingsCount: bookings.length,
+          vehiclesCount: vehicles.length,
+          fuelLogsCount: fuelLogs.length,
+          maintenanceRecordsCount: maintenanceRecords.length,
+          usersCount: users.length
+        },
+        data: {
+          bookings,
+          vehicles,
+          fuelLogs,
+          maintenanceRecords,
+          users,
+          notifications
+        }
+      };
+      const jsonStr = JSON.stringify(backupData, null, 2);
+      const blob = new Blob([jsonStr], { type: 'application/json;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      showToast('ดาวน์โหลดไฟล์สำรองข้อมูลก่อนล้างเรียบร้อยแล้ว', 'success');
+    } catch (err) {
+      console.error('Backup export error:', err);
+    }
+  };
+
   // Handle Open Signature Modal for Director
   const handleOpenSignatureModal = (booking: BookingRequest, initialComment?: string) => {
     setSigningBooking(booking);
@@ -1195,6 +1298,9 @@ export default function App() {
     setVehicles(backupData.vehicles);
     setFuelLogs(backupData.fuelLogs);
     setMaintenanceRecords(backupData.maintenanceRecords);
+    if (backupData.bookings && backupData.bookings.length > 0) {
+      localStorage.removeItem('mculture_bookings_cleared_for_production');
+    }
     if (backupData.users && backupData.users.length > 0) {
       setUsers(backupData.users);
       saveLocalData(STORAGE_KEYS.USERS, backupData.users);
@@ -1294,6 +1400,7 @@ export default function App() {
             onOpenSignatureModal={handleOpenSignatureModal}
             onOpenUsers={() => setActiveTab('users')}
             onOpenDriverMissions={() => setActiveTab('driver_mission')}
+            onOpenClearAllBookings={() => setIsClearAllBookingsModalOpen(true)}
           />
         )}
 
@@ -1416,6 +1523,7 @@ export default function App() {
             onRestoreAllData={handleRestoreAllData}
             firestoreStatus={firestoreStatus}
             onForceCloudSync={handleForceCloudSync}
+            onOpenClearAllBookings={() => setIsClearAllBookingsModalOpen(true)}
           />
         )}
 
@@ -1488,6 +1596,15 @@ export default function App() {
         initialComment={signatureInitialComment}
         onConfirm={handleConfirmApprovalWithSignature}
         onConfirmApproval={handleConfirmApprovalWithSignature}
+      />
+
+      {/* Clear All Test Bookings Modal */}
+      <ClearAllBookingsModal
+        isOpen={isClearAllBookingsModalOpen}
+        onClose={() => setIsClearAllBookingsModalOpen(false)}
+        onConfirmClear={handleClearAllBookings}
+        onExportBackup={handleExportBackupBeforeClear}
+        totalBookingsCount={bookings.length}
       />
 
       {/* Google Sheets Synchronization Modal */}

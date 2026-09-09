@@ -337,32 +337,28 @@ export const OfficialMemoModal: React.FC<OfficialMemoModalProps> = ({
                 </div>
 
                 {/* Requester Signature (Right-aligned using Flexbox according to Thai official memo format) */}
-                <div className="pt-3 flex justify-end text-center text-[13pt] leading-[1.35]">
-                  <div className="w-[55%] flex flex-col items-center">
-                    {booking.requesterSignature ? (
-                      <div className="flex flex-col items-center mb-1">
-                        <div className="h-14 flex items-center justify-center">
-                          <img
-                            src={booking.requesterSignature}
-                            alt={`ลายเซ็น ${booking.name}`}
-                            className="max-h-12 max-w-[200px] object-contain"
-                          />
-                        </div>
-                        <p className="text-[9pt] text-slate-500 font-sans print:text-black">
-                          (ลงนามดิจิทัลโดย {booking.name})
-                        </p>
-                      </div>
-                    ) : (
-                      <p className="mb-8">(ลงชื่อ).......................................................</p>
-                    )}
-                    <p className="font-normal">({booking.name})</p>
-                    <p className="text-[12pt] text-black/90 mt-0.5">{booking.position}</p>
+                <div className="pt-2 flex justify-end text-center text-[13pt] leading-[1.35]">
+                  <div className="w-[50%] flex flex-col items-center">
+                    <div className="relative flex flex-col items-center justify-end h-13">
+                      {booking.requesterSignature ? (
+                        <img
+                          src={booking.requesterSignature}
+                          alt={`ลายเซ็น ${booking.name}`}
+                          className="h-11 max-w-[170px] object-contain -mb-1.5 z-10"
+                        />
+                      ) : null}
+                      <p className="font-normal text-[12pt] text-black leading-none">
+                        (ลงชื่อ).......................................................
+                      </p>
+                    </div>
+                    <p className="font-normal mt-0.5">({booking.name})</p>
+                    <p className="text-[12pt] text-black/90">{booking.position}</p>
                   </div>
                 </div>
               </div>
 
               {/* Director Approval / Order Section */}
-              <div className="pt-2 border-t border-dashed border-black/70 mt-2 space-y-1 text-[12pt] leading-[1.3]">
+              <div className="pt-2 border-t border-dashed border-black/70 mt-1.5 space-y-1 text-[12pt] leading-[1.3]">
                 <div className="flex items-center justify-between">
                   <p className="font-bold text-[12pt]">ความเห็นและคำสั่งของผู้อำนวยการสำนักงานวัฒนธรรมจังหวัดพังงา:</p>
                   {booking.status === 'approved' && (
@@ -400,157 +396,160 @@ export const OfficialMemoModal: React.FC<OfficialMemoModalProps> = ({
                   )}
 
                   {/* Director Signature Box (Right-aligned using Flexbox) */}
-                  <div className="pt-1.5 flex justify-end text-center text-[12pt] leading-[1.3]">
+                  <div className="pt-1 flex justify-end text-center text-[12pt] leading-[1.3]">
                     <div className="w-[50%] flex flex-col items-center">
                       {booking.status === 'approved' ? (
-                        <div className="py-0.5 flex flex-col items-center">
-                          {booking.signatureData ? (
-                            <div className="flex flex-col items-center my-0.5">
+                        <div className="flex flex-col items-center">
+                          <div className="relative flex flex-col items-center justify-end h-13">
+                            {booking.signatureData ? (
                               <img
                                 src={booking.signatureData}
                                 alt="ลายมือชื่อผู้อนุมัติ"
-                                className="h-8 max-w-[180px] object-contain"
+                                className="h-11 max-w-[170px] object-contain -mb-1.5 z-10"
                               />
-                              <p className="text-[9.5pt] text-blue-800 font-sans">
-                                {booking.signatureType === 'draw'
-                                  ? 'ลงนามลายมือชื่อสดดิจิทัล'
-                                  : 'ลงนามอิเล็กทรอนิกส์รับรอง'}{' '}
-                                • {booking.approvedAt ? formatThaiDate(booking.approvedAt.split('T')[0], 'short') : memoDateDisplay}
-                              </p>
-                            </div>
-                          ) : (
-                            <div>
-                              <div className="font-serif italic text-blue-900 font-bold tracking-widest text-[12pt] py-0.5 border-b border-blue-400">
+                            ) : (
+                              <div className="font-serif italic text-blue-900 font-bold text-[13pt] tracking-wider px-2 -mb-1 z-10">
                                 (อุไรวรรณ แดงงาม)
                               </div>
-                              <p className="text-[9.5pt] text-blue-800 font-sans">
-                                ลงนามอิเล็กทรอนิกส์เมื่อ: {booking.approvedAt ? formatThaiDate(booking.approvedAt.split('T')[0], 'short') : memoDateDisplay}
-                              </p>
-                            </div>
-                          )}
+                            )}
+                            <p className="font-normal text-[11.5pt] text-black leading-none">
+                              (ลงชื่อ).......................................................
+                            </p>
+                          </div>
+                          <p className="font-bold mt-0.5">({booking.approvedBy || 'นางสาวอุไรวรรณ แดงงาม'})</p>
+                          <p className="text-[11pt] text-black">วัฒนธรรมจังหวัดพังงา</p>
+                          <p className="text-[9pt] text-black/70 mt-0.5">
+                            {booking.approvedAt ? formatThaiDate(booking.approvedAt.split('T')[0], 'short') : memoDateDisplay}
+                          </p>
                         </div>
                       ) : (
-                        <p className="mb-5">(ลงชื่อ).......................................................</p>
+                        <div className="flex flex-col items-center">
+                          <div className="flex flex-col items-center justify-end h-13">
+                            <p className="font-normal text-[11.5pt] text-black mb-1">
+                              (ลงชื่อ).......................................................
+                            </p>
+                          </div>
+                          <p className="font-bold mt-0.5">({booking.approvedBy || 'นางสาวอุไรวรรณ แดงงาม'})</p>
+                          <p className="text-[11pt] text-black">วัฒนธรรมจังหวัดพังงา</p>
+                        </div>
                       )}
-                      <p className="font-bold">({booking.approvedBy || 'นางสาวอุไรวรรณ แดงงาม'})</p>
-                      <p className="text-[11pt] text-black">วัฒนธรรมจังหวัดพังงา</p>
                     </div>
                   </div>
                 </div>
               </div>
 
-              {/* Section 3: ส่วนบันทึกเลขไมล์ไป-กลับ และการตรวจรับรถยนต์โดยเจ้าหน้าที่พัสดุ */}
-              <div className="pt-2 border-t-2 border-black/80 mt-2 text-[11.5pt] leading-[1.3] bg-slate-50/50 p-2 rounded border border-slate-300">
-                <div className="flex items-center justify-between pb-1 border-b border-slate-300">
-                  <div className="flex items-center space-x-1.5">
-                    <span className="font-bold text-[12pt] text-slate-900">
-                      การบันทึกเลขไมล์ไป-กลับ และการตรวจรับรถเสร็จสิ้นภารกิจ (งานพัสดุ/ยานพาหนะ)
-                    </span>
-                  </div>
-                  {booking.assetInspectionStatus === 'accepted' ? (
-                    <span className="text-[9.5pt] font-bold text-emerald-800 bg-emerald-100/90 border border-emerald-400 px-2 py-0.2 rounded flex items-center">
-                      <CheckCircle2 className="w-3 h-3 mr-1 text-emerald-600" /> ตรวจรับรถเรียบร้อยแล้ว
-                    </span>
-                  ) : booking.status === 'completed' ? (
-                    <span className="text-[9.5pt] font-bold text-amber-800 bg-amber-100 border border-amber-400 px-2 py-0.2 rounded">
-                      รอเจ้าหน้าที่พัสดุตรวจรับรถ
-                    </span>
-                  ) : (
-                    <span className="text-[9.5pt] text-slate-500">
-                      (บันทึกเมื่อเสร็จสิ้นภารกิจ)
-                    </span>
-                  )}
+              {/* Section 3: ส่วนบันทึกเลขไมล์ไป-กลับ และการตรวจรับรถยนต์โดยเจ้าหน้าที่พัสดุ (กรอบทางการสมบูรณ์แบบ) */}
+              <div className="mt-2 border border-black text-[10.5pt] leading-[1.3] bg-white">
+                {/* Header Row */}
+                <div className="bg-slate-100/80 border-b border-black px-2.5 py-1 flex items-center justify-between">
+                  <span className="font-bold text-[11.5pt] text-black">
+                    การบันทึกการใช้ยานพาหนะและผลการตรวจรับพัสดุ (เมื่อเสร็จสิ้นภารกิจ)
+                  </span>
+                  <span className="text-[9.5pt] text-black/80 font-normal">
+                    {booking.assetInspectionStatus === 'accepted' ? (
+                      <span className="font-bold text-black">✓ ตรวจรับพัสดุเรียบร้อยแล้ว</span>
+                    ) : (
+                      <span>งานพัสดุและยานพาหนะ ฝ่ายบริหารทั่วไป</span>
+                    )}
+                  </span>
                 </div>
 
-                {/* 2-Column: Left for Mileage Table, Right for Logistics Officer Signature */}
-                <div className="grid grid-cols-12 gap-3 pt-1.5 items-start">
+                {/* 2-Column Balanced Official Grid */}
+                <div className="grid grid-cols-12 divide-x divide-black">
                   
-                  {/* Left Column: Start/End Mileage Data (cols 7) */}
-                  <div className="col-span-7 space-y-1">
-                    <div className="grid grid-cols-2 gap-2 text-[11pt]">
-                      <div className="bg-white p-1.5 rounded border border-slate-300">
-                        <span className="font-bold text-slate-800 block text-[10.5pt]">๑. เลขไมล์ตอนไป (Start):</span>
-                        <span className="text-[12pt] font-bold text-blue-900">
-                          {booking.startMileage ? `${num(booking.startMileage.toLocaleString())} กม.` : '...................... กม.'}
+                  {/* Left Column: เลขกิโลเมตร & เชื้อเพลิง (cols 7) */}
+                  <div className="col-span-7 p-2 space-y-1.5 flex flex-col justify-between">
+                    <div className="space-y-1 text-[10.5pt]">
+                      <div className="flex justify-between items-baseline border-b border-dotted border-black/40 pb-0.5">
+                        <span className="font-bold">๑. เลขไมล์เมื่อออกเดินทาง:</span>
+                        <span className="font-bold font-mono text-black text-[11pt]">
+                          {booking.startMileage ? `${num(booking.startMileage.toLocaleString())} กม.` : '........................ กม.'}
                         </span>
-                        {booking.startMileageTime && (
-                          <span className="block text-[9.5pt] text-slate-500">
-                            เวลาออก: {num(booking.startMileageTime)} น.
-                          </span>
-                        )}
+                        <span className="text-[9.5pt] text-black/70">
+                          {booking.startMileageTime ? `(เวลา ${num(booking.startMileageTime)} น.)` : '(เวลา .............. น.)'}
+                        </span>
                       </div>
 
-                      <div className="bg-white p-1.5 rounded border border-slate-300">
-                        <span className="font-bold text-slate-800 block text-[10.5pt]">๒. เลขไมล์ตอนกลับ (End):</span>
-                        <span className="text-[12pt] font-bold text-emerald-900">
-                          {booking.endMileage ? `${num(booking.endMileage.toLocaleString())} กม.` : '...................... กม.'}
+                      <div className="flex justify-between items-baseline border-b border-dotted border-black/40 pb-0.5">
+                        <span className="font-bold">๒. เลขไมล์เมื่อกลับถึงสำนักงาน:</span>
+                        <span className="font-bold font-mono text-black text-[11pt]">
+                          {booking.endMileage ? `${num(booking.endMileage.toLocaleString())} กม.` : '........................ กม.'}
                         </span>
-                        {booking.endMileageTime && (
-                          <span className="block text-[9.5pt] text-slate-500">
-                            เวลากลับ: {num(booking.endMileageTime)} น.
-                          </span>
-                        )}
+                        <span className="text-[9.5pt] text-black/70">
+                          {booking.endMileageTime ? `(เวลา ${num(booking.endMileageTime)} น.)` : '(เวลา .............. น.)'}
+                        </span>
+                      </div>
+
+                      <div className="flex justify-between items-baseline pt-0.5">
+                        <span className="font-bold">ระยะทางรวมทั้งสิ้น:</span>
+                        <span className="font-bold font-mono text-[11pt] text-black">
+                          {booking.totalDistance
+                            ? `${num(booking.totalDistance.toLocaleString())} กิโลเมตร`
+                            : booking.endMileage && booking.startMileage
+                            ? `${num((booking.endMileage - booking.startMileage).toLocaleString())} กิโลเมตร`
+                            : '........................ กิโลเมตร'}
+                        </span>
                       </div>
                     </div>
 
-                    <div className="flex justify-between items-center bg-white px-2 py-1 rounded border border-slate-300 text-[10.5pt]">
+                    <div className="text-[9.5pt] pt-1 border-t border-black/30 flex justify-between items-center text-black/90">
                       <span>
-                        <span className="font-bold">ระยะทางรวมทั้งสิ้น:</span>{' '}
-                        <span className="font-bold text-indigo-900">
-                          {booking.totalDistance ? `${num(booking.totalDistance.toLocaleString())} กิโลเมตร` : (booking.endMileage && booking.startMileage ? `${num((booking.endMileage - booking.startMileage).toLocaleString())} กิโลเมตร` : '............... กิโลเมตร')}
-                        </span>
+                        การเติมน้ำมัน:{' '}
+                        {booking.fuelRefilledLiters && booking.fuelRefilledLiters > 0
+                          ? `${num(booking.fuelRefilledLiters)} ลิตร (${num(booking.fuelRefilledCost?.toLocaleString() || 0)} บาท)`
+                          : 'ไม่มีการเติมระหว่างทาง'}
                       </span>
-                      {booking.fuelRefilledLiters && booking.fuelRefilledLiters > 0 ? (
-                        <span className="text-slate-700">
-                          เติมน้ำมัน: {num(booking.fuelRefilledLiters)} ลิตร ({num(booking.fuelRefilledCost?.toLocaleString() || 0)} บาท)
+                      {booking.driverNotes && (
+                        <span className="italic truncate max-w-[150px]" title={booking.driverNotes}>
+                          หมายเหตุ: {booking.driverNotes}
                         </span>
-                      ) : null}
+                      )}
                     </div>
-
-                    {booking.driverNotes && (
-                      <p className="text-[10pt] text-slate-600 italic truncate">
-                        หมายเหตุคนขับ: {booking.driverNotes}
-                      </p>
-                    )}
                   </div>
 
-                  {/* Right Column: Logistics Officer Signature (cols 5) */}
-                  <div className="col-span-5 flex flex-col items-center justify-center text-center pt-0.5 bg-white p-2 rounded border border-slate-300">
-                    <p className="font-bold text-[11pt] text-slate-900 mb-0.5">
-                      ผู้ตรวจรับยานพาหนะ / เจ้าหน้าที่พัสดุ
-                    </p>
-                    
-                    {booking.assetInspectionSignature ? (
-                      <div className="py-0.5 flex flex-col items-center">
-                        <img
-                          src={booking.assetInspectionSignature}
-                          alt="ลายเซ็นเจ้าหน้าที่พัสดุ"
-                          className="h-9 max-w-[150px] object-contain my-0.5"
-                        />
-                        <p className="text-[9pt] text-emerald-800 font-sans">
-                          {booking.assetInspectionSignatureType === 'draw'
-                            ? 'ตรวจรับด้วยลายเซ็นสดดิจิทัล'
-                            : 'ตรวจรับด้วยลายเซ็นอิเล็กทรอนิกส์'}{' '}
-                          • {booking.assetInspectedAt ? formatThaiDate(booking.assetInspectedAt.split('T')[0], 'short') : memoDateDisplay}
+                  {/* Right Column: ตรวจรับสภาพและลงนามเจ้าหน้าที่พัสดุ (cols 5) */}
+                  <div className="col-span-5 p-2 flex flex-col justify-between text-center">
+                    {/* Condition checkboxes */}
+                    <div className="text-left text-[9.5pt] space-y-0.5 pb-1 border-b border-dotted border-black/40">
+                      <span className="font-bold block text-[10pt]">ผลการตรวจรับสภาพรถยนต์:</span>
+                      <div className="flex items-center space-x-2 text-[9pt]">
+                        <span>
+                          {booking.assetInspectionVehicleCondition === 'normal' || !booking.assetInspectionVehicleCondition ? '☑' : '☐'} สภาพปกติ
+                        </span>
+                        <span>
+                          {booking.assetInspectionVehicleCondition === 'needs_cleaning' ? '☑' : '☐'} ควรทำความสะอาด
+                        </span>
+                        <span>
+                          {booking.assetInspectionVehicleCondition === 'needs_repair' ? '☑' : '☐'} ส่งซ่อม
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Logistics officer signature */}
+                    <div className="pt-1 flex flex-col items-center">
+                      <div className="relative flex flex-col items-center justify-end h-11">
+                        {booking.assetInspectionSignature ? (
+                          <img
+                            src={booking.assetInspectionSignature}
+                            alt="ลายเซ็นผู้ตรวจรับ"
+                            className="h-10 max-w-[140px] object-contain -mb-1.5 z-10"
+                          />
+                        ) : null}
+                        <p className="font-normal text-[10.5pt] text-black leading-none">
+                          (ลงชื่อ).......................................................
                         </p>
                       </div>
-                    ) : (
-                      <div className="my-2">
-                        <p className="text-slate-400 text-[11pt]">(ลงชื่อ)........................................................</p>
-                      </div>
-                    )}
-
-                    <p className="font-bold text-[11pt] text-slate-900">
-                      ({booking.assetInspectorName || '..........................................................'})
-                    </p>
-                    <p className="text-[10pt] text-slate-600 mt-0.5">
-                      {booking.assetInspectorPosition || 'เจ้าหน้าที่พัสดุ / ผู้ตรวจรับรถยนต์ราชการ'}
-                    </p>
-                    {booking.assetInspectionVehicleCondition && (
-                      <p className="text-[9pt] text-emerald-700 mt-0.5 font-medium">
-                        สภาพรถ: {booking.assetInspectionVehicleCondition === 'normal' ? 'สภาพปกติเรียบร้อย' : booking.assetInspectionVehicleCondition === 'needs_cleaning' ? 'ควรล้างทำความสะอาด' : 'ต้องส่งซ่อมบำรุง'}
+                      <p className="font-bold text-[10.5pt] mt-0.5">
+                        ({booking.assetInspectorName || '..........................................................'})
                       </p>
-                    )}
+                      <p className="text-[9.5pt] text-black/80">
+                        {booking.assetInspectorPosition || 'เจ้าหน้าที่พัสดุ / ผู้ตรวจรับ'}
+                      </p>
+                      <p className="text-[9pt] text-black/60">
+                        วันที่ {booking.assetInspectedAt ? formatThaiDate(booking.assetInspectedAt.split('T')[0], 'short') : '......./......./.......'}
+                      </p>
+                    </div>
+
                   </div>
 
                 </div>
@@ -640,41 +639,41 @@ export const OfficialMemoModal: React.FC<OfficialMemoModalProps> = ({
                 </div>
               </div>
 
-              {/* Authority Signature (Right-aligned using Flexbox with generous signing clearance) */}
-              <div className="pt-6 flex justify-end text-center text-[13pt] leading-[1.35]">
-                <div className="w-[55%] flex flex-col items-center">
+              {/* Authority Signature (Right-aligned using Flexbox) */}
+              <div className="pt-4 flex justify-end text-center text-[13pt] leading-[1.35]">
+                <div className="w-[50%] flex flex-col items-center">
                   {booking.status === 'approved' ? (
-                    <div className="py-1 flex flex-col items-center">
-                      {booking.signatureData ? (
-                        <div className="flex flex-col items-center">
+                    <div className="flex flex-col items-center">
+                      <div className="relative flex flex-col items-center justify-end h-14">
+                        {booking.signatureData ? (
                           <img
                             src={booking.signatureData}
                             alt="ลายมือชื่อผู้อนุญาต"
-                            className="h-10 max-w-[200px] object-contain"
+                            className="h-12 max-w-[180px] object-contain -mb-1.5 z-10"
                           />
-                          <p className="text-[10pt] text-blue-800 font-sans mt-0.5">
-                            อนุญาตผ่านระบบอิเล็กทรอนิกส์ ({booking.signatureType === 'draw' ? 'ลายเซ็นสดดิจิทัล' : 'ตราประทับดิจิทัล'})
-                          </p>
-                        </div>
-                      ) : (
-                        <div>
-                          <div className="font-serif italic text-blue-900 font-bold tracking-widest text-[13pt] py-0.5 border-b border-blue-400">
+                        ) : (
+                          <div className="font-serif italic text-blue-900 font-bold text-[14pt] tracking-wider px-3 -mb-1 z-10">
                             (อุไรวรรณ แดงงาม)
                           </div>
-                          <p className="text-[10pt] text-blue-800 font-sans mt-0.5">
-                            อนุญาตผ่านระบบอิเล็กทรอนิกส์
-                          </p>
-                        </div>
-                      )}
+                        )}
+                        <p className="font-normal text-[12pt] text-black leading-none">
+                          (ลงชื่อ).......................................................ผู้อนุญาต
+                        </p>
+                      </div>
+                      <p className="font-bold mt-0.5">({booking.approvedBy || 'นางสาวอุไรวรรณ แดงงาม'})</p>
+                      <p className="text-[12pt] text-black">วัฒนธรรมจังหวัดพังงา</p>
                     </div>
                   ) : (
-                    <p className="mb-10">(ลงชื่อ).......................................................ผู้อนุญาต</p>
+                    <div className="flex flex-col items-center">
+                      <div className="flex flex-col items-center justify-end h-14">
+                        <p className="font-normal text-[12pt] text-black mb-1">
+                          (ลงชื่อ).......................................................ผู้อนุญาต
+                        </p>
+                      </div>
+                      <p className="font-bold mt-0.5">({booking.approvedBy || 'นางสาวอุไรวรรณ แดงงาม'})</p>
+                      <p className="text-[12pt] text-black">วัฒนธรรมจังหวัดพังงา</p>
+                    </div>
                   )}
-                  <p className="font-bold">({booking.approvedBy || 'นางสาวอุไรวรรณ แดงงาม'})</p>
-                  <p className="text-[12pt] text-black mt-0.5">วัฒนธรรมจังหวัดพังงา</p>
-                  <p className="text-[10.5pt] text-black/60 mt-0.5">
-                    เลขที่คำขออนุมัติ: {booking.id}
-                  </p>
                 </div>
               </div>
 

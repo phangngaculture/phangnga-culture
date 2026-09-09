@@ -42,6 +42,7 @@ interface DashboardViewProps {
   onDeleteBooking: (bookingId: string) => void;
   onOpenDirectorApproval: () => void;
   onOpenSignatureModal?: (booking: BookingRequest) => void;
+  onOpenClearAllBookings?: () => void;
 }
 
 export const DashboardView: React.FC<DashboardViewProps> = ({
@@ -59,7 +60,8 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   onEditBooking,
   onDeleteBooking,
   onOpenDirectorApproval,
-  onOpenSignatureModal
+  onOpenSignatureModal,
+  onOpenClearAllBookings
 }) => {
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
@@ -303,11 +305,24 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         {/* Controls */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
-            <h3 className="font-bold text-sm text-slate-900 flex items-center space-x-2">
-              <FileText className="w-4 h-4 text-orange-600" />
-              <span>รายการใบเบิกและสถานะคำขอทั้งหมด ({filteredBookings.length})</span>
-            </h3>
-            <p className="text-[11px] text-slate-500">คลิกที่รายการเพื่อดูใบคำขอขอใช้รถยนต์ส่วนกลางหรือดำเนินการ</p>
+            <div className="flex items-center space-x-2.5">
+              <h3 className="font-bold text-sm text-slate-900 flex items-center space-x-2">
+                <FileText className="w-4 h-4 text-orange-600" />
+                <span>รายการใบเบิกและสถานะคำขอทั้งหมด ({filteredBookings.length})</span>
+              </h3>
+              {onOpenClearAllBookings && (currentUser.role === 'admin' || currentUser.role === 'director') && bookings.length > 0 && (
+                <button
+                  type="button"
+                  onClick={onOpenClearAllBookings}
+                  className="px-2.5 py-1 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-lg text-[11px] font-semibold flex items-center space-x-1.5 transition cursor-pointer shadow-2xs"
+                  title="ลบใบคำขอทั้งหมดเพื่อเตรียมเริ่มใช้งานจริง"
+                >
+                  <Trash2 className="w-3.5 h-3.5 text-rose-600" />
+                  <span>ลบใบคำขอทั้งหมด (เริ่มใช้จริง)</span>
+                </button>
+              )}
+            </div>
+            <p className="text-[11px] text-slate-500 mt-0.5">คลิกที่รายการเพื่อดูใบคำขอขอใช้รถยนต์ส่วนกลางหรือดำเนินการ</p>
           </div>
 
           <div className="flex flex-wrap items-center gap-2.5 w-full md:w-auto">

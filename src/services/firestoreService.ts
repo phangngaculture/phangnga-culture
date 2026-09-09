@@ -9,6 +9,7 @@ import {
   deleteDoc,
   onSnapshot,
   writeBatch,
+  getDocs,
   getDocFromServer,
   Firestore
 } from 'firebase/firestore';
@@ -186,9 +187,11 @@ export const subscribeToFirestore = (
     const unsubBookings = onSnapshot(
       bookingsCol,
       (snapshot) => {
+        const isCleared = typeof window !== 'undefined' && localStorage.getItem('mculture_bookings_cleared_for_production') === 'true';
+
         if (!snapshot.empty) {
           const items = snapshot.docs.map((d) => d.data() as BookingRequest);
-          if (initialData?.bookings && initialData.bookings.length > 0) {
+          if (!isCleared && initialData?.bookings && initialData.bookings.length > 0) {
             const existingIds = new Set(snapshot.docs.map((d) => d.id));
             const missing = initialData.bookings.filter((b) => b && b.id && !existingIds.has(b.id));
             if (missing.length > 0) {
@@ -199,9 +202,11 @@ export const subscribeToFirestore = (
           // Sort latest first
           items.sort((a, b) => new Date(b.createdAt || b.date).getTime() - new Date(a.createdAt || a.date).getTime());
           callbacks.onBookingsChange?.(items);
-        } else if (initialData?.bookings && initialData.bookings.length > 0) {
-          // Seed if completely empty
+        } else if (!isCleared && initialData?.bookings && initialData.bookings.length > 0) {
+          // Seed if completely empty only if not deliberately cleared for production
           seedCollection('bookings', initialData.bookings);
+        } else {
+          callbacks.onBookingsChange?.([]);
         }
         callbacks.onStatusChange?.('connected');
       },
@@ -376,6 +381,25 @@ export const deleteBookingFromFirestore = async (bookingId: string): Promise<boo
     return true;
   } catch (err) {
     handleFirestoreError(err, OperationType.DELETE, `bookings/${bookingId}`);
+    return false;
+  }
+};
+
+export const clearAllBookingsFromFirestore = async (): Promise<boolean> => {
+  try {
+    const colRef = collection(db, 'bookings');
+    const snapshot = await getDocs(colRef);
+    if (!snapshot.empty) {
+      const batch = writeBatch(db);
+      snapshot.docs.forEach((docSnap) => {
+        batch.delete(docSnap.ref);
+      });
+      await batch.commit();
+      console.log(`[Firestore] Successfully cleared all ${snapshot.docs.length} bookings for live production.`);
+    }
+    return true;
+  } catch (err) {
+    handleFirestoreError(err, OperationType.DELETE, 'bookings');
     return false;
   }
 };

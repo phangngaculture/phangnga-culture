@@ -17,7 +17,8 @@ import {
   Bell,
   Clock,
   Sparkles,
-  ArrowRight
+  ArrowRight,
+  Trash2
 } from 'lucide-react';
 import {
   BookingRequest,
@@ -42,6 +43,7 @@ interface BackupRestoreViewProps {
   onRestoreAllData: (data: SystemBackupData['data']) => Promise<void>;
   firestoreStatus?: 'connected' | 'syncing' | 'error' | 'idle';
   onForceCloudSync?: () => Promise<void>;
+  onOpenClearAllBookings?: () => void;
 }
 
 export const BackupRestoreView: React.FC<BackupRestoreViewProps> = ({
@@ -54,7 +56,8 @@ export const BackupRestoreView: React.FC<BackupRestoreViewProps> = ({
   currentUser,
   onRestoreAllData,
   firestoreStatus = 'connected',
-  onForceCloudSync
+  onForceCloudSync,
+  onOpenClearAllBookings
 }) => {
   const [isExporting, setIsExporting] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
@@ -495,6 +498,39 @@ export const BackupRestoreView: React.FC<BackupRestoreViewProps> = ({
           </div>
         </div>
       </div>
+
+      {/* Production Launch: Reset Test Bookings */}
+      {onOpenClearAllBookings && (
+        <div className="bg-gradient-to-br from-rose-50/70 via-white to-orange-50/50 rounded-2xl p-5 border border-rose-200 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+          <div className="flex items-start space-x-3.5">
+            <div className="w-10 h-10 rounded-xl bg-rose-100 text-rose-600 flex items-center justify-center shrink-0">
+              <Trash2 className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="flex items-center space-x-2">
+                <h4 className="font-bold text-sm text-slate-900">
+                  ลบใบคำขอทดสอบทั้งหมด (เตรียมเริ่มใช้งานจริง)
+                </h4>
+                <span className="text-[10px] bg-rose-100 text-rose-700 px-2 py-0.5 rounded-full font-bold">
+                  {bookings.length} รายการในระบบ
+                </span>
+              </div>
+              <p className="text-xs text-slate-600 mt-0.5 max-w-2xl leading-relaxed">
+                ล้างข้อมูลใบคำขอขอใช้รถยนต์ที่เคยทดสอบออกทั้งหมด เพื่อเตรียมเปิดระบบให้ข้าราชการและเจ้าหน้าที่สำนักงานวัฒนธรรมจังหวัดพังงาเริ่มใช้งานจริง (บัญชีผู้ใช้และรายชื่อรถจะไม่ถูกลบ)
+              </p>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={onOpenClearAllBookings}
+            className="px-4 py-2.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl font-bold text-xs flex items-center space-x-2 transition shadow-sm hover:shadow shrink-0 cursor-pointer"
+          >
+            <Trash2 className="w-4 h-4" />
+            <span>ล้างใบคำขอทั้งหมด</span>
+          </button>
+        </div>
+      )}
 
       {/* Confirmation Modal before Restore */}
       {showConfirmModal && previewBackup && (
