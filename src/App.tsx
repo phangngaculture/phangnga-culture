@@ -1341,6 +1341,7 @@ export default function App() {
               setActiveTab('dashboard');
               setEditingBooking(null);
             }}
+            onUpdateUser={handleUpdateUser}
           />
         )}
 

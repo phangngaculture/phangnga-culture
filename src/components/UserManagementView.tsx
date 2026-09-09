@@ -31,12 +31,14 @@ import {
   ChevronRight,
   Gauge,
   Camera,
-  Database
+  Database,
+  PenTool
 } from 'lucide-react';
 import { User, UserRole, MenuKey, MenuDefinition } from '../types';
 import { APP_MENUS, DEFAULT_ROLE_MENUS, DEPARTMENTS, getUserAllowedMenus } from '../data/mockData';
 import { ProfilePhotoModal } from './ProfilePhotoModal';
 import { BulkAddUsersModal } from './BulkAddUsersModal';
+import { UserSignatureModal } from './UserSignatureModal';
 
 interface UserManagementViewProps {
   users: User[];
@@ -54,6 +56,7 @@ const MENU_ICONS: Record<MenuKey, React.ComponentType<{ className?: string }>> =
   booking: FilePlus,
   driver_mission: Gauge,
   director: ShieldCheck,
+  asset_inspection: ShieldCheck,
   fuel: Fuel,
   fleet: Wrench,
   analytics: BarChart3,
@@ -113,6 +116,7 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({
   const [editingUserId, setEditingUserId] = useState<string | null>(null);
   const [permissionTargetUser, setPermissionTargetUser] = useState<User | null>(null);
   const [photoModalUser, setPhotoModalUser] = useState<User | null>(null);
+  const [signatureModalUser, setSignatureModalUser] = useState<User | null>(null);
 
   // Form state
   const [formData, setFormData] = useState({
@@ -552,6 +556,34 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({
                           </>
                         )}
                       </div>
+
+                      {/* User Digital Signature Status Badge */}
+                      <div className="pt-1 flex items-center gap-2">
+                        {user.signatureUrl ? (
+                          <button
+                            type="button"
+                            onClick={() => setSignatureModalUser(user)}
+                            className="inline-flex items-center space-x-1.5 px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-800 border border-emerald-200 text-[11px] font-semibold hover:bg-emerald-100 transition cursor-pointer"
+                            title="คลิกเพื่อดูหรือแก้ไขลายมือชื่อดิจิทัล"
+                          >
+                            <PenTool className="w-3 h-3 text-emerald-600" />
+                            <span>มีลายเซ็นในระบบแล้ว</span>
+                            <span className="text-[10px] text-emerald-600 font-normal">
+                              ({user.signatureType === 'draw' ? 'วาดสด' : user.signatureType === 'image' ? 'ภาพ' : 'ดิจิทัล'})
+                            </span>
+                          </button>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => setSignatureModalUser(user)}
+                            className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-md bg-slate-100 text-slate-500 border border-dashed border-slate-300 text-[11px] hover:bg-orange-50 hover:text-orange-700 hover:border-orange-300 transition cursor-pointer"
+                            title="คลิกเพื่อเพิ่มลายมือชื่อ"
+                          >
+                            <PenTool className="w-3 h-3 text-slate-400" />
+                            <span>ยังไม่มีลายเซ็น (คลิกเพื่อเพิ่ม)</span>
+                          </button>
+                        )}
+                      </div>
                     </div>
                   </div>
 
@@ -616,6 +648,19 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({
                       title="แก้ไข/เปลี่ยนรูปภาพโปรไฟล์"
                     >
                       <Camera className="w-4 h-4" />
+                    </button>
+
+                    {/* Manage Digital Signature */}
+                    <button
+                      onClick={() => setSignatureModalUser(user)}
+                      className={`p-1.5 rounded-xl transition cursor-pointer ${
+                        user.signatureUrl
+                          ? 'text-emerald-700 hover:bg-emerald-100 bg-emerald-50 border border-emerald-200'
+                          : 'text-slate-600 hover:text-orange-700 hover:bg-orange-50'
+                      }`}
+                      title={user.signatureUrl ? 'จัดการ/แก้ไขลายมือชื่อดิจิทัล' : 'เพิ่มลายมือชื่อดิจิทัล'}
+                    >
+                      <PenTool className="w-4 h-4" />
                     </button>
 
                     {/* Edit User */}
@@ -969,6 +1014,51 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({
                 </div>
               </div>
 
+              {/* Digital Signature Management Section */}
+              {editingUserId && (
+                <div className="p-4 bg-slate-50 border border-slate-200 rounded-2xl space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
+                      <div className="w-7 h-7 rounded-lg bg-orange-100 text-orange-600 flex items-center justify-center">
+                        <PenTool className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <h4 className="text-xs font-bold text-slate-800">ลายมือชื่อดิจิทัล (สำหรับลงนามในใบคำขอ)</h4>
+                        <p className="text-[10px] text-slate-500">ใช้สำหรับลงลายมือชื่อในใบบันทึกข้อความขอใช้รถราชการ</p>
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const target = users.find((u) => u.id === editingUserId);
+                        if (target) setSignatureModalUser(target);
+                      }}
+                      className="px-3 py-1.5 bg-orange-600 hover:bg-orange-700 text-white rounded-xl text-xs font-semibold flex items-center space-x-1.5 transition shadow-xs cursor-pointer"
+                    >
+                      <PenTool className="w-3.5 h-3.5" />
+                      <span>{users.find((u) => u.id === editingUserId)?.signatureUrl ? 'จัดการ/แก้ไขลายเซ็น' : 'วาดหรือเพิ่มลายเซ็น'}</span>
+                    </button>
+                  </div>
+
+                  {/* Thumbnail if user already has a signature */}
+                  {users.find((u) => u.id === editingUserId)?.signatureUrl && (
+                    <div className="mt-2 p-2 bg-white rounded-xl border border-slate-200 flex items-center space-x-3">
+                      <div className="h-10 px-2 bg-slate-50 rounded border border-slate-200 flex items-center justify-center">
+                        <img
+                          src={users.find((u) => u.id === editingUserId)?.signatureUrl}
+                          alt="Signature thumbnail"
+                          className="max-h-8 max-w-[120px] object-contain"
+                        />
+                      </div>
+                      <div className="text-[11px] text-emerald-700 font-medium">
+                        ✓ บันทึกลายมือชื่อดิจิทัลแล้ว (พร้อมประทับลงในใบคำขออัตโนมัติ)
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
               {/* Footer Buttons */}
               <div className="pt-4 border-t flex justify-end items-center space-x-2">
                 <button
@@ -1171,6 +1261,31 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({
           onUpdateUser(userId, { avatarUrl: newAvatarUrl });
         }}
       />
+
+      {/* User Digital Signature Modal */}
+      {signatureModalUser && (
+        <UserSignatureModal
+          isOpen={!!signatureModalUser}
+          user={signatureModalUser}
+          onClose={() => setSignatureModalUser(null)}
+          onSaveSignature={(userId, sigUrl, sigType) => {
+            onUpdateUser(userId, {
+              signatureUrl: sigUrl,
+              signatureType: sigType,
+              signatureUpdatedAt: new Date().toISOString()
+            });
+            setSignatureModalUser(null);
+          }}
+          onDeleteSignature={(userId) => {
+            onUpdateUser(userId, {
+              signatureUrl: undefined,
+              signatureType: undefined,
+              signatureUpdatedAt: undefined
+            });
+            setSignatureModalUser(null);
+          }}
+        />
+      )}
 
     </div>
   );

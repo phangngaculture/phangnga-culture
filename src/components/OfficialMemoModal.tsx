@@ -336,10 +336,25 @@ export const OfficialMemoModal: React.FC<OfficialMemoModalProps> = ({
                   <p>จึงเรียนมาเพื่อโปรดพิจารณาอนุมัติ</p>
                 </div>
 
-                {/* Requester Signature (Right-aligned using Flexbox according to Thai official memo format, generous signing clearance) */}
-                <div className="pt-4 flex justify-end text-center text-[13pt] leading-[1.35]">
+                {/* Requester Signature (Right-aligned using Flexbox according to Thai official memo format) */}
+                <div className="pt-3 flex justify-end text-center text-[13pt] leading-[1.35]">
                   <div className="w-[55%] flex flex-col items-center">
-                    <p className="mb-8">(ลงชื่อ).......................................................</p>
+                    {booking.requesterSignature ? (
+                      <div className="flex flex-col items-center mb-1">
+                        <div className="h-14 flex items-center justify-center">
+                          <img
+                            src={booking.requesterSignature}
+                            alt={`ลายเซ็น ${booking.name}`}
+                            className="max-h-12 max-w-[200px] object-contain"
+                          />
+                        </div>
+                        <p className="text-[9pt] text-slate-500 font-sans print:text-black">
+                          (ลงนามดิจิทัลโดย {booking.name})
+                        </p>
+                      </div>
+                    ) : (
+                      <p className="mb-8">(ลงชื่อ).......................................................</p>
+                    )}
                     <p className="font-normal">({booking.name})</p>
                     <p className="text-[12pt] text-black/90 mt-0.5">{booking.position}</p>
                   </div>

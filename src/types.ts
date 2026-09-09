@@ -58,6 +58,9 @@ export interface User {
   avatarUrl?: string;
   phone?: string;
   email?: string;
+  signatureUrl?: string; // ลายมือชื่อดิจิทัลของเจ้าหน้าที่ (Data URL หรือ PNG)
+  signatureType?: 'draw' | 'image' | 'electronic';
+  signatureUpdatedAt?: string;
   status?: 'active' | 'inactive';
   allowedMenus?: MenuKey[];
   createdAt?: string;
@@ -99,6 +102,11 @@ export interface BookingRequest {
   signatureType?: 'draw' | 'electronic';
   signatureData?: string;
   createdAt: string;
+
+  // Requester Signature (ลายมือชื่อผู้ขอใช้รถราชการสำหรับประทับในใบคำขอ)
+  requesterSignature?: string;
+  requesterSignatureType?: 'draw' | 'image' | 'electronic';
+  requesterSignedAt?: string;
 
   // Driver Trip Execution & Odometer Tracking
   startMileage?: number;

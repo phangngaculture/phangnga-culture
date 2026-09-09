@@ -55,8 +55,10 @@ import {
   ShieldAlert,
   CheckCircle2,
   AlertCircle,
-  RefreshCw
+  RefreshCw,
+  PenTool
 } from 'lucide-react';
+import { UserSignatureModal } from './UserSignatureModal';
 
 interface BookingFormViewProps {
   currentUser: User;
@@ -67,6 +69,7 @@ interface BookingFormViewProps {
   initialDate?: string;
   onSaveBooking: (data: Partial<BookingRequest>, isEdit: boolean) => void;
   onCancel: () => void;
+  onUpdateUser?: (id: string, data: Partial<User>) => void;
 }
 
 export const BookingFormView: React.FC<BookingFormViewProps> = ({
@@ -77,13 +80,24 @@ export const BookingFormView: React.FC<BookingFormViewProps> = ({
   editingBooking,
   initialDate,
   onSaveBooking,
-  onCancel
+  onCancel,
+  onUpdateUser
 }) => {
   // Form fields - Requester
   const [name, setName] = useState(editingBooking?.name || currentUser.name);
   const [position, setPosition] = useState(editingBooking?.position || currentUser.position || POSITIONS[0]);
   const [department, setDepartment] = useState(editingBooking?.department || currentUser.department || DEPARTMENTS[0]);
   const [purpose, setPurpose] = useState(editingBooking?.purpose || '');
+
+  // Requester Signature State for Memo
+  const [attachSignature, setAttachSignature] = useState<boolean>(true);
+  const [requesterSignature, setRequesterSignature] = useState<string>(
+    editingBooking?.requesterSignature || currentUser.signatureUrl || ''
+  );
+  const [requesterSignatureType, setRequesterSignatureType] = useState<'draw' | 'image' | 'electronic'>(
+    editingBooking?.requesterSignatureType || currentUser.signatureType || 'draw'
+  );
+  const [showSignatureModal, setShowSignatureModal] = useState<boolean>(false);
 
   // Destination fields (Reordered: Tambon, Amphoe, Province)
   const [destProvince, setDestProvince] = useState(editingBooking?.destProvince || 'พังงา');
@@ -535,7 +549,10 @@ export const BookingFormView: React.FC<BookingFormViewProps> = ({
         ? selectedPassengers.map((p) => p.name).join(', ')
         : passengerNames,
       attachmentName: attachmentName || 'เอกสารประกอบคำขอ.pdf',
-      status: editingBooking?.status || 'pending'
+      status: editingBooking?.status || 'pending',
+      requesterSignature: attachSignature ? (requesterSignature || currentUser.signatureUrl || undefined) : undefined,
+      requesterSignatureType: attachSignature ? requesterSignatureType : undefined,
+      requesterSignedAt: attachSignature ? (editingBooking?.requesterSignedAt || new Date().toISOString()) : undefined
     };
 
     onSaveBooking(bookingData, !!editingBooking);
@@ -1617,6 +1634,64 @@ export const BookingFormView: React.FC<BookingFormViewProps> = ({
           </div>
         </div>
 
+        {/* Requester Digital Signature (ลงลายมือชื่อผู้ขอใช้รถในใบคำขอ) */}
+        <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-xs space-y-3">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
+            <div className="flex items-center space-x-2.5">
+              <div className="w-8 h-8 rounded-xl bg-orange-50 text-orange-600 flex items-center justify-center border border-orange-200">
+                <PenTool className="w-4 h-4" />
+              </div>
+              <div>
+                <h3 className="text-sm font-bold text-slate-900">ลายมือชื่อผู้ขอใช้รถ (ลงนามในใบคำขอ)</h3>
+                <p className="text-[11px] text-slate-500">
+                  ระบบจะประทับลายมือชื่อนี้ลงในช่อง &quot;(ลงชื่อ) ... ผู้ขอใช้รถ&quot; ในใบบันทึกขอใช้รถยนต์ส่วนกลางอัตโนมัติ
+                </p>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setShowSignatureModal(true)}
+              className="inline-flex items-center space-x-1.5 px-3 py-1.5 bg-orange-50 hover:bg-orange-100 text-orange-700 rounded-xl text-xs font-semibold border border-orange-200 transition shrink-0 cursor-pointer"
+            >
+              <PenTool className="w-3.5 h-3.5" />
+              <span>{requesterSignature ? 'แก้ไข/เปลี่ยนลายเซ็น' : 'วาดหรืออัปโหลดลายเซ็น'}</span>
+            </button>
+          </div>
+
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-1">
+            <label className="flex items-center space-x-2.5 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={attachSignature}
+                onChange={(e) => setAttachSignature(e.target.checked)}
+                className="w-4 h-4 text-orange-600 rounded border-slate-300 focus:ring-orange-500 cursor-pointer"
+              />
+              <span className="text-xs font-semibold text-slate-700">
+                ประทับลายมือชื่อดิจิทัลในใบคำขอขอใช้รถยนต์ส่วนกลาง
+              </span>
+            </label>
+
+            {/* Signature Preview Thumbnail */}
+            <div className="flex items-center space-x-2.5 bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-200">
+              <span className="text-[11px] text-slate-500 font-medium shrink-0">ตัวอย่างลายเซ็น:</span>
+              {requesterSignature ? (
+                <div className="h-10 px-2.5 bg-white border border-slate-200 rounded-lg flex items-center justify-center">
+                  <img
+                    src={requesterSignature}
+                    alt="ตัวอย่างลายมือชื่อ"
+                    className="max-h-8 max-w-[130px] object-contain"
+                  />
+                </div>
+              ) : (
+                <span className="text-[11px] text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
+                  ยังไม่ได้ลงลายมือชื่อ (คลิกปุ่ม &quot;วาดหรืออัปโหลดลายเซ็น&quot;)
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
+
         {/* Submit Actions */}
         <div className="flex justify-end items-center space-x-3 pt-2">
           <button
@@ -1838,6 +1913,33 @@ export const BookingFormView: React.FC<BookingFormViewProps> = ({
           </div>
         </div>
       )}
+
+      {/* Modal: User Signature Setup */}
+      <UserSignatureModal
+        isOpen={showSignatureModal}
+        user={{
+          ...currentUser,
+          name: name || currentUser.name,
+          position: position || currentUser.position,
+          signatureUrl: requesterSignature || currentUser.signatureUrl,
+          signatureType: requesterSignatureType || currentUser.signatureType
+        }}
+        onClose={() => setShowSignatureModal(false)}
+        onSaveSignature={(userId, sigUrl, sigType) => {
+          setRequesterSignature(sigUrl);
+          setRequesterSignatureType(sigType);
+          setAttachSignature(true);
+          if (onUpdateUser && currentUser.id === userId) {
+            onUpdateUser(userId, { signatureUrl: sigUrl, signatureType: sigType });
+          }
+        }}
+        onDeleteSignature={(userId) => {
+          setRequesterSignature('');
+          if (onUpdateUser && currentUser.id === userId) {
+            onUpdateUser(userId, { signatureUrl: undefined, signatureType: undefined });
+          }
+        }}
+      />
 
     </div>
   );

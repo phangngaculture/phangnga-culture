@@ -40,9 +40,21 @@ export const AssetInspectionView: React.FC<AssetInspectionViewProps> = ({
   const [statusFilter, setStatusFilter] = useState<'all' | 'pending_inspection' | 'inspected'>('all');
   const [vehicleFilter, setVehicleFilter] = useState<string>('all');
 
-  // Completed missions ready for or already inspected by logistics officer
+  // In the asset inspection menu, data MUST have passed director approval first before reaching this inspection stage
   const completedMissions = useMemo(() => {
-    return bookings.filter((b) => b.status === 'completed' || b.endMileage);
+    return bookings.filter((b) => {
+      // 1. Must be approved (never pending, rejected, or cancelled)
+      const hasPassedApproval =
+        b.status !== 'pending' &&
+        b.status !== 'rejected' &&
+        b.status !== 'cancelled' &&
+        (b.status === 'approved' || b.status === 'in_progress' || b.status === 'completed' || !!b.approvedAt);
+
+      // 2. Must be completed or have return end mileage recorded
+      const isMissionCompleted = b.status === 'completed' || !!b.endMileage;
+
+      return hasPassedApproval && isMissionCompleted;
+    });
   }, [bookings]);
 
   const filteredMissions = useMemo(() => {
