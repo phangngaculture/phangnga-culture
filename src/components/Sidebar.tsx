@@ -1,5 +1,5 @@
-import React from 'react';
-import { User, MenuKey } from '../types';
+import React, { useState } from 'react';
+import { User, MenuKey, DashboardSubView } from '../types';
 import {
   LayoutDashboard,
   Calendar,
@@ -11,12 +11,14 @@ import {
   X,
   Car,
   ChevronRight,
+  ChevronDown,
   Wrench,
   Users,
   Sliders,
   Gauge,
   LogOut,
-  Database
+  Database,
+  FileText
 } from 'lucide-react';
 import { getUserAllowedMenus } from '../data/mockData';
 
@@ -24,22 +26,33 @@ interface SidebarProps {
   isOpen: boolean;
   onClose: () => void;
   activeTab: string;
-  onSelectTab: (tab: string) => void;
+  dashboardSubView?: DashboardSubView;
+  onSelectTab: (tab: string, subView?: DashboardSubView) => void;
   currentUser: User;
   onLogout?: () => void;
+  bookingsCount?: number;
+  pendingBookingsCount?: number;
+  vehiclesCount?: number;
+  availableVehiclesCount?: number;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
   isOpen,
   onClose,
   activeTab,
+  dashboardSubView = 'overview',
   onSelectTab,
   currentUser,
-  onLogout
+  onLogout,
+  bookingsCount,
+  pendingBookingsCount,
+  vehiclesCount,
+  availableVehiclesCount
 }) => {
   const allowedMenus = getUserAllowedMenus(currentUser);
   const canAccessDirector = allowedMenus.includes('director');
   const canAccessUsers = allowedMenus.includes('users') || currentUser.role === 'admin';
+  const [isDashboardExpanded, setIsDashboardExpanded] = useState<boolean>(true);
 
   const menuItems = [
     {
@@ -171,7 +184,168 @@ export const Sidebar: React.FC<SidebarProps> = ({
         <div className="flex-grow p-3 space-y-1.5 overflow-y-auto">
           {menuItems.map((item) => {
             const Icon = item.icon;
+            const isDashboardItem = item.id === 'dashboard';
             const isActive = activeTab === item.id;
+
+            if (isDashboardItem) {
+              return (
+                <div key={item.id} className="space-y-1">
+                  <div className="flex items-center space-x-1">
+                    <button
+                      onClick={() => {
+                        onSelectTab('dashboard', 'overview');
+                        setIsDashboardExpanded(true);
+                        onClose();
+                      }}
+                      className={`flex-grow flex items-center justify-between p-3 rounded-xl transition text-left group ${
+                        isActive
+                          ? 'bg-orange-600 text-white shadow-md font-semibold'
+                          : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+                      }`}
+                    >
+                      <div className="flex items-center space-x-3">
+                        <div
+                          className={`w-8 h-8 rounded-lg flex items-center justify-center ${
+                            isActive ? 'bg-white/20 text-white' : item.color
+                          }`}
+                        >
+                          <Icon className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <div className="text-xs font-medium leading-none">{item.label}</div>
+                          <div
+                            className={`text-[10px] mt-1 ${
+                              isActive ? 'text-orange-100' : 'text-slate-400'
+                            }`}
+                          >
+                            {item.desc}
+                          </div>
+                        </div>
+                      </div>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setIsDashboardExpanded(!isDashboardExpanded);
+                      }}
+                      className={`w-9 h-11 rounded-xl flex items-center justify-center transition ${
+                        isActive
+                          ? 'bg-orange-700/80 text-white hover:bg-orange-800'
+                          : 'text-slate-400 hover:text-white hover:bg-slate-800'
+                      }`}
+                      title={isDashboardExpanded ? 'ซ่อนเมนูย่อย' : 'แสดงเมนูย่อย'}
+                    >
+                      {isDashboardExpanded ? (
+                        <ChevronDown className="w-4 h-4" />
+                      ) : (
+                        <ChevronRight className="w-4 h-4" />
+                      )}
+                    </button>
+                  </div>
+
+                  {/* Sub-menu under ภาพรวม */}
+                  {isDashboardExpanded && (
+                    <div className="ml-4 pl-3 border-l-2 border-orange-500/40 space-y-1 py-1">
+                      {/* Sub-item 1: ภาพรวม */}
+                      <button
+                        onClick={() => {
+                          onSelectTab('dashboard', 'overview');
+                          onClose();
+                        }}
+                        className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-left transition ${
+                          activeTab === 'dashboard' && dashboardSubView === 'overview'
+                            ? 'bg-orange-500 text-white font-bold shadow-xs'
+                            : 'text-slate-300 hover:bg-slate-800/80 hover:text-white'
+                        }`}
+                      >
+                        <div className="flex items-center space-x-2.5">
+                          <LayoutDashboard className={`w-3.5 h-3.5 shrink-0 ${
+                            activeTab === 'dashboard' && dashboardSubView === 'overview' ? 'text-white' : 'text-orange-400'
+                          }`} />
+                          <span className="text-xs">ภาพรวม</span>
+                        </div>
+                        <span className={`text-[10px] px-1.5 py-0.5 rounded-md font-medium ${
+                          activeTab === 'dashboard' && dashboardSubView === 'overview'
+                            ? 'bg-white/20 text-white'
+                            : 'text-slate-400 bg-slate-800'
+                        }`}>
+                          KPI & สถิติ
+                        </span>
+                      </button>
+
+                      {/* Sub-item 2: รายการใบเบิก */}
+                      <button
+                        onClick={() => {
+                          onSelectTab('dashboard', 'bookings');
+                          onClose();
+                        }}
+                        className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-left transition ${
+                          activeTab === 'dashboard' && dashboardSubView === 'bookings'
+                            ? 'bg-orange-500 text-white font-bold shadow-xs'
+                            : 'text-slate-300 hover:bg-slate-800/80 hover:text-white'
+                        }`}
+                      >
+                        <div className="flex items-center space-x-2.5">
+                          <FileText className={`w-3.5 h-3.5 shrink-0 ${
+                            activeTab === 'dashboard' && dashboardSubView === 'bookings' ? 'text-white' : 'text-orange-400'
+                          }`} />
+                          <span className="text-xs">รายการใบเบิก</span>
+                        </div>
+                        {pendingBookingsCount && pendingBookingsCount > 0 ? (
+                          <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
+                            activeTab === 'dashboard' && dashboardSubView === 'bookings'
+                              ? 'bg-white text-orange-600'
+                              : 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
+                          }`}>
+                            {pendingBookingsCount} รออนุมัติ
+                          </span>
+                        ) : bookingsCount !== undefined ? (
+                          <span className={`text-[10px] px-1.5 py-0.5 rounded-md font-medium ${
+                            activeTab === 'dashboard' && dashboardSubView === 'bookings'
+                              ? 'bg-white/20 text-white'
+                              : 'text-slate-400 bg-slate-800'
+                          }`}>
+                            {bookingsCount} รายการ
+                          </span>
+                        ) : null}
+                      </button>
+
+                      {/* Sub-item 3: สถานะรถยนต์ราชการ */}
+                      <button
+                        onClick={() => {
+                          onSelectTab('dashboard', 'vehicles');
+                          onClose();
+                        }}
+                        className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-left transition ${
+                          activeTab === 'dashboard' && dashboardSubView === 'vehicles'
+                            ? 'bg-orange-500 text-white font-bold shadow-xs'
+                            : 'text-slate-300 hover:bg-slate-800/80 hover:text-white'
+                        }`}
+                      >
+                        <div className="flex items-center space-x-2.5">
+                          <Car className={`w-3.5 h-3.5 shrink-0 ${
+                            activeTab === 'dashboard' && dashboardSubView === 'vehicles' ? 'text-white' : 'text-teal-400'
+                          }`} />
+                          <span className="text-xs">สถานะรถยนต์ราชการ</span>
+                        </div>
+                        {availableVehiclesCount !== undefined && vehiclesCount !== undefined ? (
+                          <span className={`text-[10px] px-1.5 py-0.5 rounded-md font-medium ${
+                            activeTab === 'dashboard' && dashboardSubView === 'vehicles'
+                              ? 'bg-white/20 text-white'
+                              : 'text-teal-300 bg-teal-950/60 border border-teal-800/50'
+                          }`}>
+                            {availableVehiclesCount}/{vehiclesCount} คัน
+                          </span>
+                        ) : null}
+                      </button>
+                    </div>
+                  )}
+                </div>
+              );
+            }
+
             return (
               <button
                 key={item.id}

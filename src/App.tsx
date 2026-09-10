@@ -5,7 +5,8 @@ import {
   NotificationItem,
   User,
   Vehicle,
-  MaintenanceRecord
+  MaintenanceRecord,
+  DashboardSubView
 } from './types';
 import {
   SYSTEM_USERS,
@@ -176,6 +177,7 @@ export default function App() {
     loadSavedData<Vehicle[]>(STORAGE_KEYS.VEHICLES, VEHICLES)
   );
   const [activeTab, setActiveTab] = useState<string>('dashboard');
+  const [dashboardSubView, setDashboardSubView] = useState<DashboardSubView>('overview');
   const [sidebarOpen, setSidebarOpen] = useState<boolean>(false);
 
   // Modals & sub-views
@@ -644,19 +646,36 @@ export default function App() {
   };
 
   // Handle Tab Change with Access Control
-  const handleTabChange = (tab: string) => {
+  const handleTabChange = (tab: string, subView?: DashboardSubView) => {
+    let targetTab = tab;
+    let targetSubView = subView;
+
+    if (tab === 'dashboard_overview') {
+      targetTab = 'dashboard';
+      targetSubView = 'overview';
+    } else if (tab === 'dashboard_bookings') {
+      targetTab = 'dashboard';
+      targetSubView = 'bookings';
+    } else if (tab === 'dashboard_vehicles') {
+      targetTab = 'dashboard';
+      targetSubView = 'vehicles';
+    }
+
     const allowed = getUserAllowedMenus(currentUser);
     const isAllowed =
-      tab === 'dashboard' ||
-      allowed.includes(tab as any) ||
-      (tab === 'users' && currentUser.role === 'admin');
+      targetTab === 'dashboard' ||
+      allowed.includes(targetTab as any) ||
+      (targetTab === 'users' && currentUser.role === 'admin');
 
     if (!isAllowed) {
       playAppSound('alert', soundEnabled);
       showToast('คุณไม่มีสิทธิ์เข้าถึงเมนูนี้ กรุณาติดต่อผู้ดูแลระบบ (Admin)', 'error');
       return;
     }
-    setActiveTab(tab);
+    setActiveTab(targetTab);
+    if (targetTab === 'dashboard' && targetSubView) {
+      setDashboardSubView(targetSubView);
+    }
     playAppSound('click', soundEnabled);
   };
 
@@ -1359,9 +1378,14 @@ export default function App() {
         isOpen={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
         activeTab={activeTab}
+        dashboardSubView={dashboardSubView}
         onSelectTab={handleTabChange}
         currentUser={currentUser}
         onLogout={handleLogout}
+        bookingsCount={bookings.length}
+        pendingBookingsCount={bookings.filter((b) => b.status === 'pending' || b.status === 'pending_director').length}
+        vehiclesCount={vehicles.length}
+        availableVehiclesCount={vehicles.filter((v) => v.status === 'available').length}
       />
 
       {/* Top Header Navbar */}
@@ -1388,6 +1412,8 @@ export default function App() {
             bookings={bookings}
             vehicles={vehicles}
             currentUser={currentUser}
+            subView={dashboardSubView}
+            onSubViewChange={setDashboardSubView}
             onOpenBookingForm={handleOpenBookingForm}
             onOpenFuelForm={() => setActiveTab('fuel')}
             onOpenCalendar={() => setActiveTab('calendar')}

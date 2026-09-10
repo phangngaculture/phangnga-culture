@@ -1,5 +1,7 @@
 export type UserRole = 'admin' | 'director' | 'officer' | 'driver';
 
+export type DashboardSubView = 'overview' | 'bookings' | 'vehicles';
+
 export type MenuKey =
   | 'dashboard'
   | 'calendar'
