@@ -19,7 +19,8 @@ import {
   CheckCircle2,
   AlertCircle,
   Database,
-  ShieldCheck
+  ShieldCheck,
+  FileSpreadsheet
 } from 'lucide-react';
 import {
   isBadgingSupported,
@@ -140,10 +141,26 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
                   ? 'bg-amber-600 text-white border-amber-500 shadow-md shadow-amber-600/30'
                   : 'bg-amber-50 hover:bg-amber-100 text-amber-900 border-amber-200'
               }`}
-              title="เปิดหน้าภารกิจคนขับรถและทะเบียนคุมพัสดุ"
+              title="เปิดหน้าภารกิจคนขับรถ (Missions)"
             >
               <Car className={`w-3.5 h-3.5 ${activeTab === 'driver_mission' ? 'text-white' : 'text-amber-600'}`} />
               <span className="hidden sm:inline">ภารกิจคนขับ</span>
+            </button>
+          )}
+
+          {/* Quick Asset Register Button for Permitted Users */}
+          {getUserAllowedMenus(currentUser).includes('asset_register') && (
+            <button
+              onClick={() => onTabChange('asset_register')}
+              className={`h-9 px-2.5 sm:px-3 rounded-xl flex items-center space-x-1.5 transition border text-xs font-semibold shadow-xs ${
+                activeTab === 'asset_register'
+                  ? 'bg-teal-600 text-white border-teal-500 shadow-md shadow-teal-600/30'
+                  : 'bg-teal-50 hover:bg-teal-100 text-teal-900 border-teal-200'
+              }`}
+              title="เปิดหน้าสมุดทะเบียนคุมการใช้รถยนต์ราชการ (งานพัสดุ)"
+            >
+              <FileSpreadsheet className={`w-3.5 h-3.5 ${activeTab === 'asset_register' ? 'text-white' : 'text-teal-600'}`} />
+              <span className="hidden lg:inline">สมุดทะเบียนคุม</span>
             </button>
           )}
 

@@ -19,7 +19,8 @@ import {
   Gauge,
   LogOut,
   Database,
-  FileText
+  FileText,
+  FileSpreadsheet
 } from 'lucide-react';
 import { getUserAllowedMenus } from '../data/mockData';
 
@@ -89,10 +90,17 @@ export const Sidebar: React.FC<SidebarProps> = ({
     },
     {
       id: 'driver_mission',
-      label: 'ภารกิจคนขับ & ทะเบียนคุม',
-      desc: 'เริ่มงาน กรอกไมล์ไป-กลับ ลงคุมพัสดุ',
+      label: 'ภารกิจคนขับรถ (Missions)',
+      desc: 'เริ่มงาน กรอกไมล์ไป-กลับ บันทึกน้ำมัน',
       icon: Gauge,
       color: 'text-amber-400 bg-amber-500/10'
+    },
+    {
+      id: 'asset_register',
+      label: 'สมุดทะเบียนคุม (งานพัสดุ)',
+      desc: 'สมุดคุมการใช้รถยนต์ราชการ พิมพ์ A4 ส่งออก Excel',
+      icon: FileSpreadsheet,
+      color: 'text-teal-400 bg-teal-500/10'
     },
     {
       id: 'asset_inspection',

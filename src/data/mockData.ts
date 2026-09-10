@@ -31,10 +31,17 @@ export const APP_MENUS: MenuDefinition[] = [
   },
   {
     id: 'driver_mission',
-    label: 'ภารกิจคนขับรถ & ทะเบียนคุม',
-    desc: 'เริ่มงาน/กรอกไมล์ไป-กลับ บันทึกภารกิจ และลงทะเบียนคุมพัสดุอัตโนมัติ',
-    badge: 'คนขับ & พัสดุ',
+    label: 'ภารกิจคนขับรถ',
+    desc: 'เริ่มงาน/กรอกไมล์ไป-กลับ บันทึกภารกิจการขับรถยนต์ราชการ',
+    badge: 'คนขับรถ',
     color: 'text-amber-500 bg-amber-500/10'
+  },
+  {
+    id: 'asset_register',
+    label: 'สมุดทะเบียนคุมการใช้รถ (พัสดุ)',
+    desc: 'สมุดทะเบียนคุมการใช้รถยนต์ส่วนกลาง สรุปเลขไมล์ ระยะทาง และพิมพ์สมุดคุมราชการ',
+    badge: 'งานพัสดุ',
+    color: 'text-teal-500 bg-teal-500/10'
   },
   {
     id: 'asset_inspection',
@@ -88,9 +95,9 @@ export const APP_MENUS: MenuDefinition[] = [
 ];
 
 export const DEFAULT_ROLE_MENUS: Record<string, MenuKey[]> = {
-  admin: ['dashboard', 'calendar', 'booking', 'director', 'driver_mission', 'asset_inspection', 'fuel', 'fleet', 'analytics', 'tracking', 'backup', 'users'],
-  director: ['dashboard', 'calendar', 'booking', 'director', 'driver_mission', 'asset_inspection', 'analytics', 'tracking', 'backup'],
-  officer: ['dashboard', 'calendar', 'booking', 'asset_inspection', 'tracking'],
+  admin: ['dashboard', 'calendar', 'booking', 'director', 'driver_mission', 'asset_register', 'asset_inspection', 'fuel', 'fleet', 'analytics', 'tracking', 'backup', 'users'],
+  director: ['dashboard', 'calendar', 'booking', 'director', 'driver_mission', 'asset_register', 'asset_inspection', 'analytics', 'tracking', 'backup'],
+  officer: ['dashboard', 'calendar', 'booking', 'asset_register', 'asset_inspection', 'tracking'],
   driver: ['driver_mission', 'dashboard', 'calendar', 'fuel', 'fleet', 'tracking']
 };
 
@@ -119,7 +126,7 @@ export const SYSTEM_USERS: User[] = [
     phone: '076-481-482 ต่อ 11',
     email: 'admin.phangnga@m-culture.go.th',
     status: 'active',
-    allowedMenus: ['dashboard', 'calendar', 'booking', 'director', 'driver_mission', 'fuel', 'fleet', 'analytics', 'tracking', 'users']
+    allowedMenus: ['dashboard', 'calendar', 'booking', 'director', 'driver_mission', 'asset_register', 'asset_inspection', 'fuel', 'fleet', 'analytics', 'tracking', 'users']
   }
 ];
 

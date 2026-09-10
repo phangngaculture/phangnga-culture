@@ -55,6 +55,7 @@ import { FleetMaintenanceView } from './components/FleetMaintenanceView';
 import { UserManagementView } from './components/UserManagementView';
 import { BackupRestoreView } from './components/BackupRestoreView';
 import { DriverMissionView } from './components/DriverMissionView';
+import { AssetRegisterView } from './components/AssetRegisterView';
 import { AssetInspectionView } from './components/AssetInspectionView';
 import { AssetInspectionModal } from './components/AssetInspectionModal';
 import { OfficialMemoModal } from './components/OfficialMemoModal';
@@ -1449,6 +1450,16 @@ export default function App() {
             onUpdateVehicleOdometer={handleUpdateVehicleOdometer}
             onViewMemo={(b) => setSelectedBookingForMemo(b)}
             onNavigateToTracking={() => setActiveTab('tracking')}
+            onNavigateToAssetRegister={() => setActiveTab('asset_register')}
+          />
+        )}
+
+        {activeTab === 'asset_register' && (
+          <AssetRegisterView
+            bookings={bookings}
+            vehicles={vehicles}
+            onViewMemo={(b) => setSelectedBookingForMemo(b)}
+            onNavigateToMissions={() => setActiveTab('driver_mission')}
           />
         )}
 

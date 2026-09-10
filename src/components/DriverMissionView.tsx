@@ -4,11 +4,11 @@ import { formatThaiDate } from '../utils/thaiDate';
 import {
   canUserExecuteMission,
   getMissionPermissionDetails,
-  isSelfDriveBooking
+  isSelfDriveBooking,
+  isThaiNameMatch
 } from '../utils/driverPermissions';
 import { StartMissionModal } from './StartMissionModal';
 import { CompleteMissionModal } from './CompleteMissionModal';
-import { PrintOfficialRegisterModal } from './PrintOfficialRegisterModal';
 import {
   Car,
   Gauge,
@@ -22,13 +22,9 @@ import {
   User as UserIcon,
   Search,
   Filter,
-  FileSpreadsheet,
-  Printer,
-  Download,
   Eye,
   Fuel,
   ArrowRight,
-  ShieldCheck,
   ChevronRight,
   Sparkles,
   Info,
@@ -48,6 +44,7 @@ interface DriverMissionViewProps {
   onUpdateVehicleOdometer?: (carId: string, newOdometer: number) => void;
   onViewMemo: (booking: BookingRequest) => void;
   onNavigateToTracking?: () => void;
+  onNavigateToAssetRegister?: () => void;
 }
 
 export const DriverMissionView: React.FC<DriverMissionViewProps> = ({
@@ -60,11 +57,9 @@ export const DriverMissionView: React.FC<DriverMissionViewProps> = ({
   onUpdateBooking,
   onUpdateVehicleOdometer,
   onViewMemo,
-  onNavigateToTracking
+  onNavigateToTracking,
+  onNavigateToAssetRegister
 }) => {
-  // Main view tabs: 'missions' | 'asset_register'
-  const [activeSubTab, setActiveSubTab] = useState<'missions' | 'asset_register'>('missions');
-  
   // Status filter for missions
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
@@ -92,13 +87,9 @@ export const DriverMissionView: React.FC<DriverMissionViewProps> = ({
 
   const [selectedDriverFilter, setSelectedDriverFilter] = useState<string>(initialDriverFilter);
 
-  // Asset register vehicle filter
-  const [registerVehicleFilter, setRegisterVehicleFilter] = useState<string>('all');
-
   // Modals state
   const [selectedBookingForStart, setSelectedBookingForStart] = useState<BookingRequest | null>(null);
   const [selectedBookingForComplete, setSelectedBookingForComplete] = useState<BookingRequest | null>(null);
-  const [isPrintRegisterOpen, setIsPrintRegisterOpen] = useState<boolean>(false);
   const [successToast, setSuccessToast] = useState<string | null>(null);
 
   // Auto-open target booking if specified from dashboard navigation
@@ -136,9 +127,10 @@ export const DriverMissionView: React.FC<DriverMissionViewProps> = ({
       if (selectedDriverFilter === 'my_missions') {
         matchDriver = canUserExecuteMission(b, currentUser, allUsers);
       } else if (selectedDriverFilter !== 'all') {
-        matchDriver =
-          b.driverName === selectedDriverFilter ||
-          (currentUser.role === 'driver' && b.driverName?.includes(currentUser.name));
+        matchDriver = Boolean(
+          b.driverName &&
+          (b.driverName === selectedDriverFilter || isThaiNameMatch(b.driverName, selectedDriverFilter))
+        );
       }
 
       // Status filter
@@ -281,70 +273,6 @@ export const DriverMissionView: React.FC<DriverMissionViewProps> = ({
     setTimeout(() => setSuccessToast(null), 5000);
   };
 
-  // CSV Export for Asset Control Register
-  const handleExportCSV = () => {
-    const registeredList = bookings.filter(
-      (b) => b.status === 'completed' || b.registeredInAssetControl || b.startMileage
-    );
-
-    if (registeredList.length === 0) {
-      alert('ยังไม่มีข้อมูลภารกิจที่บันทึกเลขไมล์เพื่อส่งออก');
-      return;
-    }
-
-    const headers = [
-      'ลำดับ',
-      'เลขที่ใบเบิก',
-      'วันที่เดินทาง',
-      'รถยนต์และทะเบียน',
-      'ผู้ขอใช้รถ',
-      'สังกัดกลุ่มงาน',
-      'สถานที่ไปราชการ',
-      'วัตถุประสงค์',
-      'เวลาออกเดินทาง',
-      'เวลากลับถึงสำนักงาน',
-      'เลขไมล์ตอนไป (กม.)',
-      'เลขไมล์ตอนกลับ (กม.)',
-      'ระยะทางรวม (กม.)',
-      'น้ำมันเติม (ลิตร)',
-      'ค่าน้ำมัน (บาท)',
-      'สถานีบริการน้ำมัน',
-      'พนักงานขับรถ',
-      'สถานะทะเบียนคุมพัสดุ'
-    ];
-
-    const rows = registeredList.map((b, idx) => [
-      idx + 1,
-      `"${b.memoNo || b.id}"`,
-      `"${b.date}"`,
-      `"${b.carName}"`,
-      `"${b.name}"`,
-      `"${b.department}"`,
-      `"${b.destination.replace(/"/g, '""')}"`,
-      `"${b.purpose.replace(/"/g, '""')}"`,
-      `"${b.actualDepartureTime || b.startTime || ''}"`,
-      `"${b.actualReturnTime || b.endTime || ''}"`,
-      b.startMileage || '',
-      b.endMileage || '',
-      b.totalDistance || '',
-      b.fuelRefilledLiters || '',
-      b.fuelRefilledCost || '',
-      `"${b.fuelStation || ''}"`,
-      `"${b.driverName || ''}"`,
-      b.status === 'completed' || b.registeredInAssetControl ? 'ลงทะเบียนคุมแล้ว' : 'อยู่ระหว่างเดินทาง'
-    ]);
-
-    const csvContent = '\uFEFF' + [headers.join(','), ...rows.map((r) => r.join(','))].join('\n');
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.setAttribute('href', url);
-    link.setAttribute('download', `ทะเบียนคุมการใช้รถยนต์ราชการ_พังงา_${new Date().toISOString().split('T')[0]}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
-
   return (
     <div className="space-y-6">
       
@@ -372,17 +300,18 @@ export const DriverMissionView: React.FC<DriverMissionViewProps> = ({
           <div className="space-y-2">
             <div className="inline-flex items-center space-x-2 bg-amber-500/20 text-amber-300 border border-amber-500/30 px-3 py-1 rounded-full text-xs font-semibold">
               <Car className="w-3.5 h-3.5" />
-              <span>ระบบงานพนักงานขับรถยนต์ & ทะเบียนคุมงานพัสดุ</span>
+              <span>ระบบงานพนักงานขับรถยนต์ราชการ</span>
               <span className="text-amber-400">|</span>
               <span>สำนักงานวัฒนธรรมจังหวัดพังงา</span>
             </div>
 
-            <h1 className="text-xl md:text-2xl font-bold text-white tracking-tight">
-              ศูนย์ปฏิบัติภารกิจคนขับรถ & ทะเบียนคุมการใช้รถยนต์ราชการ
+            <h1 className="text-xl md:text-2xl font-bold text-white tracking-tight flex items-center space-x-2.5">
+              <Gauge className="w-6 h-6 text-amber-400 shrink-0" />
+              <span>ศูนย์ปฏิบัติภารกิจคนขับรถ (Driver Missions)</span>
             </h1>
             <p className="text-xs md:text-sm text-slate-300 max-w-2xl leading-relaxed">
-              สำหรับพนักงานขับรถเริ่มงาน กรอกไมล์ตอนไป เมื่อเสร็จสิ้นภารกิจกรอกไมล์ตอนกลับ 
-              ข้อมูลทั้งหมดจะถูกประมวลผลและส่งลงบันทึกใน <strong>สมุดทะเบียนคุมของเจ้าหน้าที่พัสดุ</strong> โดยอัตโนมัติตามระเบียบราชการ
+              สำหรับพนักงานขับรถและผู้ได้รับมอบหมายขับรถราชการ บันทึกเริ่มงาน (ไมล์ตอนไป) 
+              และเมื่อเสร็จสิ้นภารกิจบันทึกจบงาน (ไมล์ตอนกลับ) พร้อมระบุปริมาณน้ำมันเชื้อเพลิงและตรวจสภาพรถ
             </p>
           </div>
 
@@ -392,12 +321,11 @@ export const DriverMissionView: React.FC<DriverMissionViewProps> = ({
             <button
               type="button"
               onClick={() => {
-                setActiveSubTab('missions');
                 setStatusFilter(statusFilter === 'ready_to_start' ? 'all' : 'ready_to_start');
               }}
               title="คลิกทางลัด: กรองดูเฉพาะรายการที่รอเริ่มงาน"
               className={`rounded-2xl p-3 border text-center transition-all cursor-pointer group hover:scale-[1.03] active:scale-95 ${
-                activeSubTab === 'missions' && statusFilter === 'ready_to_start'
+                statusFilter === 'ready_to_start'
                   ? 'bg-amber-500/30 border-amber-400 ring-2 ring-amber-400/80 shadow-lg shadow-amber-500/20'
                   : 'bg-white/10 hover:bg-white/20 border-white/10'
               }`}
@@ -416,12 +344,11 @@ export const DriverMissionView: React.FC<DriverMissionViewProps> = ({
             <button
               type="button"
               onClick={() => {
-                setActiveSubTab('missions');
                 setStatusFilter(statusFilter === 'in_progress' ? 'all' : 'in_progress');
               }}
               title="คลิกทางลัด: กรองดูเฉพาะรายการที่กำลังวิ่งงานอยู่บนถนน"
               className={`rounded-2xl p-3 border text-center transition-all cursor-pointer group hover:scale-[1.03] active:scale-95 ${
-                activeSubTab === 'missions' && statusFilter === 'in_progress'
+                statusFilter === 'in_progress'
                   ? 'bg-amber-500/40 border-amber-300 ring-2 ring-amber-300 shadow-lg shadow-amber-500/30 animate-none'
                   : 'bg-amber-500/20 hover:bg-amber-500/30 border-amber-400/30 animate-pulse'
               }`}
@@ -436,16 +363,15 @@ export const DriverMissionView: React.FC<DriverMissionViewProps> = ({
               </span>
             </button>
 
-            {/* Card 3: เสร็จสิ้นแล้ว (ลงทะเบียนคุมแล้ว) */}
+            {/* Card 3: เสร็จสิ้นแล้ว */}
             <button
               type="button"
               onClick={() => {
-                setActiveSubTab('missions');
                 setStatusFilter(statusFilter === 'completed' ? 'all' : 'completed');
               }}
               title="คลิกทางลัด: กรองดูเฉพาะภารกิจที่เสร็จสิ้นแล้ว"
               className={`rounded-2xl p-3 border text-center transition-all cursor-pointer group hover:scale-[1.03] active:scale-95 ${
-                activeSubTab === 'missions' && statusFilter === 'completed'
+                statusFilter === 'completed'
                   ? 'bg-emerald-500/40 border-emerald-400 ring-2 ring-emerald-400 shadow-lg shadow-emerald-500/30'
                   : 'bg-emerald-500/20 hover:bg-emerald-500/30 border-emerald-400/30'
               }`}
@@ -456,95 +382,38 @@ export const DriverMissionView: React.FC<DriverMissionViewProps> = ({
               </div>
               <span className="text-xl font-bold text-emerald-300 mt-0.5 block">{completedCount}</span>
               <span className="text-[9px] text-emerald-200/90 group-hover:text-emerald-100 block">
-                ลงทะเบียนคุมแล้ว {statusFilter === 'completed' ? '✓ (กำลังกรอง)' : '• คลิกดู'}
+                {statusFilter === 'completed' ? '✓ (กำลังกรอง)' : '• คลิกดู'}
               </span>
             </button>
 
-            {/* Card 4: ระยะทางรวม (กิโลเมตร) */}
+            {/* Card 4: ภารกิจของฉัน */}
             <button
               type="button"
               onClick={() => {
-                setActiveSubTab('asset_register');
+                setSelectedDriverFilter(selectedDriverFilter === 'my_missions' ? 'all' : 'my_missions');
               }}
-              title="คลิกทางลัด: เปิดดูสมุดทะเบียนคุมของเจ้าหน้าที่พัสดุและรายการระยะทางทั้งหมด"
+              title="คลิกทางลัด: กรองดูเฉพาะภารกิจของฉันหรือขับเอง"
               className={`rounded-2xl p-3 border text-center transition-all cursor-pointer group hover:scale-[1.03] active:scale-95 ${
-                activeSubTab === 'asset_register'
-                  ? 'bg-teal-500/30 border-teal-400 ring-2 ring-teal-400 shadow-lg shadow-teal-500/30'
+                selectedDriverFilter === 'my_missions'
+                  ? 'bg-blue-500/40 border-blue-400 ring-2 ring-blue-400 shadow-lg shadow-blue-500/30'
                   : 'bg-white/10 hover:bg-white/20 border-white/10'
               }`}
             >
               <div className="flex items-center justify-center space-x-1">
-                <span className="text-[10px] text-slate-300 font-bold block uppercase tracking-wide">ระยะทางรวม</span>
-                <span className="text-[9px] opacity-0 group-hover:opacity-100 transition text-teal-300">📖</span>
+                <span className="text-[10px] text-blue-300 font-bold block uppercase tracking-wide">ภารกิจของฉัน</span>
+                <span className="text-[9px] opacity-0 group-hover:opacity-100 transition text-blue-200">⭐</span>
               </div>
-              <span className="text-xl font-bold text-white mt-0.5 block">{totalKmSum.toLocaleString()}</span>
-              <span className="text-[9px] text-slate-400 group-hover:text-teal-200 block">
-                กิโลเมตร {activeSubTab === 'asset_register' ? '✓ (เปิดทะเบียนคุม)' : '• คลิกดูสมุด'}
+              <span className="text-xl font-bold text-white mt-0.5 block">{myExecutableMissions.length}</span>
+              <span className="text-[9px] text-slate-300 group-hover:text-blue-200 block">
+                {selectedDriverFilter === 'my_missions' ? '✓ (กำลังกรอง)' : '• คลิกดูของฉัน'}
               </span>
             </button>
           </div>
         </div>
       </div>
 
-      {/* Primary Sub-Tab Switcher */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-200 pb-3">
-        <div className="flex items-center space-x-2 bg-slate-100 p-1.5 rounded-2xl border border-slate-200">
-          <button
-            onClick={() => setActiveSubTab('missions')}
-            className={`px-4 py-2 rounded-xl text-xs font-bold transition flex items-center space-x-2 ${
-              activeSubTab === 'missions'
-                ? 'bg-white text-orange-700 shadow-xs border border-slate-200'
-                : 'text-slate-600 hover:text-slate-900'
-            }`}
-          >
-            <Car className="w-4 h-4 text-orange-600" />
-            <span>ภารกิจคนขับรถ ({bookings.length})</span>
-            {inProgressCount > 0 && (
-              <span className="w-2 h-2 rounded-full bg-amber-500 animate-ping" />
-            )}
-          </button>
-
-          <button
-            onClick={() => setActiveSubTab('asset_register')}
-            className={`px-4 py-2 rounded-xl text-xs font-bold transition flex items-center space-x-2 ${
-              activeSubTab === 'asset_register'
-                ? 'bg-white text-teal-800 shadow-xs border border-slate-200'
-                : 'text-slate-600 hover:text-slate-900'
-            }`}
-          >
-            <FileSpreadsheet className="w-4 h-4 text-teal-600" />
-            <span>สมุดทะเบียนคุมของเจ้าหน้าที่พัสดุ</span>
-            <span className="bg-teal-100 text-teal-800 text-[10px] px-2 py-0.5 rounded-full font-bold">
-              งานพัสดุ
-            </span>
-          </button>
-        </div>
-
-        {/* Global Action Buttons */}
-        <div className="flex items-center space-x-2">
-          <button
-            onClick={() => setIsPrintRegisterOpen(true)}
-            className="px-3.5 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 rounded-xl text-xs font-semibold transition flex items-center space-x-1.5 shadow-2xs"
-            title="พิมพ์แบบฟอร์มทะเบียนคุมทางการ A4"
-          >
-            <Printer className="w-4 h-4 text-orange-600" />
-            <span>พิมพ์ทะเบียนคุม A4</span>
-          </button>
-
-          <button
-            onClick={handleExportCSV}
-            className="px-3.5 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 rounded-xl text-xs font-semibold transition flex items-center space-x-1.5 shadow-2xs"
-            title="ดาวน์โหลดไฟล์ CSV สำหรับ Excel"
-          >
-            <Download className="w-4 h-4 text-emerald-600" />
-            <span>ส่งออก Excel/CSV</span>
-          </button>
-        </div>
-      </div>
-
-      {/* TAB 1: DRIVER MISSIONS WORKFLOW */}
-      {activeSubTab === 'missions' && (
-        <div className="space-y-4">
+      {/* DRIVER MISSIONS WORKFLOW */}
+      <div className="space-y-4">
           
           {/* Filters Bar */}
           <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -826,15 +695,23 @@ export const DriverMissionView: React.FC<DriverMissionViewProps> = ({
                           )
                         )}
 
-                        {/* CASE 3: COMPLETED -> REGISTERED BADGE */}
+                        {/* CASE 3: COMPLETED -> BADGE */}
                         {isCompleted && (
-                          <button
-                            onClick={() => setActiveSubTab('asset_register')}
-                            className="w-full sm:w-auto px-4 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 rounded-xl text-xs font-semibold transition flex items-center justify-center space-x-1.5"
-                          >
-                            <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-600" />
-                            <span>ดูในทะเบียนคุมพัสดุ</span>
-                          </button>
+                          onNavigateToAssetRegister ? (
+                            <button
+                              onClick={onNavigateToAssetRegister}
+                              className="w-full sm:w-auto px-3.5 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 rounded-xl text-xs font-semibold transition flex items-center justify-center space-x-1.5"
+                              title="เปิดดูในเมนูสมุดทะเบียนคุม"
+                            >
+                              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                              <span>บันทึกไมล์กลับเรียบร้อย (ดูทะเบียนคุม) &rarr;</span>
+                            </button>
+                          ) : (
+                            <div className="w-full sm:w-auto px-3.5 py-2 bg-emerald-50 text-emerald-800 border border-emerald-300 rounded-xl text-xs font-semibold flex items-center justify-center space-x-1.5">
+                              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                              <span>เสร็จสิ้นภารกิจแล้ว (บันทึกไมล์กลับเรียบร้อย)</span>
+                            </div>
+                          )
                         )}
 
                         <div className="flex items-center space-x-2">
@@ -864,162 +741,7 @@ export const DriverMissionView: React.FC<DriverMissionViewProps> = ({
               })}
             </div>
           )}
-        </div>
-      )}
-
-      {/* TAB 2: OFFICIAL ASSET CONTROL REGISTER (สมุดทะเบียนคุมของเจ้าหน้าที่พัสดุ) */}
-      {activeSubTab === 'asset_register' && (
-        <div className="space-y-4">
-          
-          {/* Header Info Banner */}
-          <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-xs space-y-4">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-100 pb-4">
-              <div>
-                <div className="flex items-center space-x-2 text-xs font-bold text-teal-700 mb-1">
-                  <ShieldCheck className="w-4 h-4" />
-                  <span>งานพัสดุและยานพาหนะ ฝ่ายบริหารทั่วไป</span>
-                </div>
-                <h2 className="text-base sm:text-lg font-bold text-slate-900">
-                  สมุดทะเบียนคุมการใช้รถยนต์ราชการ (Official Vehicle Control Register)
-                </h2>
-                <p className="text-xs text-slate-500">
-                  บันทึกการใช้รถยนต์ส่วนกลาง เลขไมล์ ระยะทาง และการใช้น้ำมันเชื้อเพลิง สำหรับตรวจรับงานพัสดุ
-                </p>
-              </div>
-
-              {/* Filter by Vehicle */}
-              <div className="flex items-center space-x-2 bg-slate-50 p-2 rounded-2xl border border-slate-200 text-xs">
-                <Car className="w-4 h-4 text-slate-500" />
-                <span className="font-semibold text-slate-700">เลือกรถ:</span>
-                <select
-                  value={registerVehicleFilter}
-                  onChange={(e) => setRegisterVehicleFilter(e.target.value)}
-                  className="bg-transparent font-semibold text-slate-900 focus:outline-none"
-                >
-                  <option value="all">รถยนต์ทุกคันในสังกัด (All)</option>
-                  {vehicles.map((v) => (
-                    <option key={v.id} value={v.plate}>
-                      {v.name} ({v.plate})
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            {/* Register Table */}
-            <div className="overflow-x-auto rounded-2xl border border-slate-200">
-              <table className="w-full text-left text-xs border-collapse">
-                <thead className="bg-slate-100 text-slate-800 font-bold border-b border-slate-200 text-[11px]">
-                  <tr>
-                    <th className="p-3 text-center w-12">ลำดับ</th>
-                    <th className="p-3">วัน เดือน ปี</th>
-                    <th className="p-3">เลขที่ใบเบิก</th>
-                    <th className="p-3">รถยนต์ / ทะเบียน</th>
-                    <th className="p-3">ผู้ขอใช้รถ / สังกัด</th>
-                    <th className="p-3">สถานที่ไปราชการ</th>
-                    <th className="p-3 text-center">เวลาไป-กลับ</th>
-                    <th className="p-3 text-right">ไมล์ไป</th>
-                    <th className="p-3 text-right">ไมล์กลับ</th>
-                    <th className="p-3 text-right">ระยะทาง (กม.)</th>
-                    <th className="p-3 text-center">น้ำมันที่เติม</th>
-                    <th className="p-3">พนักงานขับรถ</th>
-                    <th className="p-3 text-center">สถานะตรวจรับ</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-200 bg-white">
-                  {bookings
-                    .filter(
-                      (b) =>
-                        (registerVehicleFilter === 'all' || b.carName.includes(registerVehicleFilter)) &&
-                        (b.status === 'completed' || b.status === 'in_progress' || b.startMileage)
-                    )
-                    .map((b, idx) => {
-                      const kmDriven = b.totalDistance || (b.endMileage && b.startMileage ? b.endMileage - b.startMileage : 0);
-                      return (
-                        <tr key={b.id} className="hover:bg-teal-50/20 transition">
-                          <td className="p-3 text-center font-mono font-medium text-slate-500">
-                            {idx + 1}
-                          </td>
-                          <td className="p-3 font-medium text-slate-900 whitespace-nowrap">
-                            {formatThaiDate(b.date, 'short')}
-                          </td>
-                          <td className="p-3 font-mono text-slate-700">
-                            {b.memoNo || b.id}
-                          </td>
-                          <td className="p-3 font-semibold text-teal-900">
-                            {b.carName}
-                          </td>
-                          <td className="p-3">
-                            <span className="font-semibold text-slate-800 block">{b.name}</span>
-                            <span className="text-[10px] text-slate-500">{b.department}</span>
-                          </td>
-                          <td className="p-3">
-                            <div className="font-medium text-slate-800 truncate max-w-xs">{b.destination}</div>
-                            <div className="text-[10px] text-slate-500 truncate max-w-xs">{b.purpose}</div>
-                          </td>
-                          <td className="p-3 text-center font-mono text-[11px] whitespace-nowrap">
-                            <span className="text-slate-700">{b.actualDepartureTime || b.startTime || '-'}</span>
-                            <span className="text-slate-400 mx-1">&rarr;</span>
-                            <span className="text-slate-700">{b.actualReturnTime || b.endTime || '-'}</span>
-                          </td>
-                          <td className="p-3 text-right font-mono font-medium text-slate-800">
-                            {b.startMileage ? b.startMileage.toLocaleString() : '-'}
-                          </td>
-                          <td className="p-3 text-right font-mono font-medium text-slate-800">
-                            {b.endMileage ? b.endMileage.toLocaleString() : (b.status === 'in_progress' ? 'กำลังวิ่ง' : '-')}
-                          </td>
-                          <td className="p-3 text-right font-mono font-bold text-emerald-700 bg-emerald-50/50">
-                            {kmDriven > 0 ? `+${kmDriven.toLocaleString()}` : '-'}
-                          </td>
-                          <td className="p-3 text-center">
-                            {b.fuelRefilledLiters ? (
-                              <span className="inline-block bg-amber-50 text-amber-900 px-2 py-0.5 rounded text-[10px] font-medium border border-amber-200">
-                                {b.fuelRefilledLiters} ลิตร ({b.fuelRefilledCost} บ.)
-                              </span>
-                            ) : (
-                              <span className="text-slate-400 text-[11px]">-</span>
-                            )}
-                          </td>
-                          <td className="p-3 font-medium text-slate-700">
-                            {b.driverName || '-'}
-                          </td>
-                          <td className="p-3 text-center">
-                            {b.status === 'completed' || b.registeredInAssetControl ? (
-                              <span className="inline-flex items-center space-x-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">
-                                <CheckCircle2 className="w-3 h-3 text-emerald-600" />
-                                <span>ลงคุมเรียบร้อย</span>
-                              </span>
-                            ) : (
-                              <span className="inline-flex items-center space-x-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800">
-                                <span>อยู่ระหว่างภารกิจ</span>
-                              </span>
-                            )}
-                          </td>
-                        </tr>
-                      );
-                    })}
-                </tbody>
-              </table>
-            </div>
-
-            {/* Registry Footer Summary */}
-            <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 flex flex-col sm:flex-row justify-between items-center gap-4 text-xs">
-              <div className="text-slate-600 flex items-center space-x-2">
-                <Info className="w-4 h-4 text-slate-400 shrink-0" />
-                <span>
-                  ข้อมูลในตารางนี้อัปเดตอัตโนมัติเมื่อพนักงานขับรถกรอกไมล์ไปและไมล์กลับเสร็จสิ้น
-                </span>
-              </div>
-
-              <div className="flex items-center space-x-3 font-semibold text-slate-800">
-                <span>ระยะทางสะสม: <strong className="text-emerald-700 font-mono text-sm">{totalKmSum.toLocaleString()} กม.</strong></span>
-                <span className="text-slate-300">|</span>
-                <span>จำนวนภารกิจลงคุม: <strong className="text-teal-700 font-mono text-sm">{completedCount} รายการ</strong></span>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      </div>
 
       {/* Start Mission Modal */}
       {selectedBookingForStart && (
@@ -1042,16 +764,6 @@ export const DriverMissionView: React.FC<DriverMissionViewProps> = ({
           allUsers={allUsers}
           onClose={() => setSelectedBookingForComplete(null)}
           onConfirmComplete={handleCompleteMission}
-        />
-      )}
-
-      {/* Print Official Register Sheet Modal */}
-      {isPrintRegisterOpen && (
-        <PrintOfficialRegisterModal
-          bookings={bookings}
-          vehicles={vehicles}
-          filterCarPlate={registerVehicleFilter}
-          onClose={() => setIsPrintRegisterOpen(false)}
         />
       )}
     </div>

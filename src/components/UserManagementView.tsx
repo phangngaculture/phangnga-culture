@@ -32,7 +32,8 @@ import {
   Gauge,
   Camera,
   Database,
-  PenTool
+  PenTool,
+  FileSpreadsheet
 } from 'lucide-react';
 import { User, UserRole, MenuKey, MenuDefinition } from '../types';
 import { APP_MENUS, DEFAULT_ROLE_MENUS, DEPARTMENTS, getUserAllowedMenus } from '../data/mockData';
@@ -55,6 +56,7 @@ const MENU_ICONS: Record<MenuKey, React.ComponentType<{ className?: string }>> =
   calendar: Calendar,
   booking: FilePlus,
   driver_mission: Gauge,
+  asset_register: FileSpreadsheet,
   director: ShieldCheck,
   asset_inspection: ShieldCheck,
   fuel: Fuel,

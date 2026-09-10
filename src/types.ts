@@ -8,6 +8,7 @@ export type MenuKey =
   | 'booking'
   | 'director'
   | 'driver_mission'
+  | 'asset_register'
   | 'asset_inspection'
   | 'fuel'
   | 'fleet'
