@@ -5,8 +5,10 @@ import { BookingRequest } from '../types';
 interface ClearAllBookingsModalProps {
   isOpen: boolean;
   onClose: () => void;
-  bookingsCount: number;
-  onConfirmClearAll: () => Promise<void>;
+  bookingsCount?: number;
+  totalBookingsCount?: number;
+  onConfirmClearAll?: () => Promise<void>;
+  onConfirmClear?: () => Promise<void>;
   onExportBackup?: () => void;
 }
 
@@ -14,7 +16,9 @@ export const ClearAllBookingsModal: React.FC<ClearAllBookingsModalProps> = ({
   isOpen,
   onClose,
   bookingsCount,
+  totalBookingsCount,
   onConfirmClearAll,
+  onConfirmClear,
   onExportBackup
 }) => {
   const [isDeleting, setIsDeleting] = useState(false);
@@ -23,10 +27,15 @@ export const ClearAllBookingsModal: React.FC<ClearAllBookingsModalProps> = ({
 
   if (!isOpen) return null;
 
+  const count = typeof totalBookingsCount === 'number' ? totalBookingsCount : (bookingsCount || 0);
+
   const handleConfirm = async () => {
     setIsDeleting(true);
     try {
-      await onConfirmClearAll();
+      const clearFn = onConfirmClearAll || onConfirmClear;
+      if (clearFn) {
+        await clearFn();
+      }
       onClose();
     } catch (err) {
       console.error('Failed to clear all bookings:', err);
@@ -76,7 +85,7 @@ export const ClearAllBookingsModal: React.FC<ClearAllBookingsModalProps> = ({
           <div className="p-4 bg-amber-50 rounded-2xl border border-amber-200 space-y-2">
             <div className="flex items-center space-x-2 text-amber-800 font-bold text-xs">
               <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
-              <span>ตรวจพบใบคำขอในระบบทั้งหมด {bookingsCount.toLocaleString()} รายการ</span>
+              <span>ตรวจพบใบคำขอในระบบทั้งหมด {count.toLocaleString()} รายการ</span>
             </div>
             <p className="text-[11px] text-amber-700">
               การดำเนินการนี้จะลบใบคำขอขอใช้รถยนต์ส่วนกลางทุกรายการ (ทั้งที่รออนุมัติ อนุมัติแล้ว และที่เสร็จสิ้นภารกิจ) ออกจากฐานข้อมูลทั้งหมด เพื่อเตรียมระบบให้พร้อมสำหรับ **การเริ่มใช้งานจริงอย่างเป็นทางการ**
@@ -89,7 +98,7 @@ export const ClearAllBookingsModal: React.FC<ClearAllBookingsModalProps> = ({
               <span>สิ่งที่ระบบจะดำเนินการอัตโนมัติ:</span>
             </p>
             <ul className="list-disc pl-5 space-y-1 text-slate-600">
-              <li>ลบรายการคำขอขอใช้รถทั้งหมด ({bookingsCount} รายการ) ทั้งในเครื่องและ Cloud Firestore</li>
+              <li>ลบรายการคำขอขอใช้รถทั้งหมด ({count} รายการ) ทั้งในเครื่องและ Cloud Firestore</li>
               <li>รีเซ็ตสถานะยานพาหนะทุกคันที่กำลังติดภารกิจ ให้กลับเป็น <strong className="text-emerald-700 font-bold">&ldquo;พร้อมใช้งาน&rdquo;</strong></li>
               <li>ข้อมูลผู้ใช้งาน, รายการยานพาหนะ, ข้อมูลระบบ และสิทธิ์ต่าง ๆ จะยังคงอยู่ครบถ้วน ไม่สูญหาย</li>
             </ul>

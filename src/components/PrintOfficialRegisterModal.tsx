@@ -27,9 +27,37 @@ export const PrintOfficialRegisterModal: React.FC<PrintOfficialRegisterModalProp
       (filterCarPlate === 'all' || b.carName.includes(filterCarPlate))
   );
 
-  const totalKm = missionRecords.reduce((acc, b) => acc + (b.totalDistance || 0), 0);
-  const totalLiters = missionRecords.reduce((acc, b) => acc + (b.fuelRefilledLiters || 0), 0);
-  const totalCost = missionRecords.reduce((acc, b) => acc + (b.fuelRefilledCost || 0), 0);
+  // Sorted mission records (oldest to newest: travel date asc, start time asc, memoNo/id asc)
+  // Safely creates a new array copy; does NOT mutate state or props
+  const sortedMissionRecords = [...missionRecords].sort((a, b) => {
+    const timeA = a.date ? new Date(a.date).getTime() : 0;
+    const timeB = b.date ? new Date(b.date).getTime() : 0;
+    const validTimeA = Number.isNaN(timeA) ? 0 : timeA;
+    const validTimeB = Number.isNaN(timeB) ? 0 : timeB;
+
+    if (validTimeA !== validTimeB) {
+      return validTimeA - validTimeB;
+    }
+
+    const startA = (a.startTime || a.actualDepartureTime || '').trim();
+    const startB = (b.startTime || b.actualDepartureTime || '').trim();
+    if (startA && startB && startA !== startB) {
+      return startA.localeCompare(startB);
+    }
+    if (startA && !startB) return -1;
+    if (!startA && startB) return 1;
+
+    const idA = (a.memoNo || a.id || '').trim();
+    const idB = (b.memoNo || b.id || '').trim();
+    const idCmp = idA.localeCompare(idB, 'th', { numeric: true });
+    if (idCmp !== 0) return idCmp;
+
+    return (a.id || '').localeCompare(b.id || '', 'th', { numeric: true });
+  });
+
+  const totalKm = sortedMissionRecords.reduce((acc, b) => acc + (b.totalDistance || 0), 0);
+  const totalLiters = sortedMissionRecords.reduce((acc, b) => acc + (b.fuelRefilledLiters || 0), 0);
+  const totalCost = sortedMissionRecords.reduce((acc, b) => acc + (b.fuelRefilledCost || 0), 0);
 
   const docTitle = `ทะเบียนคุมการใช้รถยนต์_${filterCarPlate === 'all' ? 'ทุกคัน' : filterCarPlate.replace(/\s+/g, '_')}`;
 
@@ -150,76 +178,95 @@ export const PrintOfficialRegisterModal: React.FC<PrintOfficialRegisterModalProp
           </div>
 
           {/* Table */}
-          <div className="overflow-x-auto">
-            <table className="w-full border-collapse border border-slate-900 text-[10px] sm:text-[11px]">
-              <thead>
-                <tr className="bg-slate-100 border-b border-slate-900 text-slate-900">
-                  <th className="border border-slate-900 p-1.5 text-center w-8">ลำดับ</th>
-                  <th className="border border-slate-900 p-1.5 text-center w-20">วัน เดือน ปี</th>
-                  <th className="border border-slate-900 p-1.5 text-center w-24">เลขที่ใบเบิก/บันทึก</th>
-                  <th className="border border-slate-900 p-1.5 text-center">รถยนต์/ทะเบียน</th>
-                  <th className="border border-slate-900 p-1.5 text-left">ผู้ขอใช้รถ / สังกัดกลุ่มงาน</th>
-                  <th className="border border-slate-900 p-1.5 text-left">สถานที่ไปราชการ / ภารกิจ</th>
-                  <th className="border border-slate-900 p-1.5 text-center w-16">เวลาไป-กลับ</th>
-                  <th className="border border-slate-900 p-1.5 text-right w-16">ไมล์ไป</th>
-                  <th className="border border-slate-900 p-1.5 text-right w-16">ไมล์กลับ</th>
-                  <th className="border border-slate-900 p-1.5 text-right w-14 font-bold">รวม (กม.)</th>
-                  <th className="border border-slate-900 p-1.5 text-center w-20">น้ำมัน (ลิตร/บาท)</th>
-                  <th className="border border-slate-900 p-1.5 text-center w-24">พนักงานขับรถ</th>
-                  <th className="border border-slate-900 p-1.5 text-center w-20">สถานะคุมพัสดุ</th>
+          <div className="overflow-x-auto print:overflow-visible">
+            <table className="w-full table-fixed border-collapse border border-slate-900 text-[10px] sm:text-[11px] print:text-[7.5pt] print:leading-tight">
+              <colgroup>
+                <col style={{ width: '3.5%' }} />
+                <col style={{ width: '8%' }} />
+                <col style={{ width: '8%' }} />
+                <col style={{ width: '8.5%' }} />
+                <col style={{ width: '12%' }} />
+                <col style={{ width: '15%' }} />
+                <col style={{ width: '7%' }} />
+                <col style={{ width: '6%' }} />
+                <col style={{ width: '6%' }} />
+                <col style={{ width: '5.5%' }} />
+                <col style={{ width: '7.5%' }} />
+                <col style={{ width: '6.5%' }} />
+                <col style={{ width: '6.5%' }} />
+              </colgroup>
+              <thead style={{ display: 'table-header-group' }} className="print:[display:table-header-group]">
+                <tr className="bg-slate-100 border-b border-slate-900 text-slate-900 break-inside-avoid print:break-inside-avoid" style={{ pageBreakInside: 'avoid', breakInside: 'avoid' }}>
+                  <th className="border border-slate-900 p-1 text-center font-bold break-words">ลำดับ</th>
+                  <th className="border border-slate-900 p-1 text-center font-bold break-words">วัน เดือน ปี</th>
+                  <th className="border border-slate-900 p-1 text-center font-bold break-words">เลขที่ใบเบิก/บันทึก</th>
+                  <th className="border border-slate-900 p-1 text-center font-bold break-words">รถยนต์/ทะเบียน</th>
+                  <th className="border border-slate-900 p-1 text-left font-bold break-words">ผู้ขอใช้รถ / สังกัดกลุ่มงาน</th>
+                  <th className="border border-slate-900 p-1 text-left font-bold break-words">สถานที่ไปราชการ / ภารกิจ</th>
+                  <th className="border border-slate-900 p-1 text-center font-bold break-words">เวลาไป-กลับ</th>
+                  <th className="border border-slate-900 p-1 text-right font-bold break-words">ไมล์ไป</th>
+                  <th className="border border-slate-900 p-1 text-right font-bold break-words">ไมล์กลับ</th>
+                  <th className="border border-slate-900 p-1 text-right font-bold break-words">รวม (กม.)</th>
+                  <th className="border border-slate-900 p-1 text-center font-bold break-words">น้ำมัน (ลิตร/บาท)</th>
+                  <th className="border border-slate-900 p-1 text-center font-bold break-words">พนักงานขับรถ</th>
+                  <th className="border border-slate-900 p-1 text-center font-bold break-words">สถานะคุมพัสดุ</th>
                 </tr>
               </thead>
               <tbody>
-                {missionRecords.length === 0 ? (
+                {sortedMissionRecords.length === 0 ? (
                   <tr>
                     <td colSpan={13} className="border border-slate-900 p-6 text-center text-slate-500">
                       ยังไม่มีรายการบันทึกไมล์ในทะเบียนคุม
                     </td>
                   </tr>
                 ) : (
-                  missionRecords.map((b, idx) => {
+                  sortedMissionRecords.map((b, idx) => {
                     const startKm = b.startMileage || 0;
                     const endKm = b.endMileage || 0;
                     const kmDriven = b.totalDistance || (endKm > startKm ? endKm - startKm : 0);
 
                     return (
-                      <tr key={b.id} className="border-b border-slate-400">
-                        <td className="border border-slate-900 p-1.5 text-center font-mono">{idx + 1}</td>
-                        <td className="border border-slate-900 p-1.5 text-center whitespace-nowrap">
+                      <tr
+                        key={b.id}
+                        className="border-b border-slate-400 break-inside-avoid print:break-inside-avoid"
+                        style={{ pageBreakInside: 'avoid', breakInside: 'avoid' }}
+                      >
+                        <td className="border border-slate-900 p-1 text-center font-mono break-words">{idx + 1}</td>
+                        <td className="border border-slate-900 p-1 text-center break-words leading-tight">
                           {formatThaiDate(b.date, 'short')}
                         </td>
-                        <td className="border border-slate-900 p-1.5 text-center font-mono">
+                        <td className="border border-slate-900 p-1 text-center font-mono break-words leading-tight">
                           {b.memoNo || b.id}
                         </td>
-                        <td className="border border-slate-900 p-1.5 text-center font-semibold">
+                        <td className="border border-slate-900 p-1 text-center font-semibold break-words leading-tight">
                           {b.carName.replace(/Toyota|Hilux|Camry|Commuter|Fortuner/gi, '').trim() || b.carName}
                         </td>
-                        <td className="border border-slate-900 p-1.5">
-                          <strong>{b.name}</strong>
-                          <div className="text-[9px] text-slate-600">{b.department}</div>
+                        <td className="border border-slate-900 p-1 break-words whitespace-normal leading-tight">
+                          <strong className="block text-slate-900">{b.name}</strong>
+                          <div className="text-[9px] print:text-[7pt] text-slate-600 break-words">{b.department}</div>
                         </td>
-                        <td className="border border-slate-900 p-1.5">
-                          <div className="font-semibold">{b.destination}</div>
-                          <div className="text-[9px] text-slate-600 truncate max-w-xs">{b.purpose}</div>
+                        <td className="border border-slate-900 p-1 break-words whitespace-normal leading-tight">
+                          <div className="font-semibold text-slate-900 break-words">{b.destination}</div>
+                          <div className="text-[9px] print:text-[7pt] text-slate-600 break-words whitespace-normal">{b.purpose}</div>
                         </td>
-                        <td className="border border-slate-900 p-1.5 text-center whitespace-nowrap font-mono">
+                        <td className="border border-slate-900 p-1 text-center font-mono break-words leading-tight">
                           {b.actualDepartureTime || b.startTime || '-'}<br />
                           {b.actualReturnTime || b.endTime || '-'}
                         </td>
-                        <td className="border border-slate-900 p-1.5 text-right font-mono font-medium">
+                        <td className="border border-slate-900 p-1 text-right font-mono font-medium break-words">
                           {startKm ? startKm.toLocaleString() : '-'}
                         </td>
-                        <td className="border border-slate-900 p-1.5 text-right font-mono font-medium">
+                        <td className="border border-slate-900 p-1 text-right font-mono font-medium break-words">
                           {endKm ? endKm.toLocaleString() : (b.status === 'in_progress' ? 'กำลังเดินทาง' : '-')}
                         </td>
-                        <td className="border border-slate-900 p-1.5 text-right font-mono font-bold text-slate-900 bg-slate-50">
+                        <td className="border border-slate-900 p-1 text-right font-mono font-bold text-slate-900 bg-slate-50 print:bg-transparent break-words">
                           {kmDriven > 0 ? kmDriven.toLocaleString() : '-'}
                         </td>
-                        <td className="border border-slate-900 p-1.5 text-center">
+                        <td className="border border-slate-900 p-1 text-center break-words leading-tight">
                           {b.fuelRefilledLiters ? (
                             <div>
                               <span>{b.fuelRefilledLiters} ล.</span>
-                              <div className="text-[9px] text-slate-600 font-mono">
+                              <div className="text-[9px] print:text-[7pt] text-slate-600 font-mono">
                                 {b.fuelRefilledCost ? `${b.fuelRefilledCost.toLocaleString()} บ.` : ''}
                               </div>
                             </div>
@@ -227,10 +274,10 @@ export const PrintOfficialRegisterModal: React.FC<PrintOfficialRegisterModalProp
                             <span className="text-slate-400">-</span>
                           )}
                         </td>
-                        <td className="border border-slate-900 p-1.5 text-center font-medium">
+                        <td className="border border-slate-900 p-1 text-center font-medium break-words leading-tight">
                           {b.driverName || '-'}
                         </td>
-                        <td className="border border-slate-900 p-1.5 text-center text-[10px]">
+                        <td className="border border-slate-900 p-1 text-center text-[9px] print:text-[7pt] break-words leading-tight">
                           {b.status === 'completed' || b.registeredInAssetControl ? (
                             <span className="text-emerald-800 font-bold">✓ ลงคุมแล้ว</span>
                           ) : b.status === 'in_progress' ? (
@@ -245,19 +292,19 @@ export const PrintOfficialRegisterModal: React.FC<PrintOfficialRegisterModalProp
                 )}
               </tbody>
               {/* Summary Totals Row */}
-              <tfoot>
-                <tr className="bg-slate-100 font-bold border-t-2 border-slate-900">
-                  <td colSpan={9} className="border border-slate-900 p-2 text-right">
-                    รวมทั้งสิ้น ({missionRecords.length} ภารกิจ):
+              <tfoot style={{ display: 'table-footer-group' }} className="print:[display:table-footer-group]">
+                <tr className="bg-slate-100 border-t-2 border-slate-900 font-bold break-inside-avoid print:break-inside-avoid" style={{ pageBreakInside: 'avoid', breakInside: 'avoid' }}>
+                  <td colSpan={9} className="border border-slate-900 p-1.5 text-right break-words">
+                    รวมทั้งสิ้น ({sortedMissionRecords.length} ภารกิจ):
                   </td>
-                  <td className="border border-slate-900 p-2 text-right font-mono text-xs">
+                  <td className="border border-slate-900 p-1.5 text-right font-mono text-[10px] print:text-[7.5pt] break-words">
                     {totalKm.toLocaleString()} กม.
                   </td>
-                  <td className="border border-slate-900 p-2 text-center text-[10px]">
+                  <td className="border border-slate-900 p-1.5 text-center text-[9px] print:text-[7pt] break-words">
                     {totalLiters > 0 ? `${totalLiters} ล.` : '-'}
                     {totalCost > 0 && <div>{totalCost.toLocaleString()} บ.</div>}
                   </td>
-                  <td colSpan={2} className="border border-slate-900 p-2 text-center text-[10px] text-slate-600">
+                  <td colSpan={2} className="border border-slate-900 p-1.5 text-center text-[9px] print:text-[7pt] text-slate-600 break-words">
                     ตรวจรับถูกต้องตามระเบียบ
                   </td>
                 </tr>
@@ -266,7 +313,10 @@ export const PrintOfficialRegisterModal: React.FC<PrintOfficialRegisterModalProp
           </div>
 
           {/* Thai Government Official Signatures Block */}
-          <div className="pt-6 grid grid-cols-3 gap-8 text-center text-xs break-inside-avoid">
+          <div
+            className="pt-6 grid grid-cols-3 gap-8 text-center text-xs break-inside-avoid print:break-inside-avoid"
+            style={{ pageBreakInside: 'avoid', breakInside: 'avoid' }}
+          >
             {/* Signature 1: Driver */}
             <div className="space-y-4">
               <p className="font-semibold text-slate-800">ผู้รายงาน / พนักงานขับรถยนต์</p>

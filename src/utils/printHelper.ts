@@ -58,10 +58,10 @@ export function printElementById(elementId: string, options: PrintOptions = {}) 
         <style>
           @page {
             size: A4 ${orientation};
-            margin-top: ${orientation === 'landscape' ? '1.5cm' : '2cm'};
-            margin-right: ${orientation === 'landscape' ? '1.5cm' : '2cm'};
-            margin-bottom: ${orientation === 'landscape' ? '1.5cm' : '2cm'};
-            margin-left: ${orientation === 'landscape' ? '1.5cm' : '3cm'};
+            margin-top: ${orientation === 'landscape' ? '1.2cm' : '2cm'};
+            margin-right: ${orientation === 'landscape' ? '1.2cm' : '2cm'};
+            margin-bottom: ${orientation === 'landscape' ? '1.2cm' : '2cm'};
+            margin-left: ${orientation === 'landscape' ? '1.2cm' : '3cm'};
           }
           * {
             -webkit-print-color-adjust: exact !important;
@@ -74,10 +74,34 @@ export function printElementById(elementId: string, options: PrintOptions = {}) 
             padding: 0 !important;
             width: 100% !important;
             font-family: 'TH Sarabun PSK', 'TH Sarabun New', 'Sarabun', Tahoma, sans-serif !important;
+            visibility: visible !important;
+          }
+          body * {
+            visibility: visible !important;
           }
           .no-print, button, .print-hide, [data-print-hide="true"] {
             display: none !important;
             visibility: hidden !important;
+          }
+          table {
+            border-collapse: collapse !important;
+            width: 100% !important;
+            page-break-inside: auto !important;
+            break-inside: auto !important;
+          }
+          thead {
+            display: table-header-group !important;
+          }
+          tfoot {
+            display: table-footer-group !important;
+          }
+          tr {
+            page-break-inside: avoid !important;
+            break-inside: avoid !important;
+          }
+          th, td {
+            word-break: break-word !important;
+            overflow-wrap: break-word !important;
           }
           #${elementId} {
             box-shadow: none !important;
@@ -91,14 +115,10 @@ export function printElementById(elementId: string, options: PrintOptions = {}) 
             box-sizing: border-box !important;
             padding: 0 !important;
             overflow: visible !important;
-            font-family: 'TH Sarabun PSK', 'TH Sarabun New', 'Sarabun', Tahoma, sans-serif !important;
-            font-size: 13pt !important;
-            line-height: 1.45 !important;
-            page-break-after: avoid !important;
-            page-break-inside: avoid !important;
-            break-inside: avoid !important;
-            display: flex !important;
+            display: block !important;
             visibility: visible !important;
+            page-break-inside: auto !important;
+            break-inside: auto !important;
           }
         </style>
       </head>

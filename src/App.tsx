@@ -1602,8 +1602,10 @@ export default function App() {
       <ClearAllBookingsModal
         isOpen={isClearAllBookingsModalOpen}
         onClose={() => setIsClearAllBookingsModalOpen(false)}
+        onConfirmClearAll={handleClearAllBookings}
         onConfirmClear={handleClearAllBookings}
         onExportBackup={handleExportBackupBeforeClear}
+        bookingsCount={bookings.length}
         totalBookingsCount={bookings.length}
       />
 

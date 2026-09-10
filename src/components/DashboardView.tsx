@@ -81,6 +81,38 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
     return matchStatus && matchSearch;
   });
 
+  // Sort filtered bookings safely without mutating original props:
+  // 1. Travel date descending (latest date first)
+  // 2. If same date, createdAt descending (latest createdAt first)
+  // 3. If same, deterministic tie-break by memoNo/id
+  // Handles legacy/corrupt records with missing date or createdAt safely
+  const sortedBookings = [...filteredBookings].sort((a, b) => {
+    const timeA = a.date ? new Date(a.date).getTime() : 0;
+    const timeB = b.date ? new Date(b.date).getTime() : 0;
+    const validTimeA = Number.isNaN(timeA) ? 0 : timeA;
+    const validTimeB = Number.isNaN(timeB) ? 0 : timeB;
+
+    if (validTimeB !== validTimeA) {
+      return validTimeB - validTimeA;
+    }
+
+    const createdA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+    const createdB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+    const validCreatedA = Number.isNaN(createdA) ? 0 : createdA;
+    const validCreatedB = Number.isNaN(createdB) ? 0 : createdB;
+
+    if (validCreatedB !== validCreatedA) {
+      return validCreatedB - validCreatedA;
+    }
+
+    const keyA = (a.memoNo || a.id || '').trim();
+    const keyB = (b.memoNo || b.id || '').trim();
+    const keyCmp = keyB.localeCompare(keyA, 'th', { numeric: true });
+    if (keyCmp !== 0) return keyCmp;
+
+    return (b.id || '').localeCompare(a.id || '', 'th', { numeric: true });
+  });
+
   return (
     <div className="space-y-6">
       
@@ -308,7 +340,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             <div className="flex items-center space-x-2.5">
               <h3 className="font-bold text-sm text-slate-900 flex items-center space-x-2">
                 <FileText className="w-4 h-4 text-orange-600" />
-                <span>รายการใบเบิกและสถานะคำขอทั้งหมด ({filteredBookings.length})</span>
+                <span>รายการใบเบิกและสถานะคำขอทั้งหมด ({sortedBookings.length})</span>
               </h3>
               {onOpenClearAllBookings && (currentUser.role === 'admin' || currentUser.role === 'director') && bookings.length > 0 && (
                 <button
@@ -375,14 +407,14 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         </div>
 
         {/* Booking Cards List */}
-        {filteredBookings.length === 0 ? (
+        {sortedBookings.length === 0 ? (
           <div className="py-12 text-center text-slate-400 text-xs space-y-2">
             <FileText className="w-10 h-10 mx-auto text-slate-300" />
             <p className="font-medium text-slate-500">ไม่พบรายการใบเบิกตามเงื่อนไขที่เลือก</p>
           </div>
         ) : (
           <div className="space-y-3">
-            {filteredBookings.map((b) => {
+            {sortedBookings.map((b) => {
               const isOwner = currentUser.username === b.username || currentUser.name === b.name;
               const isAdmin = currentUser.role === 'admin';
               const isDirector = currentUser.role === 'director';
