@@ -190,6 +190,7 @@ export default function App() {
   const [inspectingBooking, setInspectingBooking] = useState<BookingRequest | null>(null);
   const [isInspectionModalOpen, setIsInspectionModalOpen] = useState<boolean>(false);
   const [editingBooking, setEditingBooking] = useState<BookingRequest | null>(null);
+  const [targetMissionBooking, setTargetMissionBooking] = useState<BookingRequest | null>(null);
   const [initialBookingDate, setInitialBookingDate] = useState<string | undefined>(undefined);
 
   // Toast
@@ -1381,6 +1382,8 @@ export default function App() {
         dashboardSubView={dashboardSubView}
         onSelectTab={handleTabChange}
         currentUser={currentUser}
+        allUsers={users}
+        bookings={bookings}
         onLogout={handleLogout}
         bookingsCount={bookings.length}
         pendingBookingsCount={bookings.filter((b) => b.status === 'pending' || b.status === 'pending_director').length}
@@ -1412,6 +1415,7 @@ export default function App() {
             bookings={bookings}
             vehicles={vehicles}
             currentUser={currentUser}
+            allUsers={users}
             subView={dashboardSubView}
             onSubViewChange={setDashboardSubView}
             onOpenBookingForm={handleOpenBookingForm}
@@ -1425,7 +1429,10 @@ export default function App() {
             onOpenDirectorApproval={() => setActiveTab('director')}
             onOpenSignatureModal={handleOpenSignatureModal}
             onOpenUsers={() => setActiveTab('users')}
-            onOpenDriverMissions={() => setActiveTab('driver_mission')}
+            onOpenDriverMissions={(b) => {
+              if (b) setTargetMissionBooking(b);
+              setActiveTab('driver_mission');
+            }}
             onOpenClearAllBookings={() => setIsClearAllBookingsModalOpen(true)}
           />
         )}
@@ -1435,6 +1442,9 @@ export default function App() {
             bookings={bookings}
             vehicles={vehicles}
             currentUser={currentUser}
+            allUsers={users}
+            initialTargetBookingId={targetMissionBooking?.id}
+            onClearInitialTargetBooking={() => setTargetMissionBooking(null)}
             onUpdateBooking={handleUpdateBooking}
             onUpdateVehicleOdometer={handleUpdateVehicleOdometer}
             onViewMemo={(b) => setSelectedBookingForMemo(b)}

@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
-import { BookingRequest, Vehicle } from '../types';
+import { BookingRequest, Vehicle, User } from '../types';
 import { formatThaiDate } from '../utils/thaiDate';
+import { getMissionPermissionDetails } from '../utils/driverPermissions';
 import {
   X,
   Gauge,
@@ -14,12 +15,15 @@ import {
   FileSpreadsheet,
   ArrowRight,
   TrendingUp,
-  Receipt
+  Receipt,
+  Lock
 } from 'lucide-react';
 
 interface CompleteMissionModalProps {
   booking: BookingRequest;
   vehicle?: Vehicle;
+  currentUser?: User;
+  allUsers?: User[];
   onClose: () => void;
   onConfirmComplete: (
     bookingId: string,
@@ -40,9 +44,16 @@ interface CompleteMissionModalProps {
 export const CompleteMissionModal: React.FC<CompleteMissionModalProps> = ({
   booking,
   vehicle,
+  currentUser,
+  allUsers,
   onClose,
   onConfirmComplete
 }) => {
+  // Check driver execution permissions
+  const permission = currentUser
+    ? getMissionPermissionDetails(booking, currentUser, allUsers)
+    : { canExecute: true, driverDisplayName: booking.driverName || 'ผู้ขับรถ', reason: undefined };
+
   const startMileage = booking.startMileage || vehicle?.odometer || 148520;
   
   const now = new Date();
@@ -72,6 +83,12 @@ export const CompleteMissionModal: React.FC<CompleteMissionModalProps> = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (currentUser && !permission.canExecute) {
+      setErrorMsg(permission.reason || 'ท่านไม่มีสิทธิ์บันทึกจบภารกิจสำหรับใบคำขอนี้');
+      return;
+    }
+
     if (isNaN(endMileageNum) || endMileageNum <= 0) {
       setErrorMsg('กรุณากรอกเลขไมล์ตอนกลับให้ถูกต้อง');
       return;
@@ -153,6 +170,19 @@ export const CompleteMissionModal: React.FC<CompleteMissionModalProps> = ({
 
         {/* Form Body */}
         <form onSubmit={handleSubmit} className="p-6 space-y-5 max-h-[75vh] overflow-y-auto">
+          {currentUser && !permission.canExecute && (
+            <div className="p-4 bg-amber-50 border border-amber-300 text-amber-900 rounded-2xl text-xs space-y-1.5">
+              <div className="flex items-center space-x-2 font-bold text-amber-800">
+                <Lock className="w-4 h-4 text-amber-600 shrink-0" />
+                <span>จำกัดสิทธิ์การบันทึกจบภารกิจเฉพาะผู้ขับขี่ที่ได้รับมอบหมาย</span>
+              </div>
+              <p className="text-slate-600 leading-relaxed">
+                {permission.reason ||
+                  `สงวนสิทธิ์เฉพาะพนักงานขับรถ (${permission.driverDisplayName}) หรือผู้ขอใช้รถกรณีขับขี่ด้วยตนเอง`}
+              </p>
+            </div>
+          )}
+
           {errorMsg && (
             <div className="p-3 bg-rose-50 border border-rose-200 text-rose-700 rounded-xl text-xs flex items-center space-x-2">
               <AlertCircle className="w-4 h-4 shrink-0" />
@@ -355,20 +385,33 @@ export const CompleteMissionModal: React.FC<CompleteMissionModalProps> = ({
 
           {/* Action Buttons */}
           <div className="flex items-center justify-end space-x-3 pt-3 border-t border-slate-200">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2.5 rounded-xl border border-slate-300 text-slate-700 hover:bg-slate-100 text-xs font-semibold transition"
-            >
-              ยกเลิก
-            </button>
-            <button
-              type="submit"
-              className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white text-xs font-bold transition shadow-lg shadow-emerald-600/30 flex items-center space-x-2"
-            >
-              <CheckCircle2 className="w-4 h-4" />
-              <span>ยืนยันสิ้นสุด & ลงทะเบียนคุมพัสดุ</span>
-            </button>
+            {currentUser && !permission.canExecute ? (
+              <button
+                type="button"
+                onClick={onClose}
+                className="px-6 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold transition flex items-center space-x-2"
+              >
+                <Lock className="w-3.5 h-3.5" />
+                <span>ปิดหน้าต่าง (ไม่มีสิทธิ์บันทึกจบภารกิจ)</span>
+              </button>
+            ) : (
+              <>
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="px-4 py-2.5 rounded-xl border border-slate-300 text-slate-700 hover:bg-slate-100 text-xs font-semibold transition"
+                >
+                  ยกเลิก
+                </button>
+                <button
+                  type="submit"
+                  className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white text-xs font-bold transition shadow-lg shadow-emerald-600/30 flex items-center space-x-2"
+                >
+                  <CheckCircle2 className="w-4 h-4" />
+                  <span>ยืนยันสิ้นสุด & ลงทะเบียนคุมพัสดุ</span>
+                </button>
+              </>
+            )}
           </div>
         </form>
       </div>

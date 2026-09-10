@@ -31,11 +31,13 @@ import {
   Sparkles
 } from 'lucide-react';
 import { getUserAllowedMenus } from '../data/mockData';
+import { canUserExecuteMission } from '../utils/driverPermissions';
 
 interface DashboardViewProps {
   bookings: BookingRequest[];
   vehicles: Vehicle[];
   currentUser: User;
+  allUsers?: User[];
   subView?: DashboardSubView;
   onSubViewChange?: (subView: DashboardSubView) => void;
   onOpenBookingForm: (date?: string, carId?: string) => void;
@@ -44,7 +46,7 @@ interface DashboardViewProps {
   onOpenAnalytics: () => void;
   onOpenFleet?: () => void;
   onOpenUsers?: () => void;
-  onOpenDriverMissions?: () => void;
+  onOpenDriverMissions?: (booking?: BookingRequest) => void;
   onOpenAssetInspection?: () => void;
   onViewMemo: (booking: BookingRequest) => void;
   onEditBooking: (booking: BookingRequest) => void;
@@ -58,6 +60,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   bookings,
   vehicles,
   currentUser,
+  allUsers,
   subView = 'overview',
   onSubViewChange,
   onOpenBookingForm,
@@ -311,15 +314,20 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                   <span>ปฏิทินภารกิจ</span>
                 </button>
 
-                {onOpenDriverMissions && (
-                  <button
-                    type="button"
-                    onClick={onOpenDriverMissions}
-                    className="px-3.5 py-2.5 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-semibold transition border border-amber-500 shadow-md shadow-amber-600/30 flex items-center space-x-1.5 cursor-pointer"
-                  >
-                    <Gauge className="w-4 h-4 text-amber-200" />
-                    <span>ภารกิจคนขับ & ทะเบียนคุม</span>
-                  </button>
+                {onOpenDriverMissions &&
+                  (currentUser.role === 'driver' ||
+                    currentUser.role === 'admin' ||
+                    currentUser.role === 'director' ||
+                    getUserAllowedMenus(currentUser).includes('driver_mission') ||
+                    bookings.some((b) => canUserExecuteMission(b, currentUser, allUsers))) && (
+                    <button
+                      type="button"
+                      onClick={() => onOpenDriverMissions()}
+                      className="px-3.5 py-2.5 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-semibold transition border border-amber-500 shadow-md shadow-amber-600/30 flex items-center space-x-1.5 cursor-pointer"
+                    >
+                      <Gauge className="w-4 h-4 text-amber-200" />
+                      <span>ภารกิจคนขับ & ทะเบียนคุม</span>
+                    </button>
                 )}
 
                 <button
@@ -914,19 +922,21 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                         <span>ใบคำขอใช้รถ</span>
                       </button>
 
-                      {onOpenDriverMissions && (b.status === 'approved' || b.status === 'in_progress') && (
-                        <button
-                          type="button"
-                          onClick={onOpenDriverMissions}
-                          className={`px-3 py-2 text-white rounded-xl text-xs font-semibold transition shadow-xs flex items-center space-x-1 cursor-pointer ${
-                            b.status === 'in_progress'
-                              ? 'bg-amber-600 hover:bg-amber-700 animate-pulse'
-                              : 'bg-orange-600 hover:bg-orange-700'
-                          }`}
-                        >
-                          <Gauge className="w-3.5 h-3.5" />
-                          <span>{b.status === 'in_progress' ? 'กรอกไมล์กลับ' : 'เริ่มงาน (ไมล์ไป)'}</span>
-                        </button>
+                      {onOpenDriverMissions &&
+                        (b.status === 'approved' || b.status === 'in_progress') &&
+                        canUserExecuteMission(b, currentUser, allUsers) && (
+                          <button
+                            type="button"
+                            onClick={() => onOpenDriverMissions(b)}
+                            className={`px-3 py-2 text-white rounded-xl text-xs font-semibold transition shadow-xs flex items-center space-x-1 cursor-pointer ${
+                              b.status === 'in_progress'
+                                ? 'bg-amber-600 hover:bg-amber-700 animate-pulse'
+                                : 'bg-orange-600 hover:bg-orange-700'
+                            }`}
+                          >
+                            <Gauge className="w-3.5 h-3.5" />
+                            <span>{b.status === 'in_progress' ? 'กรอกไมล์กลับ' : 'เริ่มงาน (ไมล์ไป)'}</span>
+                          </button>
                       )}
 
                       {isDirector && isPending && (

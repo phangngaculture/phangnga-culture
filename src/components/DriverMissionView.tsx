@@ -1,6 +1,11 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { BookingRequest, Vehicle, User } from '../types';
 import { formatThaiDate } from '../utils/thaiDate';
+import {
+  canUserExecuteMission,
+  getMissionPermissionDetails,
+  isSelfDriveBooking
+} from '../utils/driverPermissions';
 import { StartMissionModal } from './StartMissionModal';
 import { CompleteMissionModal } from './CompleteMissionModal';
 import { PrintOfficialRegisterModal } from './PrintOfficialRegisterModal';
@@ -28,13 +33,17 @@ import {
   Sparkles,
   Info,
   Layers,
-  Users
+  Users,
+  Lock
 } from 'lucide-react';
 
 interface DriverMissionViewProps {
   bookings: BookingRequest[];
   vehicles: Vehicle[];
   currentUser: User;
+  allUsers?: User[];
+  initialTargetBookingId?: string | null;
+  onClearInitialTargetBooking?: () => void;
   onUpdateBooking: (updated: BookingRequest) => void;
   onUpdateVehicleOdometer?: (carId: string, newOdometer: number) => void;
   onViewMemo: (booking: BookingRequest) => void;
@@ -45,6 +54,9 @@ export const DriverMissionView: React.FC<DriverMissionViewProps> = ({
   bookings,
   vehicles,
   currentUser,
+  allUsers,
+  initialTargetBookingId,
+  onClearInitialTargetBooking,
   onUpdateBooking,
   onUpdateVehicleOdometer,
   onViewMemo,
@@ -56,11 +68,29 @@ export const DriverMissionView: React.FC<DriverMissionViewProps> = ({
   // Status filter for missions
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
-  
-  // Driver filter (default to currentUser if driver, else 'all')
-  const [selectedDriverFilter, setSelectedDriverFilter] = useState<string>(
-    currentUser.role === 'driver' ? currentUser.name : 'all'
-  );
+
+  // Missions that current user has authority to execute (as assigned driver or self-drive requester)
+  const myExecutableMissions = useMemo(() => {
+    return bookings.filter((b) => canUserExecuteMission(b, currentUser, allUsers));
+  }, [bookings, currentUser, allUsers]);
+
+  const hasMyMissions = myExecutableMissions.length > 0;
+
+  // Smart initial driver filter:
+  // - Driver role: default to their name or my_missions
+  // - Regular officer who has executable missions: default to my_missions
+  // - Admin/Director without personal mission: default to 'all'
+  const initialDriverFilter = useMemo(() => {
+    if (currentUser.role === 'driver') {
+      return 'my_missions';
+    }
+    if (currentUser.role !== 'admin' && currentUser.role !== 'director' && hasMyMissions) {
+      return 'my_missions';
+    }
+    return 'all';
+  }, [currentUser.role, hasMyMissions]);
+
+  const [selectedDriverFilter, setSelectedDriverFilter] = useState<string>(initialDriverFilter);
 
   // Asset register vehicle filter
   const [registerVehicleFilter, setRegisterVehicleFilter] = useState<string>('all');
@@ -71,11 +101,28 @@ export const DriverMissionView: React.FC<DriverMissionViewProps> = ({
   const [isPrintRegisterOpen, setIsPrintRegisterOpen] = useState<boolean>(false);
   const [successToast, setSuccessToast] = useState<string | null>(null);
 
+  // Auto-open target booking if specified from dashboard navigation
+  useEffect(() => {
+    if (initialTargetBookingId) {
+      const target = bookings.find((b) => b.id === initialTargetBookingId);
+      if (target && canUserExecuteMission(target, currentUser, allUsers)) {
+        if (target.status === 'approved') {
+          setSelectedBookingForStart(target);
+        } else if (target.status === 'in_progress') {
+          setSelectedBookingForComplete(target);
+        }
+      }
+      onClearInitialTargetBooking?.();
+    }
+  }, [initialTargetBookingId, bookings, currentUser, allUsers, onClearInitialTargetBooking]);
+
   // Unique driver names for filter
   const availableDrivers = useMemo(() => {
     const set = new Set<string>();
     bookings.forEach((b) => {
-      if (b.driverName) set.add(b.driverName);
+      if (b.driverName && b.driverName !== 'ไม่ระบุ' && !b.driverName.includes('ยังไม่ระบุ')) {
+        set.add(b.driverName);
+      }
     });
     if (currentUser.role === 'driver') set.add(currentUser.name);
     return Array.from(set);
@@ -85,10 +132,14 @@ export const DriverMissionView: React.FC<DriverMissionViewProps> = ({
   const driverMissions = useMemo(() => {
     return bookings.filter((b) => {
       // Driver filter
-      const matchDriver =
-        selectedDriverFilter === 'all' ||
-        b.driverName === selectedDriverFilter ||
-        (currentUser.role === 'driver' && b.driverName?.includes(currentUser.name));
+      let matchDriver = true;
+      if (selectedDriverFilter === 'my_missions') {
+        matchDriver = canUserExecuteMission(b, currentUser, allUsers);
+      } else if (selectedDriverFilter !== 'all') {
+        matchDriver =
+          b.driverName === selectedDriverFilter ||
+          (currentUser.role === 'driver' && b.driverName?.includes(currentUser.name));
+      }
 
       // Status filter
       let matchStatus = true;
@@ -115,13 +166,32 @@ export const DriverMissionView: React.FC<DriverMissionViewProps> = ({
 
       return matchDriver && matchStatus && matchSearch;
     });
-  }, [bookings, selectedDriverFilter, statusFilter, searchQuery, currentUser]);
+  }, [bookings, selectedDriverFilter, statusFilter, searchQuery, currentUser, allUsers]);
 
   // KPIs
   const readyCount = bookings.filter((b) => b.status === 'approved').length;
   const inProgressCount = bookings.filter((b) => b.status === 'in_progress').length;
   const completedCount = bookings.filter((b) => b.status === 'completed').length;
   const totalKmSum = bookings.reduce((sum, b) => sum + (b.totalDistance || 0), 0);
+
+  // Safe opening handlers with validation
+  const handleOpenStartModal = (b: BookingRequest) => {
+    const perm = getMissionPermissionDetails(b, currentUser, allUsers);
+    if (!perm.canExecute) {
+      alert(perm.reason || 'ท่านไม่มีสิทธิ์เริ่มงานสำหรับใบคำขอนี้');
+      return;
+    }
+    setSelectedBookingForStart(b);
+  };
+
+  const handleOpenCompleteModal = (b: BookingRequest) => {
+    const perm = getMissionPermissionDetails(b, currentUser, allUsers);
+    if (!perm.canExecute) {
+      alert(perm.reason || 'ท่านไม่มีสิทธิ์บันทึกจบภารกิจสำหรับใบคำขอนี้');
+      return;
+    }
+    setSelectedBookingForComplete(b);
+  };
 
   // Handlers for starting and completing mission
   const handleStartMission = (
@@ -132,6 +202,11 @@ export const DriverMissionView: React.FC<DriverMissionViewProps> = ({
   ) => {
     const b = bookings.find((item) => item.id === bookingId);
     if (!b) return;
+
+    if (!canUserExecuteMission(b, currentUser, allUsers)) {
+      alert('ท่านไม่มีสิทธิ์เริ่มงานสำหรับใบคำขอนี้');
+      return;
+    }
 
     const updated: BookingRequest = {
       ...b,
@@ -167,6 +242,11 @@ export const DriverMissionView: React.FC<DriverMissionViewProps> = ({
     const b = bookings.find((item) => item.id === bookingId);
     if (!b) return;
 
+    if (!canUserExecuteMission(b, currentUser, allUsers)) {
+      alert('ท่านไม่มีสิทธิ์บันทึกจบภารกิจสำหรับใบคำขอนี้');
+      return;
+    }
+
     const nowIso = new Date().toISOString();
     const updated: BookingRequest = {
       ...b,
@@ -198,7 +278,7 @@ export const DriverMissionView: React.FC<DriverMissionViewProps> = ({
     setSuccessToast(
       `ภารกิจเสร็จสิ้นเรียบร้อย! ไมล์กลับ ${data.endMileage.toLocaleString()} กม. (ระยะทาง ${data.totalDistance} กม.) บันทึกเข้าสมุดทะเบียนคุมของเจ้าหน้าที่พัสดุแล้ว`
     );
-    setTimeout(() => setSuccessToast(null), 6000);
+    setTimeout(() => setSuccessToast(null), 5000);
   };
 
   // CSV Export for Asset Control Register
@@ -529,6 +609,11 @@ export const DriverMissionView: React.FC<DriverMissionViewProps> = ({
                   className="bg-transparent text-xs font-medium text-slate-800 focus:outline-none py-1"
                 >
                   <option value="all">คนขับรถทุกคน (ทั้งหมด)</option>
+                  {hasMyMissions && (
+                    <option value="my_missions" className="font-bold text-orange-700">
+                      ⭐ ภารกิจของฉัน / ขับเอง ({myExecutableMissions.length})
+                    </option>
+                  )}
                   {availableDrivers.map((d) => (
                     <option key={d} value={d}>
                       {d}
@@ -697,24 +782,48 @@ export const DriverMissionView: React.FC<DriverMissionViewProps> = ({
                         
                         {/* CASE 1: READY TO START -> START MISSION BUTTON */}
                         {isReadyToStart && (
-                          <button
-                            onClick={() => setSelectedBookingForStart(b)}
-                            className="w-full sm:w-auto px-5 py-3 bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-700 hover:to-amber-700 text-white rounded-2xl text-xs sm:text-sm font-bold transition shadow-lg shadow-orange-600/30 flex items-center justify-center space-x-2"
-                          >
-                            <Play className="w-4 h-4 fill-white" />
-                            <span>กดเริ่มงาน (กรอกไมล์ไป)</span>
-                          </button>
+                          canUserExecuteMission(b, currentUser, allUsers) ? (
+                            <button
+                              onClick={() => handleOpenStartModal(b)}
+                              className="w-full sm:w-auto px-5 py-3 bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-700 hover:to-amber-700 text-white rounded-2xl text-xs sm:text-sm font-bold transition shadow-lg shadow-orange-600/30 flex items-center justify-center space-x-2 cursor-pointer"
+                            >
+                              <Play className="w-4 h-4 fill-white" />
+                              <span>กดเริ่มงาน (กรอกไมล์ไป)</span>
+                            </button>
+                          ) : (
+                            <div className="flex items-center space-x-1.5 px-3 py-2 bg-slate-100 border border-slate-200 text-slate-600 rounded-xl text-xs font-medium">
+                              <Clock className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                              <span>
+                                {isSelfDriveBooking(b)
+                                  ? `รอผู้ขอใช้รถ (${b.name}) กดเริ่มงาน`
+                                  : b.driverName && b.driverName !== 'ไม่ระบุ' && !b.driverName.includes('ยังไม่ระบุ')
+                                  ? `รอ ${b.driverName} กดเริ่มงาน`
+                                  : 'ยังไม่ระบุพนักงานขับรถ'}
+                              </span>
+                            </div>
+                          )
                         )}
 
                         {/* CASE 2: IN PROGRESS -> COMPLETE MISSION BUTTON */}
                         {isInProgress && (
-                          <button
-                            onClick={() => setSelectedBookingForComplete(b)}
-                            className="w-full sm:w-auto px-5 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white rounded-2xl text-xs sm:text-sm font-bold transition shadow-lg shadow-emerald-600/30 flex items-center justify-center space-x-2 animate-bounce"
-                          >
-                            <CheckCircle2 className="w-4 h-4" />
-                            <span>ขับเสร็จแล้ว (กรอกไมล์กลับ)</span>
-                          </button>
+                          canUserExecuteMission(b, currentUser, allUsers) ? (
+                            <button
+                              onClick={() => handleOpenCompleteModal(b)}
+                              className="w-full sm:w-auto px-5 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white rounded-2xl text-xs sm:text-sm font-bold transition shadow-lg shadow-emerald-600/30 flex items-center justify-center space-x-2 animate-bounce cursor-pointer"
+                            >
+                              <CheckCircle2 className="w-4 h-4" />
+                              <span>ขับเสร็จแล้ว (กรอกไมล์กลับ)</span>
+                            </button>
+                          ) : (
+                            <div className="flex items-center space-x-1.5 px-3 py-2 bg-amber-50 border border-amber-200 text-amber-800 rounded-xl text-xs font-medium">
+                              <Car className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                              <span>
+                                {isSelfDriveBooking(b)
+                                  ? `กำลังขับขี่โดย ${b.name}`
+                                  : `กำลังปฏิบัติงานโดย ${b.driverName || 'ผู้ขับรถ'}`}
+                              </span>
+                            </div>
+                          )
                         )}
 
                         {/* CASE 3: COMPLETED -> REGISTERED BADGE */}
@@ -917,6 +1026,8 @@ export const DriverMissionView: React.FC<DriverMissionViewProps> = ({
         <StartMissionModal
           booking={selectedBookingForStart}
           vehicle={vehicles.find((v) => v.id === selectedBookingForStart.carId)}
+          currentUser={currentUser}
+          allUsers={allUsers}
           onClose={() => setSelectedBookingForStart(null)}
           onConfirmStart={handleStartMission}
         />
@@ -927,6 +1038,8 @@ export const DriverMissionView: React.FC<DriverMissionViewProps> = ({
         <CompleteMissionModal
           booking={selectedBookingForComplete}
           vehicle={vehicles.find((v) => v.id === selectedBookingForComplete.carId)}
+          currentUser={currentUser}
+          allUsers={allUsers}
           onClose={() => setSelectedBookingForComplete(null)}
           onConfirmComplete={handleCompleteMission}
         />

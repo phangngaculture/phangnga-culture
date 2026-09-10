@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { BookingRequest, Vehicle } from '../types';
+import { BookingRequest, Vehicle, User } from '../types';
 import { formatThaiDate } from '../utils/thaiDate';
+import { getMissionPermissionDetails } from '../utils/driverPermissions';
 import {
   X,
   Gauge,
@@ -11,12 +12,15 @@ import {
   AlertCircle,
   FileText,
   ShieldCheck,
-  Sparkles
+  Sparkles,
+  Lock
 } from 'lucide-react';
 
 interface StartMissionModalProps {
   booking: BookingRequest;
   vehicle?: Vehicle;
+  currentUser?: User;
+  allUsers?: User[];
   onClose: () => void;
   onConfirmStart: (
     bookingId: string,
@@ -35,9 +39,16 @@ interface StartMissionModalProps {
 export const StartMissionModal: React.FC<StartMissionModalProps> = ({
   booking,
   vehicle,
+  currentUser,
+  allUsers,
   onClose,
   onConfirmStart
 }) => {
+  // Check driver execution permissions
+  const permission = currentUser
+    ? getMissionPermissionDetails(booking, currentUser, allUsers)
+    : { canExecute: true, driverDisplayName: booking.driverName || 'ผู้ขับรถ', reason: undefined };
+
   // Suggested current mileage from vehicle or defaults
   const initialMileage = vehicle?.odometer || booking.startMileage || 148520;
   
@@ -59,6 +70,12 @@ export const StartMissionModal: React.FC<StartMissionModalProps> = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (currentUser && !permission.canExecute) {
+      setErrorMsg(permission.reason || 'ท่านไม่มีสิทธิ์เริ่มงานสำหรับใบคำขอนี้');
+      return;
+    }
+
     const mileageNum = parseFloat(startMileage);
     if (isNaN(mileageNum) || mileageNum <= 0) {
       setErrorMsg('กรุณากรอกเลขไมล์ตอนออกเดินทางให้ถูกต้อง (ต้องมากกว่า 0)');
@@ -132,6 +149,19 @@ export const StartMissionModal: React.FC<StartMissionModalProps> = ({
 
         {/* Form Body */}
         <form onSubmit={handleSubmit} className="p-6 space-y-5">
+          {currentUser && !permission.canExecute && (
+            <div className="p-4 bg-amber-50 border border-amber-300 text-amber-900 rounded-2xl text-xs space-y-1.5">
+              <div className="flex items-center space-x-2 font-bold text-amber-800">
+                <Lock className="w-4 h-4 text-amber-600 shrink-0" />
+                <span>จำกัดสิทธิ์การเริ่มงานเฉพาะผู้ขับขี่ที่ได้รับมอบหมาย</span>
+              </div>
+              <p className="text-slate-600 leading-relaxed">
+                {permission.reason ||
+                  `สงวนสิทธิ์เฉพาะพนักงานขับรถ (${permission.driverDisplayName}) หรือผู้ขอใช้รถกรณีขับขี่ด้วยตนเอง`}
+              </p>
+            </div>
+          )}
+
           {errorMsg && (
             <div className="p-3 bg-rose-50 border border-rose-200 text-rose-700 rounded-xl text-xs flex items-center space-x-2">
               <AlertCircle className="w-4 h-4 shrink-0" />
@@ -262,20 +292,33 @@ export const StartMissionModal: React.FC<StartMissionModalProps> = ({
 
           {/* Action Buttons */}
           <div className="flex items-center justify-end space-x-3 pt-3 border-t border-slate-200">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2.5 rounded-xl border border-slate-300 text-slate-700 hover:bg-slate-100 text-xs font-semibold transition"
-            >
-              ยกเลิก
-            </button>
-            <button
-              type="submit"
-              className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-700 hover:to-amber-700 text-white text-xs font-bold transition shadow-lg shadow-orange-600/30 flex items-center space-x-2"
-            >
-              <CheckCircle2 className="w-4 h-4" />
-              <span>ยืนยันเริ่มงาน (ออกเดินทาง)</span>
-            </button>
+            {currentUser && !permission.canExecute ? (
+              <button
+                type="button"
+                onClick={onClose}
+                className="px-6 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold transition flex items-center space-x-2"
+              >
+                <Lock className="w-3.5 h-3.5" />
+                <span>ปิดหน้าต่าง (ไม่มีสิทธิ์เริ่มงาน)</span>
+              </button>
+            ) : (
+              <>
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="px-4 py-2.5 rounded-xl border border-slate-300 text-slate-700 hover:bg-slate-100 text-xs font-semibold transition"
+                >
+                  ยกเลิก
+                </button>
+                <button
+                  type="submit"
+                  className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-700 hover:to-amber-700 text-white text-xs font-bold transition shadow-lg shadow-orange-600/30 flex items-center space-x-2"
+                >
+                  <CheckCircle2 className="w-4 h-4" />
+                  <span>ยืนยันเริ่มงาน (ออกเดินทาง)</span>
+                </button>
+              </>
+            )}
           </div>
         </form>
       </div>

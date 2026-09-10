@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
-import { User, MenuKey, DashboardSubView } from '../types';
+import React, { useState, useMemo } from 'react';
+import { User, MenuKey, DashboardSubView, BookingRequest } from '../types';
+import { canUserExecuteMission } from '../utils/driverPermissions';
 import {
   LayoutDashboard,
   Calendar,
@@ -29,6 +30,8 @@ interface SidebarProps {
   dashboardSubView?: DashboardSubView;
   onSelectTab: (tab: string, subView?: DashboardSubView) => void;
   currentUser: User;
+  allUsers?: User[];
+  bookings?: BookingRequest[];
   onLogout?: () => void;
   bookingsCount?: number;
   pendingBookingsCount?: number;
@@ -43,6 +46,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
   dashboardSubView = 'overview',
   onSelectTab,
   currentUser,
+  allUsers,
+  bookings,
   onLogout,
   bookingsCount,
   pendingBookingsCount,
@@ -53,6 +58,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const canAccessDirector = allowedMenus.includes('director');
   const canAccessUsers = allowedMenus.includes('users') || currentUser.role === 'admin';
   const [isDashboardExpanded, setIsDashboardExpanded] = useState<boolean>(true);
+
+  // Check if current user has any mission they can execute (assigned driver or self-drive)
+  const hasExecutableMission = useMemo(() => {
+    if (!bookings) return false;
+    return bookings.some((b) => canUserExecuteMission(b, currentUser, allUsers));
+  }, [bookings, currentUser, allUsers]);
 
   const menuItems = [
     {
@@ -125,7 +136,17 @@ export const Sidebar: React.FC<SidebarProps> = ({
       icon: Database,
       color: 'text-sky-400 bg-sky-500/10'
     }
-  ].filter((item) => allowedMenus.includes(item.id as MenuKey));
+  ].filter((item) => {
+    if (item.id === 'driver_mission') {
+      // Allowed for designated drivers, or admin/director, or users who have assigned / self-drive mission
+      if (currentUser.role === 'driver') return true;
+      if (currentUser.role === 'admin' || currentUser.role === 'director') {
+        return allowedMenus.includes('driver_mission');
+      }
+      return hasExecutableMission;
+    }
+    return allowedMenus.includes(item.id as MenuKey);
+  });
 
   return (
     <>
