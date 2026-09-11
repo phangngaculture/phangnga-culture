@@ -176,17 +176,27 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
     (a, b) => Number(b[1]) - Number(a[1])
   );
 
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour >= 5 && hour < 12) return { text: 'อรุณสวัสดิ์', icon: '🌅', period: 'ช่วงเช้า' };
+    if (hour >= 12 && hour < 17) return { text: 'สวัสดียามบ่าย', icon: '☀️', period: 'ช่วงบ่าย' };
+    if (hour >= 17 && hour < 21) return { text: 'สวัสดียามเย็น', icon: '🌇', period: 'ช่วงเย็น' };
+    return { text: 'สวัสดียามค่ำคืน', icon: '🌙', period: 'ช่วงค่ำ' };
+  };
+
+  const greeting = getGreeting();
+
   return (
     <div className="space-y-6">
-      {/* Top Sub-Navigation Bar */}
-      <div className="bg-white rounded-2xl p-2.5 border border-slate-200 shadow-xs flex flex-wrap items-center justify-between gap-3">
-        <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+      {/* Top Sub-Navigation Bar (Native App Horizontal Pills Bar on Mobile) */}
+      <div className="bg-white rounded-2xl p-2 sm:p-2.5 border border-slate-200 shadow-xs flex items-center justify-between gap-2 overflow-x-auto no-scrollbar">
+        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
           {/* Sub-item 1: ภาพรวม */}
           <button
             id="subnav-btn-overview"
             type="button"
             onClick={() => handleSubViewChange('overview')}
-            className={`px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold flex items-center space-x-2 transition cursor-pointer ${
+            className={`px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold flex items-center space-x-1.5 sm:space-x-2 transition cursor-pointer shrink-0 active:scale-95 ${
               currentSubView === 'overview'
                 ? 'bg-orange-600 text-white shadow-md shadow-orange-600/20'
                 : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
@@ -210,7 +220,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             id="subnav-btn-bookings"
             type="button"
             onClick={() => handleSubViewChange('bookings')}
-            className={`px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold flex items-center space-x-2 transition cursor-pointer ${
+            className={`px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold flex items-center space-x-1.5 sm:space-x-2 transition cursor-pointer shrink-0 active:scale-95 ${
               currentSubView === 'bookings'
                 ? 'bg-orange-600 text-white shadow-md shadow-orange-600/20'
                 : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
@@ -234,14 +244,14 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             id="subnav-btn-vehicles"
             type="button"
             onClick={() => handleSubViewChange('vehicles')}
-            className={`px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold flex items-center space-x-2 transition cursor-pointer ${
+            className={`px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold flex items-center space-x-1.5 sm:space-x-2 transition cursor-pointer shrink-0 active:scale-95 ${
               currentSubView === 'vehicles'
                 ? 'bg-orange-600 text-white shadow-md shadow-orange-600/20'
                 : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
             }`}
           >
             <Car className="w-4 h-4" />
-            <span>สถานะรถยนต์ราชการ</span>
+            <span>สถานะรถยนต์</span>
             <span
               className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
                 currentSubView === 'vehicles'
@@ -254,12 +264,12 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           </button>
         </div>
 
-        {/* Quick Action Button */}
-        <div className="flex items-center space-x-2">
+        {/* Quick Action Button (Desktop only, mobile has central floating button) */}
+        <div className="hidden sm:flex items-center space-x-2 shrink-0">
           <button
             type="button"
             onClick={() => onOpenBookingForm()}
-            className="px-3.5 py-2 bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-700 hover:to-amber-700 text-white rounded-xl text-xs font-semibold transition shadow-xs flex items-center space-x-1.5 cursor-pointer"
+            className="px-3.5 py-2 bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-700 hover:to-amber-700 text-white rounded-xl text-xs font-semibold transition shadow-xs flex items-center space-x-1.5 cursor-pointer active:scale-95"
           >
             <PlusCircle className="w-4 h-4" />
             <span>เขียนใบเบิกใหม่</span>
@@ -275,18 +285,30 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           {/* Welcome Banner Card */}
           <div className="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 rounded-3xl p-6 md:p-8 text-white shadow-xl relative overflow-hidden border border-slate-800">
             <div className="absolute right-0 top-0 bottom-0 w-1/3 bg-gradient-to-l from-orange-500/10 to-transparent pointer-events-none" />
+            
+            {/* Top gold-amber subtle cultural line */}
+            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600" />
 
             <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 relative z-10">
-              <div className="space-y-2">
-                <div className="inline-flex items-center space-x-2 bg-orange-500/20 text-orange-400 border border-orange-500/30 px-3 py-1 rounded-full text-xs font-semibold">
-                  <span className="w-2 h-2 rounded-full bg-orange-400 animate-pulse" />
-                  <span>{currentUser.roleTitle}</span>
-                  <span className="text-slate-400">|</span>
-                  <span>{currentUser.department}</span>
+              <div className="space-y-2.5">
+                <div className="flex flex-wrap items-center gap-2">
+                  <div className="inline-flex items-center space-x-1.5 bg-gradient-to-r from-amber-500/20 to-orange-500/20 text-amber-300 border border-amber-500/40 px-3 py-1 rounded-full text-xs font-semibold shadow-xs">
+                    <span>{greeting.icon}</span>
+                    <span>{greeting.text}, คุณ{currentUser.name}</span>
+                  </div>
+                  <div className="inline-flex items-center space-x-1.5 bg-slate-800/80 text-slate-300 border border-slate-700/60 px-2.5 py-1 rounded-full text-xs font-medium">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
+                    <span>{currentUser.roleTitle}</span>
+                    <span className="text-slate-500">•</span>
+                    <span>{currentUser.department}</span>
+                  </div>
                 </div>
 
-                <h1 className="text-xl md:text-2xl font-bold text-white tracking-tight">
-                  ศูนย์บัญชาการยานพาหนะราชการ (Fleet Management Center)
+                <h1 className="text-xl md:text-2xl font-bold text-white tracking-tight flex items-center space-x-2">
+                  <span>ศูนย์บัญชาการยานพาหนะราชการ</span>
+                  <span className="text-xs bg-orange-500/20 text-orange-300 border border-orange-500/30 font-semibold px-2 py-0.5 rounded-md hidden sm:inline-block">
+                    สวจ.พังงา
+                  </span>
                 </h1>
                 <p className="text-xs md:text-sm text-slate-300 max-w-2xl leading-relaxed">
                   สำนักงานวัฒนธรรมจังหวัดพังงา — สรุปภาพรวมการใช้ยานพาหนะราชการ สถิติการเดินทาง
@@ -299,7 +321,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                 <button
                   type="button"
                   onClick={() => onOpenBookingForm()}
-                  className="px-4 py-2.5 bg-orange-600 hover:bg-orange-700 text-white rounded-xl text-xs font-semibold transition shadow-md shadow-orange-600/30 flex items-center space-x-1.5 cursor-pointer"
+                  className="px-4 py-2.5 bg-orange-600 hover:bg-orange-700 text-white rounded-xl text-xs font-semibold transition shadow-md shadow-orange-600/30 flex items-center space-x-1.5 active:scale-95 cursor-pointer"
                 >
                   <PlusCircle className="w-4 h-4" />
                   <span>เขียนใบเบิกใช้รถ</span>
@@ -364,42 +386,164 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             </div>
           </div>
 
+          {/* Interactive Live Fleet Status Radar Strip */}
+          <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200 shadow-xs space-y-3">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div className="flex items-center space-x-2.5">
+                <div className="w-8 h-8 rounded-xl bg-orange-50 text-orange-600 flex items-center justify-center border border-orange-100">
+                  <Car className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="text-xs sm:text-sm font-bold text-slate-900 flex items-center space-x-2">
+                    <span>เรดาร์สถานะยานพาหนะแบบเรียลไทม์ (Live Fleet Radar)</span>
+                    <span className="relative flex h-2 w-2">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+                    </span>
+                  </h3>
+                  <p className="text-[11px] text-slate-500">
+                    ความพร้อมของยานพาหนะราชการ ณ ลานจอด สนง.วัฒนธรรมจังหวัดพังงา
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => handleSubViewChange('vehicles')}
+                className="text-xs font-semibold text-orange-600 hover:text-orange-700 flex items-center space-x-1 transition cursor-pointer"
+              >
+                <span>ดูข้อมูลรถทั้งหมด</span>
+                <ChevronRight className="w-3.5 h-3.5" />
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-1">
+              {vehicles.map((v) => {
+                const isAvailable = v.status === 'available';
+                const isInMission = v.status === 'in_mission';
+                return (
+                  <div
+                    key={v.id}
+                    onClick={() => onOpenBookingForm(undefined, v.id)}
+                    className={`group p-3.5 rounded-xl border transition-all duration-200 cursor-pointer flex flex-col justify-between space-y-2.5 relative overflow-hidden ${
+                      isInMission
+                        ? 'bg-amber-50/40 border-amber-300 hover:shadow-md hover:border-amber-400'
+                        : isAvailable
+                        ? 'bg-slate-50/70 border-slate-200 hover:bg-white hover:border-orange-300 hover:shadow-md hover:-translate-y-0.5'
+                        : 'bg-rose-50/40 border-rose-200 hover:border-rose-300'
+                    }`}
+                    title={`คลิกเพื่อเขียนใบเบิกขอใช้รถ ${v.name} (${v.plate})`}
+                  >
+                    {/* Top color indicator bar */}
+                    <div
+                      className="absolute top-0 left-0 right-0 h-1"
+                      style={{ backgroundColor: v.colorTag || '#f97316' }}
+                    />
+
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <div className="text-xs font-bold text-slate-900 group-hover:text-orange-600 transition-colors line-clamp-1">
+                          {v.name}
+                        </div>
+                        <div className="text-[11px] font-mono font-semibold text-slate-600 mt-0.5">
+                          {v.plate}
+                        </div>
+                      </div>
+                      
+                      <span
+                        className={`text-[10px] font-semibold px-2 py-0.5 rounded-full flex items-center space-x-1 ${
+                          isAvailable
+                            ? 'bg-emerald-100 text-emerald-800'
+                            : isInMission
+                            ? 'bg-amber-100 text-amber-800 animate-pulse'
+                            : 'bg-rose-100 text-rose-800'
+                        }`}
+                      >
+                        <span
+                          className={`w-1.5 h-1.5 rounded-full ${
+                            isAvailable ? 'bg-emerald-500' : isInMission ? 'bg-amber-500' : 'bg-rose-500'
+                          }`}
+                        />
+                        <span>{isAvailable ? 'พร้อมใช้' : isInMission ? 'ปฏิบัติภารกิจ' : 'ซ่อมบำรุง'}</span>
+                      </span>
+                    </div>
+
+                    <div className="flex items-center justify-between text-[11px] text-slate-500 pt-1 border-t border-slate-100">
+                      <span className="flex items-center space-x-1">
+                        <Gauge className="w-3 h-3 text-slate-400" />
+                        <span>{v.odometer.toLocaleString()} กม.</span>
+                      </span>
+                      <span className="text-[10px] bg-slate-100 px-1.5 py-0.5 rounded text-slate-600 font-medium">
+                        {v.seats} ที่นั่ง
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
           {/* KPI Stats Row */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-xs flex items-center justify-between">
+            <div
+              onClick={() => handleSubViewChange('bookings')}
+              className="bg-white rounded-2xl p-5 border border-slate-200 shadow-xs flex items-center justify-between hover:-translate-y-1 hover:shadow-md transition-all duration-300 cursor-pointer relative overflow-hidden group"
+              title="คลิกเพื่อดูรายการใบเบิกทั้งหมด"
+            >
+              <div className="absolute top-0 left-0 right-0 h-1 bg-orange-500 group-hover:h-1.5 transition-all" />
               <div>
                 <p className="text-xs font-medium text-slate-500">ใบเบิกทั้งหมดในระบบ</p>
                 <h3 className="text-2xl font-bold text-slate-900 mt-1">{totalCount} รายการ</h3>
                 <span className="text-[11px] text-slate-400">ประจำปีงบประมาณ 2569</span>
               </div>
-              <div className="w-12 h-12 rounded-2xl bg-orange-50 text-orange-600 flex items-center justify-center">
+              <div className="w-12 h-12 rounded-2xl bg-orange-50 text-orange-600 flex items-center justify-center group-hover:scale-105 transition-transform">
                 <Car className="w-6 h-6" />
               </div>
             </div>
 
-            <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-xs flex items-center justify-between">
+            <div
+              onClick={() => handleSubViewChange('bookings')}
+              className="bg-white rounded-2xl p-5 border border-slate-200 shadow-xs flex items-center justify-between hover:-translate-y-1 hover:shadow-md transition-all duration-300 cursor-pointer relative overflow-hidden group"
+              title="คลิกเพื่อดูรายการใบเบิกที่อนุมัติแล้ว"
+            >
+              <div className="absolute top-0 left-0 right-0 h-1 bg-emerald-500 group-hover:h-1.5 transition-all" />
               <div>
                 <p className="text-xs font-medium text-slate-500">อนุมัติเรียบร้อยแล้ว</p>
                 <h3 className="text-2xl font-bold text-emerald-600 mt-1">{approvedCount} รายการ</h3>
                 <span className="text-[11px] text-emerald-700 font-medium">พร้อมออกปฏิบัติภารกิจ</span>
               </div>
-              <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
+              <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center group-hover:scale-105 transition-transform">
                 <CheckCircle2 className="w-6 h-6" />
               </div>
             </div>
 
-            <div className="bg-white rounded-2xl p-5 border border-amber-200 bg-amber-50/20 shadow-xs flex items-center justify-between">
+            <div
+              onClick={() => {
+                if (currentUser.role === 'director' || currentUser.role === 'admin') {
+                  onOpenDirectorApproval();
+                } else {
+                  handleSubViewChange('bookings');
+                }
+              }}
+              className="bg-white rounded-2xl p-5 border border-amber-200 bg-amber-50/20 shadow-xs flex items-center justify-between hover:-translate-y-1 hover:shadow-md transition-all duration-300 cursor-pointer relative overflow-hidden group"
+              title="คลิกเพื่อดูรายการที่รอการอนุมัติ"
+            >
+              <div className="absolute top-0 left-0 right-0 h-1 bg-amber-500 group-hover:h-1.5 transition-all" />
               <div>
                 <p className="text-xs font-medium text-slate-600">รอผู้อำนวยการอนุมัติ</p>
                 <h3 className="text-2xl font-bold text-amber-600 mt-1">{pendingCount + pendingDirectorCount} รายการ</h3>
                 <span className="text-[11px] text-amber-700 font-medium">รอการลงนามคำสั่ง</span>
               </div>
-              <div className="w-12 h-12 rounded-2xl bg-amber-100 text-amber-600 flex items-center justify-center">
+              <div className="w-12 h-12 rounded-2xl bg-amber-100 text-amber-600 flex items-center justify-center group-hover:scale-105 transition-transform">
                 <Clock className="w-6 h-6" />
               </div>
             </div>
 
-            <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-xs flex items-center justify-between">
+            <div
+              onClick={() => handleSubViewChange('vehicles')}
+              className="bg-white rounded-2xl p-5 border border-slate-200 shadow-xs flex items-center justify-between hover:-translate-y-1 hover:shadow-md transition-all duration-300 cursor-pointer relative overflow-hidden group"
+              title="คลิกเพื่อดูสถานะยานพาหนะทั้งหมด"
+            >
+              <div className="absolute top-0 left-0 right-0 h-1 bg-teal-500 group-hover:h-1.5 transition-all" />
               <div>
                 <p className="text-xs font-medium text-slate-500">ยานพาหนะพร้อมใช้</p>
                 <h3 className="text-2xl font-bold text-teal-700 mt-1">
@@ -407,7 +551,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                 </h3>
                 <span className="text-[11px] text-teal-700 font-medium">จอดพร้อม ณ สำนักงาน</span>
               </div>
-              <div className="w-12 h-12 rounded-2xl bg-teal-50 text-teal-700 flex items-center justify-center">
+              <div className="w-12 h-12 rounded-2xl bg-teal-50 text-teal-700 flex items-center justify-center group-hover:scale-105 transition-transform">
                 <FileCheck2 className="w-6 h-6" />
               </div>
             </div>
@@ -869,9 +1013,13 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                 return (
                   <div
                     key={b.id}
-                    className="p-4 rounded-xl border border-slate-200 hover:border-orange-300 bg-slate-50/50 hover:bg-white transition flex flex-col md:flex-row justify-between items-start md:items-center gap-4 shadow-2xs"
+                    className="p-4 rounded-2xl border border-slate-200 hover:border-orange-300 bg-slate-50/50 hover:bg-white transition flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shadow-2xs group"
                   >
-                    <div className="space-y-1.5 max-w-2xl">
+                    <div
+                      onClick={() => onViewMemo(b)}
+                      className="space-y-1.5 max-w-2xl cursor-pointer w-full"
+                      title="แตะเพื่อดูใบคำขอใช้รถยนต์"
+                    >
                       <div className="flex flex-wrap items-center gap-2">
                         <span className="font-mono text-xs font-bold text-orange-600 bg-orange-50 px-2 py-0.5 rounded-md border border-orange-200">
                           {b.id}
@@ -886,7 +1034,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                         </span>
                       </div>
 
-                      <h4 className="font-bold text-sm text-slate-900 leading-snug">
+                      <h4 className="font-bold text-sm text-slate-900 group-hover:text-orange-600 transition leading-snug">
                         {b.purpose}
                       </h4>
 
@@ -911,15 +1059,15 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                     </div>
 
                     {/* Actions */}
-                    <div className="flex flex-wrap items-center gap-2 shrink-0">
+                    <div className="w-full sm:w-auto flex flex-wrap items-center gap-2 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-200/60 shrink-0">
                       <button
                         type="button"
                         onClick={() => onViewMemo(b)}
-                        className="px-3.5 py-2 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 rounded-xl text-xs font-medium transition shadow-2xs flex items-center space-x-1 cursor-pointer"
+                        className="flex-1 sm:flex-none px-3.5 py-2.5 bg-orange-50 hover:bg-orange-100 active:scale-95 text-orange-700 border border-orange-200 rounded-xl text-xs font-semibold transition shadow-2xs flex items-center justify-center space-x-1.5 cursor-pointer"
                         title="ดูและพิมพ์ใบคำขอขอใช้รถยนต์ส่วนกลาง"
                       >
                         <Eye className="w-3.5 h-3.5 text-orange-600" />
-                        <span>ใบคำขอใช้รถ</span>
+                        <span>ดูใบคำขอ</span>
                       </button>
 
                       {onOpenDriverMissions &&
@@ -928,7 +1076,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                           <button
                             type="button"
                             onClick={() => onOpenDriverMissions(b)}
-                            className={`px-3 py-2 text-white rounded-xl text-xs font-semibold transition shadow-xs flex items-center space-x-1 cursor-pointer ${
+                            className={`flex-1 sm:flex-none px-3.5 py-2.5 text-white rounded-xl text-xs font-semibold transition shadow-xs flex items-center justify-center space-x-1.5 cursor-pointer active:scale-95 ${
                               b.status === 'in_progress'
                                 ? 'bg-amber-600 hover:bg-amber-700 animate-pulse'
                                 : 'bg-orange-600 hover:bg-orange-700'
@@ -949,7 +1097,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                               onOpenDirectorApproval();
                             }
                           }}
-                          className="px-3 py-2 bg-gradient-to-r from-teal-700 to-emerald-600 hover:from-teal-800 hover:to-emerald-700 text-white rounded-xl text-xs font-semibold transition shadow-xs flex items-center space-x-1 cursor-pointer"
+                          className="flex-1 sm:flex-none px-3.5 py-2.5 bg-gradient-to-r from-teal-700 to-emerald-600 hover:from-teal-800 hover:to-emerald-700 active:scale-95 text-white rounded-xl text-xs font-semibold transition shadow-xs flex items-center justify-center space-x-1.5 cursor-pointer"
                         >
                           <FileCheck2 className="w-3.5 h-3.5" />
                           <span>ลงนามอนุมัติ</span>
@@ -957,11 +1105,11 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                       )}
 
                       {(isOwner || isAdmin) && isPending && (
-                        <>
+                        <div className="flex items-center space-x-1.5">
                           <button
                             type="button"
                             onClick={() => onEditBooking(b)}
-                            className="px-2.5 py-2 bg-amber-50 hover:bg-amber-100 text-amber-700 rounded-xl text-xs font-medium transition cursor-pointer"
+                            className="px-2.5 py-2 bg-amber-50 hover:bg-amber-100 active:scale-95 text-amber-700 rounded-xl text-xs font-medium transition cursor-pointer"
                             title="แก้ไขใบเบิก"
                           >
                             <Edit className="w-3.5 h-3.5" />
@@ -969,12 +1117,12 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                           <button
                             type="button"
                             onClick={() => onDeleteBooking(b.id)}
-                            className="px-2.5 py-2 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-xl text-xs font-medium transition cursor-pointer"
+                            className="px-2.5 py-2 bg-rose-50 hover:bg-rose-100 active:scale-95 text-rose-600 rounded-xl text-xs font-medium transition cursor-pointer"
                             title="ลบคำขอ"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
                           </button>
-                        </>
+                        </div>
                       )}
                     </div>
                   </div>

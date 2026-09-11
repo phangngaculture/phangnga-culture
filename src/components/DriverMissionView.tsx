@@ -5,7 +5,9 @@ import {
   canUserExecuteMission,
   getMissionPermissionDetails,
   isSelfDriveBooking,
-  isThaiNameMatch
+  isThaiNameMatch,
+  validateCanStartMission,
+  validateMissionMileage
 } from '../utils/driverPermissions';
 import { StartMissionModal } from './StartMissionModal';
 import { CompleteMissionModal } from './CompleteMissionModal';
@@ -30,7 +32,9 @@ import {
   Info,
   Layers,
   Users,
-  Lock
+  Lock,
+  UserCheck,
+  RotateCcw
 } from 'lucide-react';
 
 interface DriverMissionViewProps {
@@ -185,7 +189,7 @@ export const DriverMissionView: React.FC<DriverMissionViewProps> = ({
     setSelectedBookingForComplete(b);
   };
 
-  // Handlers for starting and completing mission
+  // Handlers for starting, returning, and completing mission
   const handleStartMission = (
     bookingId: string,
     startMileage: number,
@@ -195,26 +199,60 @@ export const DriverMissionView: React.FC<DriverMissionViewProps> = ({
     const b = bookings.find((item) => item.id === bookingId);
     if (!b) return;
 
-    if (!canUserExecuteMission(b, currentUser, allUsers)) {
-      alert('ท่านไม่มีสิทธิ์เริ่มงานสำหรับใบคำขอนี้');
+    // Check permissions and vehicle conflict
+    const startCheck = validateCanStartMission(b, currentUser, bookings, allUsers);
+    if (!startCheck.canStart) {
+      alert(startCheck.reason || 'ท่านไม่มีสิทธิ์เริ่มงานสำหรับใบคำขอนี้');
       return;
     }
 
+    const nowIso = new Date().toISOString();
     const updated: BookingRequest = {
       ...b,
       status: 'in_progress',
+      missionStatus: 'in_progress',
       startMileage,
       startMileageTime: departureTime,
       actualDepartureTime: departureTime,
-      driverNotes: notes ? notes : b.driverNotes
+      driverNotes: notes ? notes : b.driverNotes,
+      startedByUserId: currentUser.id,
+      startedByName: currentUser.name,
+      startedAt: nowIso,
+      lastEditedByUserId: currentUser.id,
+      lastEditedByName: currentUser.name,
+      lastEditedAt: nowIso
     };
 
     onUpdateBooking(updated);
     setSelectedBookingForStart(null);
 
     // Show toast
-    setSuccessToast(`เริ่มงานสำเร็จ! บันทึกไมล์ตอนไป ${startMileage.toLocaleString()} กม. (สถานะ: กำลังปฏิบัติภารกิจ)`);
+    setSuccessToast(`เริ่มงานสำเร็จ! บันทึกไมล์ตอนไป ${startMileage.toLocaleString()} กม. (สถานะ: กำลังปฏิบัติภารกิจ) โดย ${currentUser.name}`);
     setTimeout(() => setSuccessToast(null), 5000);
+  };
+
+  // Quick action: update sub-status to "returning" (กำลังเดินทางกลับ)
+  const handleMarkReturning = (bookingId: string) => {
+    const b = bookings.find((item) => item.id === bookingId);
+    if (!b) return;
+
+    if (!canUserExecuteMission(b, currentUser, allUsers)) {
+      alert('ท่านไม่มีสิทธิ์ปรับสถานะสำหรับใบคำขอนี้');
+      return;
+    }
+
+    const nowIso = new Date().toISOString();
+    const updated: BookingRequest = {
+      ...b,
+      missionStatus: 'returning',
+      lastEditedByUserId: currentUser.id,
+      lastEditedByName: currentUser.name,
+      lastEditedAt: nowIso
+    };
+
+    onUpdateBooking(updated);
+    setSuccessToast(`อัปเดตสถานะสำเร็จ: รถยนต์กำลังเดินทางกลับสำนักงาน`);
+    setTimeout(() => setSuccessToast(null), 4000);
   };
 
   const handleCompleteMission = (
@@ -239,14 +277,21 @@ export const DriverMissionView: React.FC<DriverMissionViewProps> = ({
       return;
     }
 
+    const mileageCheck = validateMissionMileage(b.startMileage || 0, data.endMileage);
+    if (!mileageCheck.isValid) {
+      alert(mileageCheck.error || 'เลขไมล์ตอนกลับไม่ถูกต้อง');
+      return;
+    }
+
     const nowIso = new Date().toISOString();
     const updated: BookingRequest = {
       ...b,
       status: 'completed',
+      missionStatus: 'completed',
       endMileage: data.endMileage,
       endMileageTime: data.actualReturnTime,
       actualReturnTime: data.actualReturnTime,
-      totalDistance: data.totalDistance,
+      totalDistance: mileageCheck.totalDistance,
       fuelRefilledLiters: data.fuelRefilledLiters,
       fuelRefilledCost: data.fuelRefilledCost,
       fuelStation: data.fuelStation,
@@ -254,7 +299,13 @@ export const DriverMissionView: React.FC<DriverMissionViewProps> = ({
       driverNotes: data.driverNotes,
       tripRating: data.tripRating,
       registeredInAssetControl: true,
-      assetControlRecordedAt: nowIso
+      assetControlRecordedAt: nowIso,
+      completedByUserId: currentUser.id,
+      completedByName: currentUser.name,
+      completedAt: nowIso,
+      lastEditedByUserId: currentUser.id,
+      lastEditedByName: currentUser.name,
+      lastEditedAt: nowIso
     };
 
     onUpdateBooking(updated);
@@ -268,7 +319,7 @@ export const DriverMissionView: React.FC<DriverMissionViewProps> = ({
 
     // Show toast
     setSuccessToast(
-      `ภารกิจเสร็จสิ้นเรียบร้อย! ไมล์กลับ ${data.endMileage.toLocaleString()} กม. (ระยะทาง ${data.totalDistance} กม.) บันทึกเข้าสมุดทะเบียนคุมของเจ้าหน้าที่พัสดุแล้ว`
+      `ภารกิจเสร็จสิ้นเรียบร้อย! ไมล์กลับ ${data.endMileage.toLocaleString()} กม. (ระยะทาง ${mileageCheck.totalDistance} กม.) บันทึกเข้าสมุดทะเบียนคุมของเจ้าหน้าที่พัสดุแล้ว โดย ${currentUser.name}`
     );
     setTimeout(() => setSuccessToast(null), 5000);
   };
@@ -545,10 +596,18 @@ export const DriverMissionView: React.FC<DriverMissionViewProps> = ({
 
                           {/* Dynamic Status Badge */}
                           {isInProgress ? (
-                            <span className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-500 text-white shadow-xs animate-pulse">
-                              <span className="w-2 h-2 rounded-full bg-white animate-ping" />
-                              <span>กำลังปฏิบัติภารกิจ (อยู่บนถนน)</span>
-                            </span>
+                            <div className="flex items-center gap-1.5">
+                              <span className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-500 text-white shadow-xs">
+                                <span className="w-2 h-2 rounded-full bg-white animate-ping" />
+                                <span>กำลังปฏิบัติภารกิจ (อยู่บนถนน)</span>
+                              </span>
+                              {b.missionStatus === 'returning' && (
+                                <span className="inline-flex items-center space-x-1 px-2.5 py-1 rounded-full text-xs font-bold bg-purple-600 text-white shadow-xs">
+                                  <RotateCcw className="w-3 h-3 animate-spin" />
+                                  <span>กำลังเดินทางกลับสำนักงาน</span>
+                                </span>
+                              )}
+                            </div>
                           ) : isReadyToStart ? (
                             <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-orange-100 text-orange-800 border border-orange-300">
                               <Play className="w-3 h-3 text-orange-600" />
@@ -597,8 +656,41 @@ export const DriverMissionView: React.FC<DriverMissionViewProps> = ({
 
                           <div className="flex items-center text-slate-700">
                             <UserIcon className="w-4 h-4 mr-1.5 text-slate-400 shrink-0" />
-                            <span>พนักงานขับรถ: <strong>{b.driverName || 'ไม่ระบุ'}</strong></span>
+                            <span>
+                              {isSelfDriveBooking(b) ? (
+                                <span className="text-blue-700 font-semibold">ผู้ขอขับเอง ({b.name})</span>
+                              ) : (
+                                <span>พนักงานขับรถ: <strong>{b.driverName || 'ไม่ระบุ'}</strong></span>
+                              )}
+                            </span>
                           </div>
+                        </div>
+
+                        {/* Audit & Driver Identity Tags */}
+                        <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                          {isSelfDriveBooking(b) ? (
+                            <span className="inline-flex items-center space-x-1 bg-blue-50 border border-blue-200 text-blue-800 px-2 py-0.5 rounded-lg text-[10px] font-semibold">
+                              <span>🚗 ผู้ขอขับขี่ด้วยตนเอง ({b.name} - {b.department})</span>
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center space-x-1 bg-indigo-50 border border-indigo-200 text-indigo-800 px-2 py-0.5 rounded-lg text-[10px] font-semibold">
+                              <span>👔 ผู้ขับขี่: {b.driverName} {b.driverUsername ? `(@${b.driverUsername})` : ''}</span>
+                            </span>
+                          )}
+
+                          {b.startedByName && (
+                            <span className="inline-flex items-center space-x-1 bg-slate-100 border border-slate-200 text-slate-600 px-2 py-0.5 rounded-lg text-[10px]">
+                              <UserCheck className="w-3 h-3 text-slate-500" />
+                              <span>เริ่มงานโดย: {b.startedByName}</span>
+                            </span>
+                          )}
+
+                          {b.completedByName && (
+                            <span className="inline-flex items-center space-x-1 bg-emerald-50 border border-emerald-200 text-emerald-800 px-2 py-0.5 rounded-lg text-[10px]">
+                              <UserCheck className="w-3 h-3 text-emerald-600" />
+                              <span>บันทึกจบโดย: {b.completedByName}</span>
+                            </span>
+                          )}
                         </div>
 
                         {/* Departure & Return Mileage Live Tag */}
@@ -676,13 +768,26 @@ export const DriverMissionView: React.FC<DriverMissionViewProps> = ({
                         {/* CASE 2: IN PROGRESS -> COMPLETE MISSION BUTTON */}
                         {isInProgress && (
                           canUserExecuteMission(b, currentUser, allUsers) ? (
-                            <button
-                              onClick={() => handleOpenCompleteModal(b)}
-                              className="w-full sm:w-auto px-5 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white rounded-2xl text-xs sm:text-sm font-bold transition shadow-lg shadow-emerald-600/30 flex items-center justify-center space-x-2 animate-bounce cursor-pointer"
-                            >
-                              <CheckCircle2 className="w-4 h-4" />
-                              <span>ขับเสร็จแล้ว (กรอกไมล์กลับ)</span>
-                            </button>
+                            <div className="flex flex-col sm:flex-row lg:flex-col gap-2 w-full sm:w-auto">
+                              {b.missionStatus !== 'returning' && (
+                                <button
+                                  type="button"
+                                  onClick={() => handleMarkReturning(b.id)}
+                                  className="w-full sm:w-auto px-3.5 py-2 bg-purple-50 hover:bg-purple-100 text-purple-800 border border-purple-200 rounded-2xl text-xs font-semibold transition flex items-center justify-center space-x-1.5 shadow-2xs cursor-pointer"
+                                  title="กดแจ้งว่ากำลังเดินทางกลับสำนักงาน"
+                                >
+                                  <RotateCcw className="w-3.5 h-3.5 text-purple-600" />
+                                  <span>แจ้งกำลังเดินทางกลับ</span>
+                                </button>
+                              )}
+                              <button
+                                onClick={() => handleOpenCompleteModal(b)}
+                                className="w-full sm:w-auto px-5 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white rounded-2xl text-xs sm:text-sm font-bold transition shadow-lg shadow-emerald-600/30 flex items-center justify-center space-x-2 animate-bounce cursor-pointer"
+                              >
+                                <CheckCircle2 className="w-4 h-4" />
+                                <span>ขับเสร็จแล้ว (กรอกไมล์กลับ)</span>
+                              </button>
+                            </div>
                           ) : (
                             <div className="flex items-center space-x-1.5 px-3 py-2 bg-amber-50 border border-amber-200 text-amber-800 rounded-xl text-xs font-medium">
                               <Car className="w-3.5 h-3.5 text-amber-600 shrink-0" />
@@ -750,6 +855,7 @@ export const DriverMissionView: React.FC<DriverMissionViewProps> = ({
           vehicle={vehicles.find((v) => v.id === selectedBookingForStart.carId)}
           currentUser={currentUser}
           allUsers={allUsers}
+          allBookings={bookings}
           onClose={() => setSelectedBookingForStart(null)}
           onConfirmStart={handleStartMission}
         />

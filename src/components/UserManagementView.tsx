@@ -33,22 +33,29 @@ import {
   Camera,
   Database,
   PenTool,
-  FileSpreadsheet
+  FileSpreadsheet,
+  MessageSquare,
+  Send,
+  Bell
 } from 'lucide-react';
-import { User, UserRole, MenuKey, MenuDefinition } from '../types';
+import { User, UserRole, MenuKey, MenuDefinition, BookingRequest } from '../types';
 import { APP_MENUS, DEFAULT_ROLE_MENUS, DEPARTMENTS, getUserAllowedMenus } from '../data/mockData';
 import { ProfilePhotoModal } from './ProfilePhotoModal';
 import { BulkAddUsersModal } from './BulkAddUsersModal';
 import { UserSignatureModal } from './UserSignatureModal';
+import { LineSimulatorModal } from './LineSimulatorModal';
+import { sendTestNotification } from '../services/lineNotificationService';
 
 interface UserManagementViewProps {
   users: User[];
   currentUser: User;
+  bookings?: BookingRequest[];
   onAddUser: (user: Omit<User, 'id'>) => void;
   onBulkAddUsers?: (newUsers: Omit<User, 'id'>[]) => void;
   onUpdateUser: (id: string, data: Partial<User>) => void;
   onDeleteUser: (id: string) => void;
   onSwitchUser?: (user: User) => void;
+  onShowToast?: (message: string, type?: 'success' | 'info' | 'warning' | 'error') => void;
 }
 
 const MENU_ICONS: Record<MenuKey, React.ComponentType<{ className?: string }>> = {
@@ -101,11 +108,13 @@ const ROLE_LABELS: Record<UserRole, { label: string; title: string; color: strin
 export const UserManagementView: React.FC<UserManagementViewProps> = ({
   users,
   currentUser,
+  bookings = [],
   onAddUser,
   onBulkAddUsers,
   onUpdateUser,
   onDeleteUser,
-  onSwitchUser
+  onSwitchUser,
+  onShowToast
 }) => {
   // Search & Filter state
   const [searchQuery, setSearchQuery] = useState('');
@@ -119,10 +128,14 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({
   const [permissionTargetUser, setPermissionTargetUser] = useState<User | null>(null);
   const [photoModalUser, setPhotoModalUser] = useState<User | null>(null);
   const [signatureModalUser, setSignatureModalUser] = useState<User | null>(null);
+  const [isLineSimulatorOpen, setIsLineSimulatorOpen] = useState(false);
+  const [isSendingTestLine, setIsSendingTestLine] = useState(false);
+  const [testLineResult, setTestLineResult] = useState<{ message: string; success: boolean } | null>(null);
 
   // Form state
   const [formData, setFormData] = useState({
     username: '',
+    password: '',
     name: '',
     position: '',
     department: DEPARTMENTS[0],
@@ -131,7 +144,10 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({
     email: '',
     avatarUrl: '',
     status: 'active' as 'active' | 'inactive',
-    allowedMenus: ['dashboard', 'calendar', 'booking', 'tracking'] as MenuKey[]
+    allowedMenus: ['dashboard', 'calendar', 'booking', 'tracking'] as MenuKey[],
+    lineUserId: '',
+    lineNotifyToken: '',
+    lineNotificationEnabled: true
   });
 
   // Filtered users list
@@ -159,13 +175,15 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({
       director: users.filter((u) => u.role === 'director').length,
       officer: users.filter((u) => u.role === 'officer').length,
       driver: users.filter((u) => u.role === 'driver').length,
-      active: users.filter((u) => (u.status || 'active') === 'active').length
+      active: users.filter((u) => (u.status || 'active') === 'active'),
+      lineEnabled: users.filter((u) => u.lineNotificationEnabled !== false && (u.lineUserId || u.lineNotifyToken)).length
     };
   }, [users]);
 
   // Open Add Modal
   const handleOpenAddModal = () => {
     setEditingUserId(null);
+    setTestLineResult(null);
     setFormData({
       username: '',
       password: '',
@@ -177,7 +195,10 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({
       email: '',
       avatarUrl: '',
       status: 'active',
-      allowedMenus: [...DEFAULT_ROLE_MENUS.officer]
+      allowedMenus: [...DEFAULT_ROLE_MENUS.officer],
+      lineUserId: '',
+      lineNotifyToken: '',
+      lineNotificationEnabled: true
     });
     setIsAddEditModalOpen(true);
   };
@@ -185,6 +206,7 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({
   // Open Edit Modal
   const handleOpenEditModal = (user: User) => {
     setEditingUserId(user.id);
+    setTestLineResult(null);
     const userMenus = getUserAllowedMenus(user);
     setFormData({
       username: user.username,
@@ -197,9 +219,45 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({
       email: user.email || '',
       avatarUrl: user.avatarUrl || '',
       status: user.status || 'active',
-      allowedMenus: [...userMenus]
+      allowedMenus: [...userMenus],
+      lineUserId: user.lineUserId || '',
+      lineNotifyToken: user.lineNotifyToken || '',
+      lineNotificationEnabled: user.lineNotificationEnabled !== false
     });
     setIsAddEditModalOpen(true);
+  };
+
+  // Quick Test LINE notification for current form user
+  const handleTestLine = async () => {
+    setIsSendingTestLine(true);
+    setTestLineResult(null);
+    try {
+      const tempUser: User = {
+        id: editingUserId || `test-${Date.now()}`,
+        username: formData.username || 'user',
+        name: formData.name || 'ผู้ใช้งานทดสอบ',
+        position: formData.position || 'เจ้าหน้าที่',
+        department: formData.department || DEPARTMENTS[0],
+        role: formData.role,
+        roleTitle: ROLE_LABELS[formData.role]?.title || 'เจ้าหน้าที่',
+        lineUserId: formData.lineUserId.trim() || undefined,
+        lineNotifyToken: formData.lineNotifyToken.trim() || undefined,
+        lineNotificationEnabled: formData.lineNotificationEnabled
+      };
+      const res = await sendTestNotification(tempUser);
+      setTestLineResult({
+        success: res.success,
+        message: `${res.message} (${res.mode === 'simulation' ? 'บันทึกลง LINE Simulator เรียบร้อย' : 'ส่งผ่าน API สำเร็จ'})`
+      });
+      onShowToast?.('ส่งข้อความทดสอบ LINE เรียบร้อยแล้ว (สามารถดูได้ที่ LINE Simulator)', 'success');
+    } catch (err) {
+      setTestLineResult({
+        success: false,
+        message: 'เกิดข้อผิดพลาดในการจำลองส่ง LINE'
+      });
+    } finally {
+      setIsSendingTestLine(false);
+    }
   };
 
   // Open Quick Permission Modal
@@ -257,7 +315,10 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({
         email: formData.email.trim(),
         avatarUrl: formData.avatarUrl,
         status: formData.status,
-        allowedMenus: formData.allowedMenus
+        allowedMenus: formData.allowedMenus,
+        lineUserId: formData.lineUserId.trim() || undefined,
+        lineNotifyToken: formData.lineNotifyToken.trim() || undefined,
+        lineNotificationEnabled: formData.lineNotificationEnabled
       });
     } else {
       // Check username duplicate
@@ -279,7 +340,10 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({
         email: formData.email.trim(),
         avatarUrl: formData.avatarUrl,
         status: formData.status,
-        allowedMenus: formData.allowedMenus
+        allowedMenus: formData.allowedMenus,
+        lineUserId: formData.lineUserId.trim() || undefined,
+        lineNotifyToken: formData.lineNotifyToken.trim() || undefined,
+        lineNotificationEnabled: formData.lineNotificationEnabled
       });
     }
 
@@ -324,6 +388,17 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({
 
           <div className="self-start md:self-center flex items-center space-x-2.5 flex-wrap gap-y-2">
             <button
+              type="button"
+              onClick={() => setIsLineSimulatorOpen(true)}
+              className="px-4 py-2.5 bg-[#06c755] hover:bg-[#05b34c] active:scale-98 text-white rounded-xl text-xs font-bold shadow-lg shadow-emerald-600/25 flex items-center space-x-2 transition cursor-pointer"
+              title="เปิดระบบจำลองและประวัติการแจ้งเตือน LINE"
+            >
+              <MessageSquare className="w-4 h-4" />
+              <span>📱 LINE Simulator & ประวัติ</span>
+            </button>
+
+            <button
+              type="button"
               onClick={() => setIsBulkModalOpen(true)}
               className="px-4 py-2.5 bg-white/10 hover:bg-white/20 active:scale-98 text-white rounded-xl text-xs font-bold border border-white/20 flex items-center space-x-2 transition cursor-pointer backdrop-blur-xs shadow-xs"
               title="นำเข้าผู้ใช้งานจาก Excel / CSV หรือกรอกทีละหลายคน"
@@ -333,6 +408,7 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({
             </button>
 
             <button
+              type="button"
               onClick={handleOpenAddModal}
               className="px-4 py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 active:scale-98 text-white rounded-xl text-xs font-bold shadow-lg shadow-purple-600/30 flex items-center space-x-2 transition cursor-pointer"
             >
@@ -584,6 +660,30 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({
                             <PenTool className="w-3 h-3 text-slate-400" />
                             <span>ยังไม่มีลายเซ็น (คลิกเพื่อเพิ่ม)</span>
                           </button>
+                        )}
+                      </div>
+
+                      {/* LINE Notification Status Badge */}
+                      <div className="pt-0.5 flex items-center gap-2">
+                        {user.lineNotificationEnabled !== false && (user.lineUserId || user.lineNotifyToken) ? (
+                          <span
+                            className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-800 border border-emerald-200 text-[10px] font-semibold"
+                            title={`LINE User ID: ${user.lineUserId || '-'}`}
+                          >
+                            <MessageSquare className="w-3 h-3 text-[#06c755]" />
+                            <span>LINE แจ้งเตือน: เปิดใช้งาน</span>
+                            {user.lineUserId && <span className="font-mono text-[9px] text-emerald-600">({user.lineUserId.substring(0, 6)}...)</span>}
+                          </span>
+                        ) : user.lineNotificationEnabled === false ? (
+                          <span className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-md bg-slate-100 text-slate-400 border border-slate-200 text-[10px]">
+                            <MessageSquare className="w-3 h-3 text-slate-400" />
+                            <span>LINE: ปิดรับแจ้งเตือน</span>
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-md bg-slate-50 text-slate-400 border border-dashed border-slate-200 text-[10px]">
+                            <MessageSquare className="w-3 h-3 text-slate-400" />
+                            <span>LINE: โหมดจำลอง</span>
+                          </span>
                         )}
                       </div>
                     </div>
@@ -925,6 +1025,117 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({
                     </select>
                   </div>
                 </div>
+              </div>
+
+              {/* LINE Notification Settings Card */}
+              <div className="p-4.5 bg-emerald-50/50 rounded-2xl border border-emerald-200/80 space-y-3.5">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-emerald-200/60 pb-2">
+                  <div className="flex items-center space-x-2">
+                    <div className="w-7 h-7 rounded-xl bg-[#06c755] flex items-center justify-center text-white font-bold shadow-xs">
+                      <MessageSquare className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <h4 className="text-xs font-bold text-slate-800">
+                        การแจ้งเตือนผ่าน LINE (LINE Notification & Messaging API)
+                      </h4>
+                      <p className="text-[11px] text-emerald-700">
+                        ส่งการแจ้งเตือนสถานะคำขอ (คำขอใหม่, อนุมัติ, ส่งกลับ, เริ่มเดินทาง) ไปยังบุคคลนี้
+                      </p>
+                    </div>
+                  </div>
+
+                  <label className="inline-flex items-center space-x-2 cursor-pointer bg-white px-3 py-1.5 rounded-xl border border-emerald-300 shadow-2xs">
+                    <input
+                      type="checkbox"
+                      checked={formData.lineNotificationEnabled}
+                      onChange={(e) => setFormData({ ...formData, lineNotificationEnabled: e.target.checked })}
+                      className="w-4 h-4 rounded text-[#06c755] focus:ring-[#06c755]"
+                    />
+                    <span className="text-xs font-semibold text-slate-700">เปิดรับการแจ้งเตือน LINE</span>
+                  </label>
+                </div>
+
+                {formData.lineNotificationEnabled && (
+                  <div className="space-y-3 pt-1">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      {/* LINE User ID */}
+                      <div className="space-y-1">
+                        <div className="flex justify-between items-center">
+                          <label className="text-xs font-semibold text-slate-700">
+                            LINE User ID (ขึ้นต้นด้วย U...)
+                          </label>
+                          <span className="text-[10px] text-slate-400">สำหรับ Push Message</span>
+                        </div>
+                        <input
+                          type="text"
+                          value={formData.lineUserId}
+                          onChange={(e) => setFormData({ ...formData, lineUserId: e.target.value })}
+                          placeholder="เช่น U4af4980629c1234567890abcdef"
+                          className="w-full px-3 py-2 bg-white border border-emerald-200 rounded-xl text-xs font-mono focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#06c755]"
+                        />
+                        <span className="text-[10px] text-slate-500 block">
+                          หากยังไม่มีหรือยังไม่ได้เชื่อมโยง ระบบจะจำลองการส่งผ่าน LINE Simulator ให้โดยอัตโนมัติ
+                        </span>
+                      </div>
+
+                      {/* Line Notify Token / Custom Webhook */}
+                      <div className="space-y-1">
+                        <label className="text-xs font-semibold text-slate-700">
+                          LINE Notify Token หรือ Webhook ส่วนบุคคล (ถ้ามี)
+                        </label>
+                        <input
+                          type="text"
+                          value={formData.lineNotifyToken}
+                          onChange={(e) => setFormData({ ...formData, lineNotifyToken: e.target.value })}
+                          placeholder="เช่น Token หรือ URL รับข้อความ"
+                          className="w-full px-3 py-2 bg-white border border-emerald-200 rounded-xl text-xs font-mono focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#06c755]"
+                        />
+                        <span className="text-[10px] text-slate-500 block">
+                          เว้นว่างไว้เพื่อใช้ค่าคอนฟิกส่วนกลาง หรือโหมดจำลอง (Simulator)
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Test Button & Result alert */}
+                    <div className="pt-2 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                      <div className="text-[11px] text-slate-500">
+                        กดปุ่มเพื่อทดสอบจำลองส่งข้อความแจ้งเตือนหาผู้ใช้รายนี้
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={handleTestLine}
+                        disabled={isSendingTestLine}
+                        className="px-3.5 py-1.5 bg-[#06c755] hover:bg-[#05b34c] active:scale-98 text-white rounded-xl text-xs font-bold shadow-xs transition flex items-center justify-center space-x-1.5 cursor-pointer disabled:opacity-50"
+                      >
+                        {isSendingTestLine ? (
+                          <>
+                            <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                            <span>กำลังส่ง...</span>
+                          </>
+                        ) : (
+                          <>
+                            <Send className="w-3.5 h-3.5" />
+                            <span>⚡ ทดสอบส่งแจ้งเตือน LINE</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
+
+                    {testLineResult && (
+                      <div
+                        className={`p-3 rounded-xl text-xs flex items-center space-x-2 ${
+                          testLineResult.success
+                            ? 'bg-emerald-100/70 text-emerald-800 border border-emerald-300'
+                            : 'bg-rose-100/70 text-rose-800 border border-rose-300'
+                        }`}
+                      >
+                        <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-600" />
+                        <span>{testLineResult.message}</span>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
 
               {/* Menu Permissions Allocation Section */}
@@ -1288,6 +1499,16 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({
           }}
         />
       )}
+
+      {/* LINE Notification Simulator Modal */}
+      <LineSimulatorModal
+        isOpen={isLineSimulatorOpen}
+        onClose={() => setIsLineSimulatorOpen(false)}
+        currentUser={currentUser}
+        users={users}
+        bookings={bookings}
+        onShowToast={onShowToast}
+      />
 
     </div>
   );

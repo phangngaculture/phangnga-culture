@@ -1,0 +1,768 @@
+src/App.tsx:1677 => {currentUser.name}
+src/App.tsx:1677 => {currentUser.roleTitle}
+src/components/AnalyticsView.tsx:191 => {new Date().toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' })}
+src/components/AnalyticsView.tsx:204 => {totalBookings}
+src/components/AnalyticsView.tsx:206 => {approvedBookings}
+src/components/AnalyticsView.tsx:206 => {totalBookings > 0 ? Math.round((approvedBookings / totalBookings) * 100) : 0}
+src/components/AnalyticsView.tsx:216 => {totalDistance.toLocaleString()}
+src/components/AnalyticsView.tsx:229 => {totalFuelCost.toLocaleString()}
+src/components/AnalyticsView.tsx:232 => {totalBookings > 0 ? Math.round(totalFuelCost / totalBookings) : 0}
+src/components/AnalyticsView.tsx:242 => {totalLitres.toFixed(1)}
+src/components/AnalyticsView.tsx:264 => {vehicleStats.map((vs, idx) => ( <div key={idx} className="p-3 rounded-xl border border-slate-200 print:border-slate-400 bg-white space-y-1.5 text-xs break-inside-avoid" > <div className="flex justify-between items-center font-semibold text-slate-900"> <span>{vs.name} ({vs.plate})</span> <span className="text-orange-600 font-bold">{vs.count} ภารกิจ</span> </div> <div className="grid grid-cols-2 gap-2 text-[11px] text-slate-600"> <div>ระยะทางสะสม: <b>{vs.distance.toLocaleString()} กม.</b></div> <div>ค่าน้ำมันรวม: <b>{vs.cost.toLocaleString()} บาท</b></div> </div> {/* Visual bar */} <div className="w-full bg-slate-200 h-1.5 rounded-full overflow-hidden print:hidden"> <div className="bg-orange-500 h-full rounded-full" style={{ width: `${Math.min(100, Math.max(15, vs.count * 30))}%` }} /> </div> </div> ))}
+src/components/AnalyticsView.tsx:270 => {vs.name}
+src/components/AnalyticsView.tsx:270 => {vs.plate}
+src/components/AnalyticsView.tsx:271 => {vs.count}
+src/components/AnalyticsView.tsx:275 => {vs.distance.toLocaleString()}
+src/components/AnalyticsView.tsx:276 => {vs.cost.toLocaleString()}
+src/components/AnalyticsView.tsx:304 => {Object.entries(deptStats).map(([dept, count], idx) => { const pct = totalBookings > 0 ? Math.round((count / totalBookings) * 100) : 0; return ( <div key={idx} className="p-3 rounded-xl border border-slate-200 print:border-slate-400 bg-white space-y-1.5 text-xs break-inside-avoid" > <div className="flex justify-between items-center font-semibold text-slate-900"> <span className="truncate pr-2">{dept}</span> <span className="text-teal-700 font-bold whitespace-nowrap">{count} ครั้ง ({pct}%)</span> </div> <div className="w-full bg-slate-200 h-2 rounded-full overflow-hidden print:hidden"> <div className="bg-teal-700 h-full rounded-full" style={{ width: `${pct}%` }} /> </div> </div> ); })}
+src/components/AnalyticsView.tsx:312 => {dept}
+src/components/AnalyticsView.tsx:313 => {count}
+src/components/AnalyticsView.tsx:313 => {pct}
+src/components/ApprovalSignatureModal.tsx:449 => {booking.id}
+src/components/ApprovalSignatureModal.tsx:474 => {booking.purpose}
+src/components/ApprovalSignatureModal.tsx:477 => {booking.memoNo}
+src/components/ApprovalSignatureModal.tsx:484 => {booking.name}
+src/components/ApprovalSignatureModal.tsx:484 => {booking.department}
+src/components/ApprovalSignatureModal.tsx:488 => {booking.carName}
+src/components/ApprovalSignatureModal.tsx:492 => {booking.destination}
+src/components/ApprovalSignatureModal.tsx:496 => {formatThaiDate(booking.date, 'short')}
+src/components/ApprovalSignatureModal.tsx:626 => {signerName}
+src/components/ApprovalSignatureModal.tsx:628 => {hasDrawn ? '✓ บันทึกลายมือชื่อสดเรียบร้อย' : 'คำแนะนำ: สามารถวาดเพื่อความสมจริง หรือสลับไปใช้ลายเซ็นอิเล็กทรอนิกส์ได้'}
+src/components/ApprovalSignatureModal.tsx:718 => {uploadedSignatureUrl ? 'เปลี่ยนไฟล์ภาพลายเซ็น' : 'คลิกเพื่อเลือกไฟล์รูปภาพลายเซ็น'}
+src/components/ApprovalSignatureModal.tsx:735 => {signerName}
+src/components/ApprovalSignatureModal.tsx:746 => {signerName}
+src/components/ApprovalSignatureModal.tsx:747 => {effectiveApproverRole}
+src/components/ApprovalSignatureModal.tsx:749 => {formatThaiDate(new Date().toISOString().split('T')[0], 'short')}
+src/components/ApprovalSignatureModal.tsx:792 => {PRESET_DIRECTOR_COMMENTS.map((preset, idx) => ( <button key={idx} type="button" onClick={() => setComment(preset)} className="text-[11px] px-2.5 py-1 bg-slate-100 hover:bg-teal-50 hover:text-teal-800 hover:border-teal-300 border border-slate-200 rounded-lg text-slate-700 font-medium transition text-left" > + {preset.slice(0, 36)}... </button> ))}
+src/components/ApprovalSignatureModal.tsx:799 => {preset.slice(0, 36)}
+src/components/AssetInspectionModal.tsx:334 => {errorMsg}
+src/components/AssetInspectionModal.tsx:341 => {booking.memoNo || 'พง ๐๐๓๒(พิเศษ)/-'}
+src/components/AssetInspectionModal.tsx:350 => {booking.purpose}
+src/components/AssetInspectionModal.tsx:353 => {booking.name}
+src/components/AssetInspectionModal.tsx:353 => {booking.driverName || 'ผู้ขอขับเอง'}
+src/components/AssetInspectionModal.tsx:359 => {booking.carName}
+src/components/AssetInspectionModal.tsx:361 => {booking.destination}
+src/components/AssetInspectionModal.tsx:361 => {booking.destProvince || 'พังงา'}
+src/components/AssetInspectionModal.tsx:369 => {startMile.toLocaleString()}
+src/components/AssetInspectionModal.tsx:371 => {booking.startMileageTime}
+src/components/AssetInspectionModal.tsx:376 => {endMile.toLocaleString()}
+src/components/AssetInspectionModal.tsx:378 => {booking.endMileageTime}
+src/components/AssetInspectionModal.tsx:383 => {dist.toLocaleString()}
+src/components/AssetInspectionModal.tsx:385 => {booking.fuelRefilledLiters}
+src/components/AssetInspectionModal.tsx:556 => {inspectorName || 'ชื่อเจ้าหน้าที่พัสดุ'}
+src/components/AssetInspectionView.tsx:117 => {stats.total}
+src/components/AssetInspectionView.tsx:121 => {stats.pending}
+src/components/AssetInspectionView.tsx:125 => {stats.inspected}
+src/components/AssetInspectionView.tsx:156 => {stats.total}
+src/components/AssetInspectionView.tsx:166 => {stats.pending}
+src/components/AssetInspectionView.tsx:176 => {stats.inspected}
+src/components/AssetInspectionView.tsx:186 => {vehicles.map((v) => ( <option key={v.id} value={v.name}> {v.name} </option> ))}
+src/components/AssetInspectionView.tsx:188 => {v.name}
+src/components/AssetInspectionView.tsx:208 => {filteredMissions.map((b) => { const isInspected = b.assetInspectionStatus === 'accepted'; const startMile = b.startMileage || 0; const endMile = b.endMileage || 0; const dist = b.totalDistance || (endMile > startMile ? endMile - startMile : 0); return ( <div key={b.id} className={`bg-white rounded-2xl border transition-all duration-200 hover:shadow-md flex flex-col justify-between overflow-hidden ${ isInspected ? 'border-emerald-200/80 hover:border-emerald-300' : 'border-amber-300 ring-2 ring-amber-400/20 hover:border-amber-400' }`} > {/* Card Top */} <div className="p-4 sm:p-5 space-y-3"> <div className="flex items-center justify-between"> <span className="text-xs font-mono font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md"> {b.memoNo || 'พง ๐๐๓๒(พิเศษ)/-'} </span> {isInspected ? ( <span className="inline-flex items-center space-x-1 text-[11px] font-bold text-emerald-800 bg-emerald-100 px-2.5 py-0.5 rounded-full border border-emerald-300"> <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" /> <span>ตรวจรับเรียบร้อย</span> </span> ) : ( <span className="inline-flex items-center space-x-1 text-[11px] font-bold text-amber-800 bg-amber-100 px-2.5 py-0.5 rounded-full border border-amber-300 animate-pulse"> <AlertCircle className="w-3.5 h-3.5 text-amber-600" /> <span>รอเจ้าหน้าที่พัสดุตรวจรับ</span> </span> )} </div> {/* Purpose & Destination */} <div> <h3 className="font-bold text-sm text-slate-900 leading-snug line-clamp-2"> {b.purpose} </h3> <div className="flex items-center space-x-1.5 text-xs text-slate-500 mt-1"> <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0" /> <span className="truncate">{b.destination} ({b.destProvince || 'พังงา'})</span> </div> </div> {/* Vehicle & Requester */} <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-200 text-xs space-y-1"> <div className="flex items-center justify-between"> <span className="text-slate-500">ยานพาหนะ:</span> <span className="font-semibold text-slate-800 truncate max-w-[170px]">{b.carName}</span> </div> <div className="flex items-center justify-between"> <span className="text-slate-500">ผู้ขอใช้รถ:</span> <span className="font-semibold text-slate-800">{b.name}</span> </div> <div className="flex items-center justify-between"> <span className="text-slate-500">พนักงานขับรถ:</span> <span className="font-semibold text-slate-800"> {b.driverType === 'self' ? `${b.name} (ขับเอง)` : (b.driverName || 'พนักงานขับรถ')} </span> </div> </div> {/* Mileage Strip */} <div className="grid grid-cols-3 gap-1.5 bg-emerald-50/50 p-2 rounded-xl border border-emerald-200/60 text-center"> <div> <span className="text-[10px] text-slate-500 block">ไมล์ไป</span> <span className="font-bold text-xs text-blue-900">{startMile.toLocaleString()}</span> </div> <div> <span className="text-[10px] text-slate-500 block">ไมล์กลับ</span> <span className="font-bold text-xs text-emerald-900">{endMile.toLocaleString()}</span> </div> <div> <span className="text-[10px] text-slate-500 block">ระยะทางรวม</span> <span className="font-bold text-xs text-indigo-900">{dist.toLocaleString()} กม.</span> </div> </div> {/* Inspection Inspector Details if already done */} {isInspected && ( <div className="p-2.5 bg-emerald-50 rounded-xl border border-emerald-200 text-xs space-y-1"> <div className="flex items-center justify-between"> <span className="text-slate-600">ผู้ตรวจรับ:</span> <span className="font-bold text-emerald-900">{b.assetInspectorName}</span> </div> <div className="flex items-center justify-between text-[11px]"> <span className="text-slate-500">ตำแหน่ง:</span> <span className="text-slate-700">{b.assetInspectorPosition}</span> </div> {b.assetInspectionSignature && ( <div className="pt-1 flex items-center justify-between border-t border-emerald-200"> <span className="text-[10px] text-slate-500">ประทับลายมือชื่อ:</span> <img src={b.assetInspectionSignature} alt="ลายเซ็นตรวจรับ" className="h-6 max-w-[100px] object-contain" /> </div> )} </div> )} </div> {/* Card Bottom Actions */} <div className="p-3 bg-slate-50/80 border-t border-slate-200 flex items-center justify-between space-x-2"> <button onClick={() => onViewMemo(b)} className="flex-1 py-2 px-2.5 bg-white hover:bg-slate-100 text-slate-700 text-xs font-semibold rounded-xl border border-slate-300 transition flex items-center justify-center space-x-1" title="เปิดดูใบบันทึกขอใช้รถราชการฉบับเต็ม" > <FileText className="w-3.5 h-3.5 text-slate-500" /> <span>ดูใบบันทึก</span> </button> <button onClick={() => onOpenInspectionModal(b)} className={`flex-1 py-2 px-2.5 text-xs font-bold rounded-xl transition flex items-center justify-center space-x-1 shadow-xs ${ isInspected ? 'bg-slate-800 hover:bg-slate-900 text-white' : 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-600/30' }`} title="เปิดหน้าตรวจรับและลงลายเซ็น" > <ShieldCheck className="w-3.5 h-3.5" /> <span>{isInspected ? 'แก้ไขการตรวจรับ' : 'ลงชื่อตรวจรับรถ'}</span> </button> </div> </div> ); })}
+src/components/AssetInspectionView.tsx:227 => {b.memoNo || 'พง ๐๐๓๒(พิเศษ)/-'}
+src/components/AssetInspectionView.tsx:245 => {b.purpose}
+src/components/AssetInspectionView.tsx:249 => {b.destination}
+src/components/AssetInspectionView.tsx:249 => {b.destProvince || 'พังงา'}
+src/components/AssetInspectionView.tsx:257 => {b.carName}
+src/components/AssetInspectionView.tsx:261 => {b.name}
+src/components/AssetInspectionView.tsx:266 => {b.driverType === 'self' ? `${b.name} (ขับเอง)` : (b.driverName || 'พนักงานขับรถ')}
+src/components/AssetInspectionView.tsx:275 => {startMile.toLocaleString()}
+src/components/AssetInspectionView.tsx:279 => {endMile.toLocaleString()}
+src/components/AssetInspectionView.tsx:283 => {dist.toLocaleString()}
+src/components/AssetInspectionView.tsx:292 => {b.assetInspectorName}
+src/components/AssetInspectionView.tsx:296 => {b.assetInspectorPosition}
+src/components/AssetInspectionView.tsx:333 => {isInspected ? 'แก้ไขการตรวจรับ' : 'ลงชื่อตรวจรับรถ'}
+src/components/AssetRegisterView.tsx:197 => {successToast}
+src/components/AssetRegisterView.tsx:260 => {filteredBookings.length}
+src/components/AssetRegisterView.tsx:262 => {completedCount}
+src/components/AssetRegisterView.tsx:262 => {inProgressCount}
+src/components/AssetRegisterView.tsx:272 => {totalKmSum.toLocaleString()}
+src/components/AssetRegisterView.tsx:275 => {filteredBookings.length > 0 ? (totalKmSum / filteredBookings.length).toFixed(1) : 0}
+src/components/AssetRegisterView.tsx:285 => {totalFuelLitersSum.toLocaleString()}
+src/components/AssetRegisterView.tsx:296 => {totalFuelCostSum.toLocaleString()}
+src/components/AssetRegisterView.tsx:327 => {vehicles.map((v) => ( <option key={v.id} value={v.plate}> {v.name} ({v.plate}) </option> ))}
+src/components/AssetRegisterView.tsx:329 => {v.name}
+src/components/AssetRegisterView.tsx:329 => {v.plate}
+src/components/AssetRegisterView.tsx:385 => {filteredBookings.length}
+src/components/AssetRegisterView.tsx:400 => {filteredBookings.length}
+src/components/AssetRegisterView.tsx:445 => {filteredBookings.map((b, idx) => { const kmDriven = b.totalDistance || (b.endMileage && b.startMileage ? b.endMileage - b.startMileage : 0); const isFinished = b.status === 'completed' || b.registeredInAssetControl; return ( <tr key={b.id} className="hover:bg-teal-50/25 transition"> <td className="p-3 text-center font-mono font-medium text-slate-500"> {idx + 1} </td> <td className="p-3 font-medium text-slate-900 whitespace-nowrap"> {formatThaiDate(b.date, 'short')} </td> <td className="p-3 font-mono text-slate-700 whitespace-nowrap"> {b.memoNo || b.id} </td> <td className="p-3 font-semibold text-teal-900 whitespace-nowrap"> {b.carName} </td> <td className="p-3"> <span className="font-semibold text-slate-800 block whitespace-nowrap">{b.name}</span> <span className="text-[10px] text-slate-500 block truncate max-w-[140px]">{b.department}</span> </td> <td className="p-3 max-w-xs"> <div className="font-medium text-slate-800 truncate" title={b.destination}> {b.destination} </div> <div className="text-[10px] text-slate-500 truncate" title={b.purpose}> {b.purpose} </div> </td> <td className="p-3 text-center font-mono text-[11px] whitespace-nowrap"> <span className="text-slate-700">{b.actualDepartureTime || b.startTime || '-'}</span> <span className="text-slate-400 mx-1">&rarr;</span> <span className="text-slate-700">{b.actualReturnTime || b.endTime || '-'}</span> </td> <td className="p-3 text-right font-mono font-medium text-slate-800 whitespace-nowrap"> {b.startMileage ? b.startMileage.toLocaleString() : '-'} </td> <td className="p-3 text-right font-mono font-medium text-slate-800 whitespace-nowrap"> {b.endMileage ? ( b.endMileage.toLocaleString() ) : b.status === 'in_progress' ? ( <span className="text-amber-600 font-semibold animate-pulse">กำลังวิ่ง</span> ) : ( '-' )} </td> <td className="p-3 text-right font-mono font-bold text-emerald-700 bg-emerald-50/40 whitespace-nowrap"> {kmDriven > 0 ? `+${kmDriven.toLocaleString()}` : '-'} </td> <td className="p-3 text-center whitespace-nowrap"> {b.fuelRefilledLiters ? ( <span className="inline-block bg-amber-50 text-amber-900 px-2 py-0.5 rounded text-[10px] font-medium border border-amber-200"> {b.fuelRefilledLiters} ล. ({b.fuelRefilledCost} บ.) </span> ) : ( <span className="text-slate-400 text-[11px]">-</span> )} </td> <td className="p-3 font-medium text-slate-700 whitespace-nowrap"> {b.driverName || '-'} </td> <td className="p-3 text-center whitespace-nowrap"> {isFinished ? ( <span className="inline-flex items-center space-x-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800"> <CheckCircle2 className="w-3 h-3 text-emerald-600" /> <span>ลงคุมเรียบร้อย</span> </span> ) : ( <span className="inline-flex items-center space-x-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800"> <Clock className="w-3 h-3 text-amber-600" /> <span>อยู่ระหว่างภารกิจ</span> </span> )} </td> <td className="p-3 text-center whitespace-nowrap"> {onViewMemo && ( <button type="button" onClick={() => onViewMemo(b)} className="p-1.5 hover:bg-slate-100 text-slate-600 hover:text-orange-600 rounded-lg transition" title="ดูใบคำขอขอใช้รถยนต์ส่วนกลาง" > <Eye className="w-4 h-4" /> </button> )} </td> </tr> ); })}
+src/components/AssetRegisterView.tsx:452 => {idx + 1}
+src/components/AssetRegisterView.tsx:455 => {formatThaiDate(b.date, 'short')}
+src/components/AssetRegisterView.tsx:458 => {b.memoNo || b.id}
+src/components/AssetRegisterView.tsx:461 => {b.carName}
+src/components/AssetRegisterView.tsx:464 => {b.name}
+src/components/AssetRegisterView.tsx:465 => {b.department}
+src/components/AssetRegisterView.tsx:469 => {b.destination}
+src/components/AssetRegisterView.tsx:472 => {b.purpose}
+src/components/AssetRegisterView.tsx:476 => {b.actualDepartureTime || b.startTime || '-'}
+src/components/AssetRegisterView.tsx:478 => {b.actualReturnTime || b.endTime || '-'}
+src/components/AssetRegisterView.tsx:481 => {b.startMileage ? b.startMileage.toLocaleString() : '-'}
+src/components/AssetRegisterView.tsx:484 => {b.endMileage ? ( b.endMileage.toLocaleString() ) : b.status === 'in_progress' ? ( <span className="text-amber-600 font-semibold animate-pulse">กำลังวิ่ง</span> ) : ( '-' )}
+src/components/AssetRegisterView.tsx:493 => {kmDriven > 0 ? `+${kmDriven.toLocaleString()}` : '-'}
+src/components/AssetRegisterView.tsx:498 => {b.fuelRefilledLiters}
+src/components/AssetRegisterView.tsx:498 => {b.fuelRefilledCost}
+src/components/AssetRegisterView.tsx:505 => {b.driverName || '-'}
+src/components/AssetRegisterView.tsx:551 => {totalKmSum.toLocaleString()}
+src/components/AssetRegisterView.tsx:555 => {totalFuelLitersSum.toLocaleString()}
+src/components/AssetRegisterView.tsx:559 => {completedCount}
+src/components/BackupRestoreView.tsx:270 => {isExporting ? 'กำลังสร้างไฟล์แบ๊คอัพ...' : 'ดาวน์โหลดแบ๊คอัพทั้งหมด (JSON)'}
+src/components/BackupRestoreView.tsx:312 => {statusMessage.text}
+src/components/BackupRestoreView.tsx:340 => {firestoreStatus === 'connected' ? 'ออนไลน์ & เชื่อมต่อแล้ว' : 'กำลังซิงก์แคช...'}
+src/components/BackupRestoreView.tsx:344 => {databaseId}
+src/components/BackupRestoreView.tsx:356 => {isCloudSyncing ? 'กำลังซิงก์ขึ้น Cloud...' : 'ซิงก์ข้อมูลขึ้น Cloud Firestore ทันที'}
+src/components/BackupRestoreView.tsx:367 => {bookings.length}
+src/components/BackupRestoreView.tsx:376 => {vehicles.length}
+src/components/BackupRestoreView.tsx:385 => {fuelLogs.length}
+src/components/BackupRestoreView.tsx:394 => {maintenanceRecords.length}
+src/components/BackupRestoreView.tsx:403 => {users.length}
+src/components/BackupRestoreView.tsx:412 => {notifications.length}
+src/components/BackupRestoreView.tsx:515 => {bookings.length}
+src/components/BackupRestoreView.tsx:553 => {new Date(previewBackup.exportedAt).toLocaleString('th-TH')}
+src/components/BackupRestoreView.tsx:558 => {previewBackup.exportedBy}
+src/components/BackupRestoreView.tsx:562 => {previewBackup.version}
+src/components/BackupRestoreView.tsx:570 => {previewBackup.summary.bookingsCount}
+src/components/BackupRestoreView.tsx:573 => {previewBackup.summary.vehiclesCount}
+src/components/BackupRestoreView.tsx:576 => {previewBackup.summary.fuelLogsCount}
+src/components/BackupRestoreView.tsx:579 => {previewBackup.summary.maintenanceRecordsCount}
+src/components/BackupRestoreView.tsx:582 => {previewBackup.summary.usersCount}
+src/components/BookingFormView.tsx:585 => {editingBooking ? 'แก้ไขแบบคำขอใช้รถยนต์ราชการ' : 'แบบฟอร์มขออนุมัติใช้รถยนต์ราชการ'}
+src/components/BookingFormView.tsx:630 => {POSITIONS.map((pos) => ( <option key={pos} value={pos}> {pos} </option> ))}
+src/components/BookingFormView.tsx:632 => {pos}
+src/components/BookingFormView.tsx:645 => {DEPARTMENTS.map((dept) => ( <option key={dept} value={dept}> {dept} </option> ))}
+src/components/BookingFormView.tsx:647 => {dept}
+src/components/BookingFormView.tsx:668 => {[ 'ตรวจติดตามงานโครงการลานธรรม ลานวิถีไทย', 'ร่วมพิธีบวงสรวงและงานประเพณีทางศาสนาและวัฒนธรรม', 'สำรวจแหล่งมรดกทางวัฒนธรรมและภูมิปัญญาท้องถิ่น', 'เข้าร่วมประชุมราชการและประสานงาน ณ ศาลากลางจังหวัดพังงา', 'จัดกิจกรรมส่งเสริมคุณธรรม จริยธรรม และวิถีถิ่นพังงา', 'ปฏิบัติงานโครงการชุมชนคุณธรรมและประเพณีท้องถิ่น' ].map((preset, idx) => ( <button key={idx} type="button" onClick={() => setPurpose(preset)} className="text-[11px] px-2.5 py-1 bg-slate-100 hover:bg-orange-50 hover:text-orange-700 hover:border-orange-300 border border-slate-200 rounded-lg transition text-slate-700 font-medium" > + {preset.slice(0, 32)}... </button> ))}
+src/components/BookingFormView.tsx:682 => {preset.slice(0, 32)}
+src/components/BookingFormView.tsx:714 => {estimatedDistance}
+src/components/BookingFormView.tsx:731 => {FREQUENT_DESTINATIONS.map((freq) => { const isAdded = destinations.includes(freq.name); return ( <button key={freq.id} type="button" onClick={() => handleSelectFrequentDest(freq)} className={`text-[11px] px-2.5 py-1 rounded-lg transition font-medium flex items-center space-x-1.5 border ${ isAdded ? 'bg-orange-100 text-orange-800 border-orange-300 shadow-2xs font-semibold' : 'bg-white hover:bg-orange-50 hover:text-orange-700 hover:border-orange-200 text-slate-700 border-slate-200' }`} title={`${freq.name} (${freq.tambon}, ${freq.amphoe}, ${freq.province}) ระยะทาง ~${freq.distanceKm} กม.`} > {isAdded && <Check className="w-3 h-3 text-orange-600" />} <span>{freq.shortName}</span> <span className="text-[9px] px-1 py-0.2 bg-slate-100 text-slate-500 rounded"> {freq.distanceKm} กม. </span> </button> ); })}
+src/components/BookingFormView.tsx:746 => {freq.shortName}
+src/components/BookingFormView.tsx:748 => {freq.distanceKm}
+src/components/BookingFormView.tsx:763 => {destProvince === 'กรุงเทพมหานคร' ? `แขวง${destTambon || '-'} เขต${destAmphoe || '-'} กรุงเทพมหานคร` : `ต.${destTambon || '-'} อ.${destAmphoe || '-'} จ.${destProvince || '-'}`}
+src/components/BookingFormView.tsx:787 => {THAI_REGIONS.map((grp) => ( <optgroup key={grp.region} label={grp.region}> {grp.provinces.map((provName) => ( <option key={provName} value={provName}> {provName} </option> ))} </optgroup> ))}
+src/components/BookingFormView.tsx:789 => {grp.provinces.map((provName) => ( <option key={provName} value={provName}> {provName} </option> ))}
+src/components/BookingFormView.tsx:791 => {provName}
+src/components/BookingFormView.tsx:802 => {destProvince === 'กรุงเทพมหานคร' ? 'เขต' : 'อำเภอ'}
+src/components/BookingFormView.tsx:802 => {currentProvinceObj?.amphoes?.length || 0}
+src/components/BookingFormView.tsx:816 => {(currentProvinceObj?.amphoes || []).map((a) => ( <option key={a.amphoe} value={a.amphoe}> {destProvince === 'กรุงเทพมหานคร' ? `เขต${a.amphoe}` : `อ.${a.amphoe}`} </option> ))}
+src/components/BookingFormView.tsx:818 => {destProvince === 'กรุงเทพมหานคร' ? `เขต${a.amphoe}` : `อ.${a.amphoe}`}
+src/components/BookingFormView.tsx:827 => {destProvince === 'กรุงเทพมหานคร' ? 'แขวง' : 'ตำบล'}
+src/components/BookingFormView.tsx:827 => {currentAmphoeObj?.tambons?.length || 0}
+src/components/BookingFormView.tsx:834 => {(currentAmphoeObj?.tambons || []).map((t) => ( <option key={t} value={t}> {destProvince === 'กรุงเทพมหานคร' ? `แขวง${t}` : `ต.${t}`} </option> ))}
+src/components/BookingFormView.tsx:836 => {destProvince === 'กรุงเทพมหานคร' ? `แขวง${t}` : `ต.${t}`}
+src/components/BookingFormView.tsx:895 => {destinations.length}
+src/components/BookingFormView.tsx:910 => {destinations.map((dest, idx) => ( <div key={idx} className="flex items-center justify-between px-3 py-2 bg-white rounded-lg border border-orange-200/60 shadow-2xs text-xs" > <div className="flex items-center space-x-2"> <span className="w-5 h-5 rounded-md bg-orange-500 text-white font-bold text-[10px] flex items-center justify-center shrink-0"> {idx + 1} </span> <span className="font-semibold text-slate-800">{dest}</span> </div> <button type="button" onClick={() => handleRemoveDestination(idx)} className="text-slate-400 hover:text-rose-600 p-1 transition" title="ลบสถานที่นี้" > <Trash2 className="w-3.5 h-3.5" /> </button> </div> ))}
+src/components/BookingFormView.tsx:917 => {idx + 1}
+src/components/BookingFormView.tsx:919 => {dest}
+src/components/BookingFormView.tsx:1019 => {FREQUENT_ORIGINS.map((orig) => ( <option key={orig.name} value={orig.name}> {orig.name} </option> ))}
+src/components/BookingFormView.tsx:1021 => {orig.name}
+src/components/BookingFormView.tsx:1025 => {originGps.name}
+src/components/BookingFormView.tsx:1031 => {originGps.lat.toFixed(4)}
+src/components/BookingFormView.tsx:1031 => {originGps.lng.toFixed(4)}
+src/components/BookingFormView.tsx:1034 => {originGps.description || 'พิกัดเริ่มต้น'}
+src/components/BookingFormView.tsx:1047 => {destinations.length > 0 ? `${destinations.join(' ➔ ')} (${destProvince})` : `จ.${destProvince} อ.${destAmphoe} ต.${destTambon}`}
+src/components/BookingFormView.tsx:1052 => {destinations.length > 0 ? `${destinations.length} จุดหมาย` : '1 จุดหมาย'}
+src/components/BookingFormView.tsx:1072 => {gpsSuccessMsg}
+src/components/BookingFormView.tsx:1078 => {gpsError}
+src/components/BookingFormView.tsx:1089 => {gpsCalculationResult.totalDistanceKm}
+src/components/BookingFormView.tsx:1095 => {gpsCalculationResult.estimatedDurationText}
+src/components/BookingFormView.tsx:1101 => {gpsCalculationResult.straightLineKm}
+src/components/BookingFormView.tsx:1112 => {gpsCalculationResult.legs.map((leg, lIdx) => ( <div key={lIdx} className="flex items-center justify-between py-0.5 border-b border-slate-200/50 last:border-0"> <span className="truncate pr-2"> {lIdx + 1}. {leg.from} ➔ {leg.to} </span> <span className="font-mono font-bold text-indigo-700 shrink-0"> {leg.distanceKm} กม. </span> </div> ))}
+src/components/BookingFormView.tsx:1115 => {lIdx + 1}
+src/components/BookingFormView.tsx:1115 => {leg.from}
+src/components/BookingFormView.tsx:1115 => {leg.to}
+src/components/BookingFormView.tsx:1118 => {leg.distanceKm}
+src/components/BookingFormView.tsx:1128 => {gpsCalculationResult.totalDistanceKm}
+src/components/BookingFormView.tsx:1172 => {assembleDestination() || 'ยังไม่ได้ระบุสถานที่'}
+src/components/BookingFormView.tsx:1195 => {formatThaiDateRange(date, endDate)}
+src/components/BookingFormView.tsx:1198 => {formatThaiTime(startTime)}
+src/components/BookingFormView.tsx:1198 => {formatThaiTime(endTime)}
+src/components/BookingFormView.tsx:1220 => {formatThaiDate(date, 'full')}
+src/components/BookingFormView.tsx:1236 => {formatThaiDate(endDate, 'full')}
+src/components/BookingFormView.tsx:1279 => {conflictingBookings.length}
+src/components/BookingFormView.tsx:1291 => {conflictingBookings.map((cb) => ( <div key={cb.id} className="bg-white/95 rounded-xl p-3 border border-rose-200 shadow-2xs flex flex-wrap items-center justify-between gap-2 text-xs" > <div className="space-y-0.5"> <div className="flex items-center space-x-2"> <span className="font-mono font-bold text-rose-700 bg-rose-100 px-2 py-0.5 rounded text-[11px]"> {cb.id} </span> <b className="text-slate-800">{cb.carName}</b> <span className="text-slate-500">โดย</span> <span className="font-semibold text-slate-800">{cb.name}</span> <span className="text-[11px] text-slate-500">({cb.department})</span> </div> <div className="text-[11px] text-slate-600 flex items-center space-x-2"> <span>กำหนดการ: <b>{formatThaiDateRange(cb.date, cb.endDate)}</b> ({cb.startTime} - {cb.endTime} น.)</span> <span>•</span> <span className="text-slate-500 truncate max-w-xs">ภารกิจ: {cb.purpose}</span> </div> </div> <span className={`text-[11px] font-bold px-2.5 py-1 rounded-lg ${ cb.status === 'approved' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800' }`} > {cb.status === 'approved' ? 'อนุมัติใช้งานแล้ว' : 'รอพิจารณาอนุมัติ'} </span> </div> ))}
+src/components/BookingFormView.tsx:1299 => {cb.id}
+src/components/BookingFormView.tsx:1301 => {cb.carName}
+src/components/BookingFormView.tsx:1303 => {cb.name}
+src/components/BookingFormView.tsx:1304 => {cb.department}
+src/components/BookingFormView.tsx:1307 => {formatThaiDateRange(cb.date, cb.endDate)}
+src/components/BookingFormView.tsx:1307 => {cb.startTime}
+src/components/BookingFormView.tsx:1307 => {cb.endTime}
+src/components/BookingFormView.tsx:1309 => {cb.purpose}
+src/components/BookingFormView.tsx:1320 => {cb.status === 'approved' ? 'อนุมัติใช้งานแล้ว' : 'รอพิจารณาอนุมัติ'}
+src/components/BookingFormView.tsx:1334 => {availableAlternativeVehicle.name}
+src/components/BookingFormView.tsx:1334 => {availableAlternativeVehicle.plate}
+src/components/BookingFormView.tsx:1337 => {availableAlternativeVehicle.fuelType}
+src/components/BookingFormView.tsx:1337 => {availableAlternativeVehicle.driverName}
+src/components/BookingFormView.tsx:1377 => {vehicles.map((v) => { const avail = vehicleAvailability.get(v.id); const isAvail = avail?.isAvailable !== false; return ( <option key={v.id} value={v.id}> {isAvail ? '✅ [ว่าง พร้อมใช้]' : `⚠️ [เวลาชนกับ ${avail?.conflict?.id || 'คิวอื่น'}]`}{' '} {v.name} ({v.plate}) - {v.fuelType} </option> ); })}
+src/components/BookingFormView.tsx:1382 => {isAvail ? '✅ [ว่าง พร้อมใช้]' : `⚠️ [เวลาชนกับ ${avail?.conflict?.id || 'คิวอื่น'}]`}
+src/components/BookingFormView.tsx:1383 => {v.name}
+src/components/BookingFormView.tsx:1383 => {v.plate}
+src/components/BookingFormView.tsx:1383 => {v.fuelType}
+src/components/BookingFormView.tsx:1395 => {vehicles.map((v) => { const avail = vehicleAvailability.get(v.id); const isAvail = avail?.isAvailable !== false; const isSelected = v.id === carId; return ( <button key={v.id} type="button" onClick={() => handleCarChange(v.id)} className={`p-2.5 rounded-xl border text-left transition flex flex-col justify-between space-y-1.5 ${ isSelected ? isAvail ? 'border-orange-500 bg-orange-50/70 ring-2 ring-orange-400' : 'border-rose-500 bg-rose-50/70 ring-2 ring-rose-400' : isAvail ? 'border-slate-200 bg-white hover:border-slate-300' : 'border-rose-200 bg-rose-50/30 hover:border-rose-300' }`} > <div className="flex items-center justify-between"> <span className="font-bold text-xs text-slate-800 truncate">{v.name}</span> {isAvail ? ( <span className="text-[9px] px-1.5 py-0.5 bg-emerald-100 text-emerald-800 font-bold rounded"> ว่าง </span> ) : ( <span className="text-[9px] px-1.5 py-0.5 bg-rose-100 text-rose-800 font-bold rounded"> ติดจอง </span> )} </div> <div className="text-[10px] text-slate-500 flex items-center justify-between"> <span>{v.plate}</span> <span className="text-[9px]">{v.fuelType}</span> </div> </button> ); })}
+src/components/BookingFormView.tsx:1415 => {v.name}
+src/components/BookingFormView.tsx:1427 => {v.plate}
+src/components/BookingFormView.tsx:1428 => {v.fuelType}
+src/components/BookingFormView.tsx:1536 => {availablePassengers.map((psg) => ( <option key={psg.id} value={psg.name}> {psg.name} — {psg.position} ({psg.department}) </option> ))}
+src/components/BookingFormView.tsx:1538 => {psg.name}
+src/components/BookingFormView.tsx:1538 => {psg.position}
+src/components/BookingFormView.tsx:1538 => {psg.department}
+src/components/BookingFormView.tsx:1548 => {selectedPassengers.length}
+src/components/BookingFormView.tsx:1551 => {selectedPassengers.map((psg, idx) => ( <span key={psg.id || idx} className="inline-flex items-center space-x-2 px-3 py-1.5 bg-purple-50 text-purple-900 border border-purple-200 rounded-xl text-xs font-medium shadow-2xs" > <span className="w-5 h-5 rounded-full bg-purple-200 text-purple-800 text-[10px] font-bold flex items-center justify-center"> {psg.name.charAt(0)} </span> <span>{psg.name}</span> <span className="text-[10px] text-purple-600 bg-white/70 px-1.5 py-0.5 rounded"> {psg.position} </span> <button type="button" onClick={() => handleRemovePassenger(idx)} className="text-purple-400 hover:text-rose-600 transition" title="ลบรายชื่อนี้" > <X className="w-3.5 h-3.5" /> </button> </span> ))}
+src/components/BookingFormView.tsx:1557 => {psg.name.charAt(0)}
+src/components/BookingFormView.tsx:1559 => {psg.name}
+src/components/BookingFormView.tsx:1561 => {psg.position}
+src/components/BookingFormView.tsx:1629 => {attachmentName}
+src/components/BookingFormView.tsx:1658 => {requesterSignature ? 'แก้ไข/เปลี่ยนลายเซ็น' : 'วาดหรืออัปโหลดลายเซ็น'}
+src/components/BookingFormView.tsx:1710 => {editingBooking ? 'บันทึกการแก้ไข' : 'ส่งใบคำขอขอใช้รถยนต์ส่วนกลาง'}
+src/components/BookingFormView.tsx:1837 => {formatThaiDateRange(date, endDate)}
+src/components/BookingFormView.tsx:1837 => {startTime}
+src/components/BookingFormView.tsx:1837 => {endTime}
+src/components/BookingFormView.tsx:1841 => {conflictingBookings.map((b) => ( <div key={b.id} className="bg-white p-2.5 rounded-lg border border-rose-100 text-xs shadow-2xs space-y-1" > <div className="flex items-center justify-between"> <span className="font-bold text-rose-700">{b.id}</span> <span className="text-[10px] px-2 py-0.5 bg-amber-100 text-amber-800 font-semibold rounded"> {b.status === 'approved' ? 'อนุมัติแล้ว' : 'รอพิจารณา'} </span> </div> <div className="text-slate-700"> ผู้ขอ: <b>{b.name}</b> ({b.department}) </div> <div className="text-[11px] text-slate-500 truncate"> ภารกิจ: {b.purpose} </div> </div> ))}
+src/components/BookingFormView.tsx:1847 => {b.id}
+src/components/BookingFormView.tsx:1849 => {b.status === 'approved' ? 'อนุมัติแล้ว' : 'รอพิจารณา'}
+src/components/BookingFormView.tsx:1853 => {b.name}
+src/components/BookingFormView.tsx:1853 => {b.department}
+src/components/BookingFormView.tsx:1856 => {b.purpose}
+src/components/BookingFormView.tsx:1874 => {availableAlternativeVehicle.name}
+src/components/BookingFormView.tsx:1874 => {availableAlternativeVehicle.plate}
+src/components/BookingFormView.tsx:1876 => {availableAlternativeVehicle.driverName}
+src/components/BulkAddUsersModal.tsx:320 => {manualRows.length}
+src/components/BulkAddUsersModal.tsx:390 => {parsedRows.length}
+src/components/BulkAddUsersModal.tsx:392 => {validCount}
+src/components/BulkAddUsersModal.tsx:411 => {parsedRows.map((r, i) => ( <tr key={i} className={r.error ? 'bg-rose-50/70' : 'hover:bg-slate-50'}> <td className="py-2 px-3 text-slate-400 text-[11px]">{i + 1}</td> <td className="py-2 px-3 font-medium text-slate-900">{r.name}</td> <td className="py-2 px-3 font-mono text-purple-700">{r.username}</td> <td className="py-2 px-3 text-slate-600">{r.position}</td> <td className="py-2 px-3 text-slate-600 truncate max-w-[150px]">{r.department}</td> <td className="py-2 px-3"> <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-slate-200 text-slate-800 uppercase"> {r.role} </span> </td> <td className="py-2 px-3"> {r.error ? ( <span className="text-[11px] text-rose-600 flex items-center space-x-1 font-medium"> <AlertCircle className="w-3 h-3 shrink-0" /> <span>{r.error}</span> </span> ) : ( <span className="text-[11px] text-emerald-600 flex items-center space-x-1 font-medium"> <Check className="w-3 h-3" /> <span>พร้อมนำเข้า</span> </span> )} </td> </tr> ))}
+src/components/BulkAddUsersModal.tsx:413 => {i + 1}
+src/components/BulkAddUsersModal.tsx:414 => {r.name}
+src/components/BulkAddUsersModal.tsx:415 => {r.username}
+src/components/BulkAddUsersModal.tsx:416 => {r.position}
+src/components/BulkAddUsersModal.tsx:417 => {r.department}
+src/components/BulkAddUsersModal.tsx:420 => {r.role}
+src/components/BulkAddUsersModal.tsx:427 => {r.error}
+src/components/BulkAddUsersModal.tsx:476 => {manualRows.map((row, i) => ( <tr key={i} className="hover:bg-slate-50/70"> <td className="py-2 px-3 text-slate-400 text-[11px]">{i + 1}</td> <td className="py-2 px-2"> <input type="text" value={row.name} onChange={(e) => handleUpdateManualRow(i, 'name', e.target.value)} placeholder="นาย..." className="w-full px-2 py-1 text-xs border border-slate-300 rounded focus:ring-1 focus:ring-purple-500 focus:outline-none" /> </td> <td className="py-2 px-2"> <input type="text" value={row.username} onChange={(e) => handleUpdateManualRow(i, 'username', e.target.value)} placeholder="username" className="w-full px-2 py-1 text-xs border border-slate-300 rounded font-mono focus:ring-1 focus:ring-purple-500 focus:outline-none" /> </td> <td className="py-2 px-2"> <input type="text" value={row.password} onChange={(e) => handleUpdateManualRow(i, 'password', e.target.value)} placeholder="เว้นว่างใช้ค่าเริ่ม" className="w-full px-2 py-1 text-xs border border-slate-300 rounded focus:ring-1 focus:ring-purple-500 focus:outline-none" /> </td> <td className="py-2 px-2"> <input type="text" value={row.position} onChange={(e) => handleUpdateManualRow(i, 'position', e.target.value)} className="w-full px-2 py-1 text-xs border border-slate-300 rounded focus:ring-1 focus:ring-purple-500 focus:outline-none" /> </td> <td className="py-2 px-2"> <select value={row.department} onChange={(e) => handleUpdateManualRow(i, 'department', e.target.value)} className="w-full px-2 py-1 text-xs border border-slate-300 rounded focus:ring-1 focus:ring-purple-500 focus:outline-none bg-white" > {DEPARTMENTS.map((dept) => ( <option key={dept} value={dept}> {dept} </option> ))} </select> </td> <td className="py-2 px-2"> <select value={row.role} onChange={(e) => handleUpdateManualRow(i, 'role', e.target.value as UserRole)} className="w-full px-2 py-1 text-xs border border-slate-300 rounded focus:ring-1 focus:ring-purple-500 focus:outline-none bg-white font-medium" > <option value="officer">เจ้าหน้าที่</option> <option value="driver">คนขับรถ</option> <option value="director">ผู้บริหาร</option> <option value="admin">Admin</option> </select> </td> <td className="py-2 px-2"> <input type="text" value={row.phone || ''} onChange={(e) => handleUpdateManualRow(i, 'phone', e.target.value)} placeholder="08X-XXX-XXXX" className="w-full px-2 py-1 text-xs border border-slate-300 rounded focus:ring-1 focus:ring-purple-500 focus:outline-none" /> </td> <td className="py-2 px-2 text-center"> {manualRows.length > 1 && ( <button onClick={() => handleRemoveManualRow(i)} className="p-1 text-slate-400 hover:text-rose-600 transition cursor-pointer rounded" title="ลบแถวนี้" > <Trash2 className="w-3.5 h-3.5" /> </button> )} </td> </tr> ))}
+src/components/BulkAddUsersModal.tsx:478 => {i + 1}
+src/components/BulkAddUsersModal.tsx:520 => {DEPARTMENTS.map((dept) => ( <option key={dept} value={dept}> {dept} </option> ))}
+src/components/BulkAddUsersModal.tsx:522 => {dept}
+src/components/BulkAddUsersModal.tsx:574 => {validCount}
+src/components/BulkAddUsersModal.tsx:594 => {validCount}
+src/components/CalendarView.tsx:106 => {vehicles.map((v) => ( <option key={v.id} value={v.id}> {v.name} </option> ))}
+src/components/CalendarView.tsx:108 => {v.name}
+src/components/CalendarView.tsx:124 => {THAI_MONTHS_NAMES[currentMonth]}
+src/components/CalendarView.tsx:124 => {currentYear + 543}
+src/components/CalendarView.tsx:164 => {Array.from({ length: firstDayOfMonth }).map((_, idx) => ( <div key={`blank-${idx}`} className="bg-slate-50/40 rounded-xl min-h-[90px] border border-transparent" /> ))}
+src/components/CalendarView.tsx:169 => {Array.from({ length: daysInMonth }).map((_, idx) => { const day = idx + 1; const dayStr = String(day).padStart(2, '0'); const mStr = String(currentMonth + 1).padStart(2, '0'); const dateKey = `${currentYear}-${mStr}-${dayStr}`; const isSelected = dateKey === selectedDateStr; const isToday = dateKey === '2026-09-02'; const dayEvents = filteredBookings.filter((b) => b.date === dateKey); return ( <div key={dateKey} onClick={() => setSelectedDateStr(dateKey)} className={`p-2 rounded-xl border transition cursor-pointer flex flex-col justify-between min-h-[95px] relative group ${ isSelected ? 'bg-orange-50/90 border-2 border-orange-500 shadow-sm' : isToday ? 'bg-blue-50/50 border-blue-400' : 'bg-white hover:bg-slate-50 border-slate-200' }`} > <div className="flex justify-between items-center"> <span className={`text-xs font-bold rounded-md px-1.5 py-0.5 ${ isSelected ? 'bg-orange-600 text-white' : isToday ? 'bg-blue-600 text-white' : 'text-slate-800' }`} > {day} </span> {dayEvents.length > 0 && ( <span className="text-[10px] font-bold bg-slate-900 text-white px-1.5 py-0.2 rounded-full"> {dayEvents.length} </span> )} </div> {/* Event markers */} <div className="mt-1 space-y-1 overflow-hidden max-h-[50px]"> {dayEvents.slice(0, 2).map((ev) => { const isApproved = ev.status === 'approved'; return ( <div key={ev.id} className={`text-[9px] px-1.5 py-0.5 rounded truncate font-medium flex items-center space-x-1 ${ isApproved ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800' }`} title={`${ev.purpose} (${ev.carName})`} > <span className="w-1.5 h-1.5 rounded-full bg-current shrink-0" /> <span className="truncate">{ev.purpose}</span> </div> ); })} {dayEvents.length > 2 && ( <div className="text-[9px] text-slate-400 text-center font-medium"> +{dayEvents.length - 2} รายการอื่น </div> )} </div> </div> ); })}
+src/components/CalendarView.tsx:202 => {day}
+src/components/CalendarView.tsx:207 => {dayEvents.length}
+src/components/CalendarView.tsx:214 => {dayEvents.slice(0, 2).map((ev) => { const isApproved = ev.status === 'approved'; return ( <div key={ev.id} className={`text-[9px] px-1.5 py-0.5 rounded truncate font-medium flex items-center space-x-1 ${ isApproved ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800' }`} title={`${ev.purpose} (${ev.carName})`} > <span className="w-1.5 h-1.5 rounded-full bg-current shrink-0" /> <span className="truncate">{ev.purpose}</span> </div> ); })}
+src/components/CalendarView.tsx:227 => {ev.purpose}
+src/components/CalendarView.tsx:233 => {dayEvents.length - 2}
+src/components/CalendarView.tsx:251 => {formatThaiDate(selectedDateStr, 'full')}
+src/components/CalendarView.tsx:283 => {b.id}
+src/components/CalendarView.tsx:297 => {b.status === 'in_progress' ? 'กำลังวิ่งงาน' : b.status === 'completed' ? 'เสร็จสิ้น/ลงคุมแล้ว' : b.status === 'approved' ? 'อนุมัติแล้ว' : b.status === 'rejected' ? 'ไม่อนุมัติ' : 'รออนุมัติ'}
+src/components/CalendarView.tsx:309 => {b.purpose}
+src/components/CalendarView.tsx:314 => {b.destination}
+src/components/CalendarView.tsx:318 => {b.carName}
+src/components/CalendarView.tsx:322 => {b.name}
+src/components/ClearAllBookingsModal.tsx:88 => {count.toLocaleString()}
+src/components/ClearAllBookingsModal.tsx:101 => {count}
+src/components/ClearAllBookingsModal.tsx:113 => {hasExported ? '✓ ดาวน์โหลดไฟล์สำรองข้อมูล (JSON) แล้ว' : 'แนะนำดาวน์โหลดไฟล์สำรองไว้ก่อนล้างข้อมูล'}
+src/components/ClearAllBookingsModal.tsx:121 => {hasExported ? 'ดาวน์โหลดอีกครั้ง' : 'สำรองข้อมูล (JSON)'}
+src/components/CompleteMissionModal.tsx:148 => {booking.id}
+src/components/CompleteMissionModal.tsx:148 => {booking.carName}
+src/components/CompleteMissionModal.tsx:151 => {booking.destination}
+src/components/CompleteMissionModal.tsx:151 => {booking.purpose}
+src/components/CompleteMissionModal.tsx:158 => {startMileage.toLocaleString()}
+src/components/CompleteMissionModal.tsx:162 => {booking.actualDepartureTime}
+src/components/CompleteMissionModal.tsx:183 => {currentUser.name}
+src/components/CompleteMissionModal.tsx:183 => {currentUser.username ? `(@${currentUser.username})` : ''}
+src/components/CompleteMissionModal.tsx:188 => {permission.isSelfDrive ? '🚗 ขับขี่ด้วยตนเอง' : '👔 พนักงานขับรถ'}
+src/components/CompleteMissionModal.tsx:200 => {permission.reason || `สงวนสิทธิ์เฉพาะพนักงานขับรถ (${permission.driverDisplayName}) หรือผู้ขอใช้รถกรณีขับขี่ด้วยตนเอง`}
+src/components/CompleteMissionModal.tsx:209 => {errorMsg}
+src/components/CompleteMissionModal.tsx:220 => {startMileage.toLocaleString()}
+src/components/CompleteMissionModal.tsx:232 => {!isNaN(endMileageNum) ? endMileageNum.toLocaleString() : '---'}
+src/components/CompleteMissionModal.tsx:242 => {totalDistance > 0 ? `+${totalDistance.toLocaleString()}` : '0'}
+src/components/CompleteMissionModal.tsx:256 => {startMileage.toLocaleString()}
+src/components/CompleteMissionModal.tsx:400 => {startMileage.toLocaleString()}
+src/components/CompleteMissionModal.tsx:400 => {!isNaN(endMileageNum) ? endMileageNum.toLocaleString() : '---'}
+src/components/CompleteMissionModal.tsx:400 => {totalDistance}
+src/components/DashboardView.tsx:238 => {bookings.length}
+src/components/DashboardView.tsx:262 => {availableVehiclesCount}
+src/components/DashboardView.tsx:262 => {vehicles.length}
+src/components/DashboardView.tsx:296 => {greeting.icon}
+src/components/DashboardView.tsx:297 => {greeting.text}
+src/components/DashboardView.tsx:297 => {currentUser.name}
+src/components/DashboardView.tsx:301 => {currentUser.roleTitle}
+src/components/DashboardView.tsx:303 => {currentUser.department}
+src/components/DashboardView.tsx:371 => {pendingCount}
+src/components/DashboardView.tsx:420 => {vehicles.map((v) => { const isAvailable = v.status === 'available'; const isInMission = v.status === 'in_mission'; return ( <div key={v.id} onClick={() => onOpenBookingForm(undefined, v.id)} className={`group p-3.5 rounded-xl border transition-all duration-200 cursor-pointer flex flex-col justify-between space-y-2.5 relative overflow-hidden ${ isInMission ? 'bg-amber-50/40 border-amber-300 hover:shadow-md hover:border-amber-400' : isAvailable ? 'bg-slate-50/70 border-slate-200 hover:bg-white hover:border-orange-300 hover:shadow-md hover:-translate-y-0.5' : 'bg-rose-50/40 border-rose-200 hover:border-rose-300' }`} title={`คลิกเพื่อเขียนใบเบิกขอใช้รถ ${v.name} (${v.plate})`} > {/* Top color indicator bar */} <div className="absolute top-0 left-0 right-0 h-1" style={{ backgroundColor: v.colorTag || '#f97316' }} /> <div className="flex items-start justify-between"> <div> <div className="text-xs font-bold text-slate-900 group-hover:text-orange-600 transition-colors line-clamp-1"> {v.name} </div> <div className="text-[11px] font-mono font-semibold text-slate-600 mt-0.5"> {v.plate} </div> </div> <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full flex items-center space-x-1 ${ isAvailable ? 'bg-emerald-100 text-emerald-800' : isInMission ? 'bg-amber-100 text-amber-800 animate-pulse' : 'bg-rose-100 text-rose-800' }`} > <span className={`w-1.5 h-1.5 rounded-full ${ isAvailable ? 'bg-emerald-500' : isInMission ? 'bg-amber-500' : 'bg-rose-500' }`} /> <span>{isAvailable ? 'พร้อมใช้' : isInMission ? 'ปฏิบัติภารกิจ' : 'ซ่อมบำรุง'}</span> </span> </div> <div className="flex items-center justify-between text-[11px] text-slate-500 pt-1 border-t border-slate-100"> <span className="flex items-center space-x-1"> <Gauge className="w-3 h-3 text-slate-400" /> <span>{v.odometer.toLocaleString()} กม.</span> </span> <span className="text-[10px] bg-slate-100 px-1.5 py-0.5 rounded text-slate-600 font-medium"> {v.seats} ที่นั่ง </span> </div> </div> ); })}
+src/components/DashboardView.tsx:445 => {v.name}
+src/components/DashboardView.tsx:448 => {v.plate}
+src/components/DashboardView.tsx:466 => {isAvailable ? 'พร้อมใช้' : isInMission ? 'ปฏิบัติภารกิจ' : 'ซ่อมบำรุง'}
+src/components/DashboardView.tsx:473 => {v.odometer.toLocaleString()}
+src/components/DashboardView.tsx:476 => {v.seats}
+src/components/DashboardView.tsx:495 => {totalCount}
+src/components/DashboardView.tsx:511 => {approvedCount}
+src/components/DashboardView.tsx:533 => {pendingCount + pendingDirectorCount}
+src/components/DashboardView.tsx:550 => {availableVehiclesCount}
+src/components/DashboardView.tsx:550 => {vehicles.length}
+src/components/DashboardView.tsx:588 => {pendingCount}
+src/components/DashboardView.tsx:588 => {totalCount > 0 ? Math.round((pendingCount / totalCount) * 100) : 0}
+src/components/DashboardView.tsx:607 => {approvedCount}
+src/components/DashboardView.tsx:607 => {totalCount > 0 ? Math.round((approvedCount / totalCount) * 100) : 0}
+src/components/DashboardView.tsx:626 => {inProgressCount}
+src/components/DashboardView.tsx:626 => {totalCount > 0 ? Math.round((inProgressCount / totalCount) * 100) : 0}
+src/components/DashboardView.tsx:645 => {completedCount}
+src/components/DashboardView.tsx:645 => {totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0}
+src/components/DashboardView.tsx:665 => {rejectedCount}
+src/components/DashboardView.tsx:665 => {totalCount > 0 ? Math.round((rejectedCount / totalCount) * 100) : 0}
+src/components/DashboardView.tsx:699 => {availableVehiclesCount}
+src/components/DashboardView.tsx:705 => {inMissionVehiclesCount}
+src/components/DashboardView.tsx:711 => {maintenanceVehiclesCount}
+src/components/DashboardView.tsx:719 => {vehicles.length}
+src/components/DashboardView.tsx:724 => {vehicles.length > 0 ? Math.round((availableVehiclesCount / vehicles.length) * 100) : 0}
+src/components/DashboardView.tsx:766 => {idx + 1}
+src/components/DashboardView.tsx:768 => {dept}
+src/components/DashboardView.tsx:771 => {count}
+src/components/DashboardView.tsx:772 => {pct}
+src/components/DashboardView.tsx:809 => {bookings.length}
+src/components/DashboardView.tsx:831 => {vehicles.length}
+src/components/DashboardView.tsx:853 => {sortedBookings.length}
+src/components/DashboardView.tsx:917 => {bookings.length}
+src/components/DashboardView.tsx:929 => {pendingCount}
+src/components/DashboardView.tsx:941 => {approvedCount}
+src/components/DashboardView.tsx:953 => {inProgressCount}
+src/components/DashboardView.tsx:965 => {completedCount}
+src/components/DashboardView.tsx:981 => {sortedBookings.map((b) => { let statusBadge = { text: 'รออนุมัติ', class: 'bg-amber-100 text-amber-800 border-amber-300' }; if (b.status === 'approved') { statusBadge = { text: 'อนุมัติแล้ว', class: 'bg-emerald-100 text-emerald-800 border-emerald-300' }; } else if (b.status === 'in_progress') { statusBadge = { text: 'กำลังเดินทาง', class: 'bg-orange-100 text-orange-800 border-orange-300' }; } else if (b.status === 'completed') { statusBadge = { text: 'เสร็จสิ้นภารกิจ', class: 'bg-teal-100 text-teal-800 border-teal-300' }; } else if (b.status === 'rejected') { statusBadge = { text: 'ไม่อนุมัติ/ส่งกลับ', class: 'bg-rose-100 text-rose-800 border-rose-300' }; } const isOwner = currentUser.username === b.username; const isAdmin = currentUser.role === 'admin'; const isDirector = currentUser.role === 'director' || isAdmin; const isPending = b.status === 'pending' || b.status === 'pending_director'; return ( <div key={b.id} className="p-4 rounded-2xl border border-slate-200 hover:border-orange-300 bg-slate-50/50 hover:bg-white transition flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shadow-2xs group" > <div onClick={() => onViewMemo(b)} className="space-y-1.5 max-w-2xl cursor-pointer w-full" title="แตะเพื่อดูใบคำขอใช้รถยนต์" > <div className="flex flex-wrap items-center gap-2"> <span className="font-mono text-xs font-bold text-orange-600 bg-orange-50 px-2 py-0.5 rounded-md border border-orange-200"> {b.id} </span> {b.memoNo && ( <span className="text-[11px] font-medium text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md border border-slate-200"> เลขที่บันทึก: {b.memoNo} </span> )} <span className={`text-[10px] px-2.5 py-0.5 rounded-full font-bold border ${statusBadge.class}`}> {statusBadge.text} </span> </div> <h4 className="font-bold text-sm text-slate-900 group-hover:text-orange-600 transition leading-snug"> {b.purpose} </h4> <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-600"> <span className="flex items-center space-x-1"> <UserIcon className="w-3.5 h-3.5 text-slate-400" /> <span>{b.name} ({b.department})</span> </span> <span className="flex items-center space-x-1"> <MapPin className="w-3.5 h-3.5 text-rose-500" /> <span>{b.destination}</span> </span> <span className="flex items-center space-x-1"> <Car className="w-3.5 h-3.5 text-slate-400" /> <span>{b.carName}</span> </span> <span className="flex items-center space-x-1 text-orange-700 font-medium"> <Calendar className="w-3.5 h-3.5 text-orange-500" /> <span>เดินทาง: {formatThaiDate(b.date)} ({b.startTime} - {b.endTime} น.)</span> </span> </div> </div> {/* Actions */} <div className="w-full sm:w-auto flex flex-wrap items-center gap-2 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-200/60 shrink-0"> <button type="button" onClick={() => onViewMemo(b)} className="flex-1 sm:flex-none px-3.5 py-2.5 bg-orange-50 hover:bg-orange-100 active:scale-95 text-orange-700 border border-orange-200 rounded-xl text-xs font-semibold transition shadow-2xs flex items-center justify-center space-x-1.5 cursor-pointer" title="ดูและพิมพ์ใบคำขอขอใช้รถยนต์ส่วนกลาง" > <Eye className="w-3.5 h-3.5 text-orange-600" /> <span>ดูใบคำขอ</span> </button> {onOpenDriverMissions && (b.status === 'approved' || b.status === 'in_progress') && canUserExecuteMission(b, currentUser, allUsers) && ( <button type="button" onClick={() => onOpenDriverMissions(b)} className={`flex-1 sm:flex-none px-3.5 py-2.5 text-white rounded-xl text-xs font-semibold transition shadow-xs flex items-center justify-center space-x-1.5 cursor-pointer active:scale-95 ${ b.status === 'in_progress' ? 'bg-amber-600 hover:bg-amber-700 animate-pulse' : 'bg-orange-600 hover:bg-orange-700' }`} > <Gauge className="w-3.5 h-3.5" /> <span>{b.status === 'in_progress' ? 'กรอกไมล์กลับ' : 'เริ่มงาน (ไมล์ไป)'}</span> </button> )} {isDirector && isPending && ( <button type="button" onClick={() => { if (onOpenSignatureModal) { onOpenSignatureModal(b); } else { onOpenDirectorApproval(); } }} className="flex-1 sm:flex-none px-3.5 py-2.5 bg-gradient-to-r from-teal-700 to-emerald-600 hover:from-teal-800 hover:to-emerald-700 active:scale-95 text-white rounded-xl text-xs font-semibold transition shadow-xs flex items-center justify-center space-x-1.5 cursor-pointer" > <FileCheck2 className="w-3.5 h-3.5" /> <span>ลงนามอนุมัติ</span> </button> )} {(isOwner || isAdmin) && isPending && ( <div className="flex items-center space-x-1.5"> <button type="button" onClick={() => onEditBooking(b)} className="px-2.5 py-2 bg-amber-50 hover:bg-amber-100 active:scale-95 text-amber-700 rounded-xl text-xs font-medium transition cursor-pointer" title="แก้ไขใบเบิก" > <Edit className="w-3.5 h-3.5" /> </button> <button type="button" onClick={() => onDeleteBooking(b.id)} className="px-2.5 py-2 bg-rose-50 hover:bg-rose-100 active:scale-95 text-rose-600 rounded-xl text-xs font-medium transition cursor-pointer" title="ลบคำขอ" > <Trash2 className="w-3.5 h-3.5" /> </button> </div> )} </div> </div> ); })}
+src/components/DashboardView.tsx:1025 => {b.id}
+src/components/DashboardView.tsx:1029 => {b.memoNo}
+src/components/DashboardView.tsx:1033 => {statusBadge.text}
+src/components/DashboardView.tsx:1038 => {b.purpose}
+src/components/DashboardView.tsx:1044 => {b.name}
+src/components/DashboardView.tsx:1044 => {b.department}
+src/components/DashboardView.tsx:1048 => {b.destination}
+src/components/DashboardView.tsx:1052 => {b.carName}
+src/components/DashboardView.tsx:1056 => {formatThaiDate(b.date)}
+src/components/DashboardView.tsx:1056 => {b.startTime}
+src/components/DashboardView.tsx:1056 => {b.endTime}
+src/components/DashboardView.tsx:1086 => {b.status === 'in_progress' ? 'กรอกไมล์กลับ' : 'เริ่มงาน (ไมล์ไป)'}
+src/components/DashboardView.tsx:1209 => {vehicles.length}
+src/components/DashboardView.tsx:1221 => {availableVehiclesCount}
+src/components/DashboardView.tsx:1233 => {inMissionVehiclesCount}
+src/components/DashboardView.tsx:1245 => {maintenanceVehiclesCount}
+src/components/DashboardView.tsx:1258 => {filteredVehicles.map((v) => { let statusBadge = { text: 'พร้อมใช้งาน', class: 'bg-emerald-100 text-emerald-800 border-emerald-300' }; if (v.status === 'in_mission') { statusBadge = { text: 'กำลังปฏิบัติภารกิจ', class: 'bg-orange-100 text-orange-800 border-orange-300' }; } else if (v.status === 'maintenance') { statusBadge = { text: 'ซ่อมบำรุง', class: 'bg-rose-100 text-rose-800 border-rose-300' }; } return ( <div key={v.id} className="p-5 rounded-2xl border border-slate-200 bg-white hover:border-teal-400 transition space-y-3.5 shadow-2xs hover:shadow-xs flex flex-col justify-between" > <div className="space-y-3"> <div className="flex justify-between items-start"> <div> <h4 className="font-bold text-sm text-slate-900">{v.name}</h4> <p className="text-xs font-mono text-orange-600 font-bold mt-0.5">{v.plate}</p> <span className="text-[10px] text-slate-400 capitalize">{v.type}</span> </div> <span className={`text-[10px] px-2.5 py-0.5 rounded-full font-bold border ${statusBadge.class}`}> {statusBadge.text} </span> </div> <div className="text-xs text-slate-600 space-y-1.5 bg-slate-50 p-3 rounded-xl border border-slate-100"> <div className="flex justify-between"> <span className="text-slate-500">ประเภทเชื้อเพลิง:</span> <span className="font-semibold text-slate-800">{v.fuelType}</span> </div> <div className="flex justify-between"> <span className="text-slate-500">เลขไมล์สะสม:</span> <span className="font-mono font-bold text-slate-900"> {v.odometer.toLocaleString()} กม. </span> </div> <div className="flex justify-between"> <span className="text-slate-500">พนักงานขับรถ:</span> <span className="font-medium text-slate-700 truncate max-w-[150px]"> {v.driverName} </span> </div> {v.nextServiceMileage && ( <div className="flex justify-between pt-1 border-t border-slate-200/60 text-[11px]"> <span className="text-slate-500">รอบเช็คระยะถัดไป:</span> <span className="font-mono text-slate-700"> {v.nextServiceMileage.toLocaleString()} กม. </span> </div> )} </div> </div> {/* Quick action for vehicle */} <div className="pt-2 border-t border-slate-100 flex items-center gap-2"> <button type="button" onClick={() => onOpenBookingForm(undefined, v.id)} disabled={v.status === 'maintenance'} className={`flex-1 py-2 px-3 rounded-xl text-xs font-semibold transition flex items-center justify-center space-x-1 cursor-pointer ${ v.status === 'available' ? 'bg-orange-600 hover:bg-orange-700 text-white shadow-2xs' : v.status === 'in_mission' ? 'bg-amber-600 hover:bg-amber-700 text-white' : 'bg-slate-200 text-slate-400 cursor-not-allowed' }`} > <PlusCircle className="w-3.5 h-3.5" /> <span>ขอใช้รถคันนี้</span> </button> {onOpenFleet && ( <button type="button" onClick={onOpenFleet} className="p-2 text-slate-500 hover:text-slate-800 bg-slate-100 hover:bg-slate-200 rounded-xl transition cursor-pointer" title="ดูประวัติการซ่อมบำรุง & รายละเอียด" > <ArrowUpRight className="w-4 h-4" /> </button> )} </div> </div> ); })}
+src/components/DashboardView.tsx:1283 => {v.name}
+src/components/DashboardView.tsx:1284 => {v.plate}
+src/components/DashboardView.tsx:1285 => {v.type}
+src/components/DashboardView.tsx:1288 => {statusBadge.text}
+src/components/DashboardView.tsx:1295 => {v.fuelType}
+src/components/DashboardView.tsx:1300 => {v.odometer.toLocaleString()}
+src/components/DashboardView.tsx:1306 => {v.driverName}
+src/components/DashboardView.tsx:1313 => {v.nextServiceMileage.toLocaleString()}
+src/components/DeleteVehicleModal.tsx:53 => {vehicle.name}
+src/components/DeleteVehicleModal.tsx:55 => {vehicle.plate}
+src/components/DeleteVehicleModal.tsx:58 => {vehicle.driverName}
+src/components/DeleteVehicleModal.tsx:58 => {vehicle.odometer.toLocaleString()}
+src/components/DirectorApprovalView.tsx:90 => {pendingBookings.length}
+src/components/DirectorApprovalView.tsx:104 => {bookings.length}
+src/components/DirectorApprovalView.tsx:107 => {pendingBookings.length}
+src/components/DirectorApprovalView.tsx:136 => {b.id}
+src/components/DirectorApprovalView.tsx:148 => {isPending ? 'รออนุมัติ' : isApproved ? 'อนุมัติแล้ว' : 'ไม่อนุมัติ'}
+src/components/DirectorApprovalView.tsx:152 => {b.purpose}
+src/components/DirectorApprovalView.tsx:159 => {b.name}
+src/components/DirectorApprovalView.tsx:159 => {b.department}
+src/components/DirectorApprovalView.tsx:167 => {formatThaiDate(b.date, 'short')}
+src/components/DirectorApprovalView.tsx:168 => {b.carName.split(' ')[0]}
+src/components/DirectorApprovalView.tsx:192 => {currentBooking.id}
+src/components/DirectorApprovalView.tsx:203 => {currentBooking.status === 'approved' ? 'อนุมัติเรียบร้อย' : 'รอพิจารณา'}
+src/components/DirectorApprovalView.tsx:207 => {currentBooking.purpose}
+src/components/DirectorApprovalView.tsx:232 => {currentBooking.memoNo ? currentBooking.memoNo.replace(/^พง\s*0030\.1\//, '').replace(/^พง\s*0032\(พิเศษ\)\//, '').replace(/^พง\s*๐๐๓๐\.๑\//, '').replace(/^พง\s*๐๐๓๒\(พิเศษ\)\//, '') : currentBooking.id}
+src/components/DirectorApprovalView.tsx:235 => {formatThaiDate(currentBooking.date, 'official')}
+src/components/DirectorApprovalView.tsx:245 => {currentBooking.name}
+src/components/DirectorApprovalView.tsx:246 => {currentBooking.position}
+src/components/DirectorApprovalView.tsx:247 => {currentBooking.purpose}
+src/components/DirectorApprovalView.tsx:248 => {currentBooking.destination}
+src/components/DirectorApprovalView.tsx:249 => {formatThaiDate(currentBooking.date, 'short')}
+src/components/DirectorApprovalView.tsx:252 => {currentBooking.carName}
+src/components/DirectorApprovalView.tsx:253 => {currentBooking.driverName}
+src/components/DirectorApprovalView.tsx:254 => {currentBooking.passengerCount}
+src/components/DirectorApprovalView.tsx:257 => {currentBooking.name}
+src/components/DirectorApprovalView.tsx:277 => {PRESET_DIRECTOR_COMMENTS.map((com, idx) => ( <button key={idx} type="button" onClick={() => setComment(com)} className="text-[11px] px-2.5 py-1 bg-white hover:bg-teal-100 border border-teal-200 text-teal-900 rounded-lg transition font-medium text-left" > + {com.slice(0, 36)}... </button> ))}
+src/components/DirectorApprovalView.tsx:284 => {com.slice(0, 36)}
+src/components/DirectorApprovalView.tsx:309 => {currentBooking.signatureType === 'draw' ? 'ลายเซ็นสดดิจิทัล' : 'ลายเซ็นอิเล็กทรอนิกส์'}
+src/components/DirectorApprovalView.tsx:324 => {currentBooking.approvedBy || 'นางสาวอุไรวรรณ แดงงาม'}
+src/components/DirectorApprovalView.tsx:330 => {currentBooking.approvedBy || 'นางสาวอุไรวรรณ แดงงาม'}
+src/components/DriverMissionView.tsx:335 => {successToast}
+src/components/DriverMissionView.tsx:388 => {readyCount}
+src/components/DriverMissionView.tsx:390 => {statusFilter === 'ready_to_start' ? '✓ (กำลังกรอง)' : '• คลิกดู'}
+src/components/DriverMissionView.tsx:411 => {inProgressCount}
+src/components/DriverMissionView.tsx:413 => {statusFilter === 'in_progress' ? '✓ (กำลังกรอง)' : '• คลิกดู'}
+src/components/DriverMissionView.tsx:434 => {completedCount}
+src/components/DriverMissionView.tsx:436 => {statusFilter === 'completed' ? '✓ (กำลังกรอง)' : '• คลิกดู'}
+src/components/DriverMissionView.tsx:457 => {myExecutableMissions.length}
+src/components/DriverMissionView.tsx:459 => {selectedDriverFilter === 'my_missions' ? '✓ (กำลังกรอง)' : '• คลิกดูของฉัน'}
+src/components/DriverMissionView.tsx:482 => {bookings.length}
+src/components/DriverMissionView.tsx:494 => {readyCount}
+src/components/DriverMissionView.tsx:506 => {inProgressCount}
+src/components/DriverMissionView.tsx:518 => {completedCount}
+src/components/DriverMissionView.tsx:534 => {myExecutableMissions.length}
+src/components/DriverMissionView.tsx:537 => {availableDrivers.map((d) => ( <option key={d} value={d}> {d} </option> ))}
+src/components/DriverMissionView.tsx:539 => {d}
+src/components/DriverMissionView.tsx:569 => {driverMissions.map((b) => { const isReadyToStart = b.status === 'approved'; const isInProgress = b.status === 'in_progress'; const isCompleted = b.status === 'completed'; const vehicle = vehicles.find((v) => v.id === b.carId); return ( <div key={b.id} className={`bg-white rounded-3xl border transition-all p-5 sm:p-6 shadow-xs hover:shadow-md ${ isInProgress ? 'border-amber-400 ring-2 ring-amber-400/20 bg-amber-50/10' : isReadyToStart ? 'border-orange-200 hover:border-orange-300' : 'border-slate-200' }`} > <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4"> {/* Left: Mission Info */} <div className="space-y-2 flex-grow"> {/* Badges Row */} <div className="flex flex-wrap items-center gap-2"> <span className="font-mono font-bold text-xs text-slate-900 bg-slate-100 px-2.5 py-0.5 rounded-lg border border-slate-200"> {b.id} </span> {/* Dynamic Status Badge */} {isInProgress ? ( <div className="flex items-center gap-1.5"> <span className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-500 text-white shadow-xs"> <span className="w-2 h-2 rounded-full bg-white animate-ping" /> <span>กำลังปฏิบัติภารกิจ (อยู่บนถนน)</span> </span> {b.missionStatus === 'returning' && ( <span className="inline-flex items-center space-x-1 px-2.5 py-1 rounded-full text-xs font-bold bg-purple-600 text-white shadow-xs"> <RotateCcw className="w-3 h-3 animate-spin" /> <span>กำลังเดินทางกลับสำนักงาน</span> </span> )} </div> ) : isReadyToStart ? ( <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-orange-100 text-orange-800 border border-orange-300"> <Play className="w-3 h-3 text-orange-600" /> <span>อนุมัติแล้ว — พร้อมกดเริ่มงาน</span> </span> ) : isCompleted ? ( <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-300"> <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" /> <span>เสร็จสิ้นภารกิจ & ลงทะเบียนคุมแล้ว</span> </span> ) : ( <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-700 border border-slate-200"> {b.status} </span> )} <span className="text-[11px] text-slate-500 flex items-center"> <Calendar className="w-3.5 h-3.5 mr-1 text-slate-400" /> {formatThaiDate(b.date, 'short')} </span> {(b.startTime || b.actualDepartureTime) && ( <span className="text-[11px] text-slate-500 flex items-center"> <Clock className="w-3.5 h-3.5 mr-1 text-slate-400" /> {b.actualDepartureTime || b.startTime} - {b.actualReturnTime || b.endTime || 'เสร็จสิ้น'} </span> )} </div> {/* Title & Purpose */} <h3 className="text-base font-bold text-slate-900 leading-snug"> {b.purpose} </h3> {/* Details Grid */} <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs text-slate-600 pt-1"> <div className="flex items-center text-orange-700 font-medium"> <MapPin className="w-4 h-4 mr-1.5 text-orange-500 shrink-0" /> <span className="truncate">{b.destination}</span> </div> <div className="flex items-center text-teal-800 font-medium"> <Car className="w-4 h-4 mr-1.5 text-teal-600 shrink-0" /> <span className="truncate">{b.carName}</span> </div> <div className="flex items-center text-slate-700"> <UserIcon className="w-4 h-4 mr-1.5 text-slate-400 shrink-0" /> <span> {isSelfDriveBooking(b) ? ( <span className="text-blue-700 font-semibold">ผู้ขอขับเอง ({b.name})</span> ) : ( <span>พนักงานขับรถ: <strong>{b.driverName || 'ไม่ระบุ'}</strong></span> )} </span> </div> </div> {/* Audit & Driver Identity Tags */} <div className="flex flex-wrap items-center gap-1.5 pt-1"> {isSelfDriveBooking(b) ? ( <span className="inline-flex items-center space-x-1 bg-blue-50 border border-blue-200 text-blue-800 px-2 py-0.5 rounded-lg text-[10px] font-semibold"> <span>🚗 ผู้ขอขับขี่ด้วยตนเอง ({b.name} - {b.department})</span> </span> ) : ( <span className="inline-flex items-center space-x-1 bg-indigo-50 border border-indigo-200 text-indigo-800 px-2 py-0.5 rounded-lg text-[10px] font-semibold"> <span>👔 ผู้ขับขี่: {b.driverName} {b.driverUsername ? `(@${b.driverUsername})` : ''}</span> </span> )} {b.startedByName && ( <span className="inline-flex items-center space-x-1 bg-slate-100 border border-slate-200 text-slate-600 px-2 py-0.5 rounded-lg text-[10px]"> <UserCheck className="w-3 h-3 text-slate-500" /> <span>เริ่มงานโดย: {b.startedByName}</span> </span> )} {b.completedByName && ( <span className="inline-flex items-center space-x-1 bg-emerald-50 border border-emerald-200 text-emerald-800 px-2 py-0.5 rounded-lg text-[10px]"> <UserCheck className="w-3 h-3 text-emerald-600" /> <span>บันทึกจบโดย: {b.completedByName}</span> </span> )} </div> {/* Departure & Return Mileage Live Tag */} {(b.startMileage || b.endMileage) && ( <div className="flex flex-wrap items-center gap-3 pt-2"> {b.startMileage && ( <div className="inline-flex items-center space-x-1.5 bg-orange-50 border border-orange-200 px-3 py-1 rounded-xl text-xs font-semibold text-orange-900"> <Gauge className="w-3.5 h-3.5 text-orange-600" /> <span>ไมล์ตอนไป: <strong>{b.startMileage.toLocaleString()} กม.</strong></span> {b.actualDepartureTime && ( <span className="text-orange-600 font-normal">({b.actualDepartureTime} น.)</span> )} </div> )} {b.endMileage && ( <div className="inline-flex items-center space-x-1.5 bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-xl text-xs font-semibold text-emerald-900"> <Flag className="w-3.5 h-3.5 text-emerald-600" /> <span>ไมล์ตอนกลับ: <strong>{b.endMileage.toLocaleString()} กม.</strong></span> {b.actualReturnTime && ( <span className="text-emerald-600 font-normal">({b.actualReturnTime} น.)</span> )} </div> )} {b.totalDistance ? ( <div className="inline-flex items-center space-x-1 bg-slate-900 text-white px-2.5 py-1 rounded-xl text-xs font-bold"> <span>ระยะทางรวม: +{b.totalDistance} กม.</span> </div> ) : null} {b.fuelRefilledLiters ? ( <div className="inline-flex items-center space-x-1 bg-amber-50 border border-amber-200 text-amber-900 px-2.5 py-1 rounded-xl text-xs"> <Fuel className="w-3 h-3 text-amber-600" /> <span>เติมน้ำมัน: {b.fuelRefilledLiters} ล. ({b.fuelRefilledCost} บ.)</span> </div> ) : null} </div> )} {b.driverNotes && ( <p className="text-[11px] text-slate-500 italic bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-200/60 inline-block"> บันทึกคนขับ: &ldquo;{b.driverNotes}&rdquo; </p> )} </div> {/* Right: Driver Action Workflow Button */} <div className="flex flex-row lg:flex-col items-stretch sm:items-end gap-2 shrink-0 w-full lg:w-auto pt-3 lg:pt-0 border-t lg:border-t-0 border-slate-100"> {/* CASE 1: READY TO START -> START MISSION BUTTON */} {isReadyToStart && ( canUserExecuteMission(b, currentUser, allUsers) ? ( <button onClick={() => handleOpenStartModal(b)} className="w-full sm:w-auto px-5 py-3 bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-700 hover:to-amber-700 text-white rounded-2xl text-xs sm:text-sm font-bold transition shadow-lg shadow-orange-600/30 flex items-center justify-center space-x-2 cursor-pointer" > <Play className="w-4 h-4 fill-white" /> <span>กดเริ่มงาน (กรอกไมล์ไป)</span> </button> ) : ( <div className="flex items-center space-x-1.5 px-3 py-2 bg-slate-100 border border-slate-200 text-slate-600 rounded-xl text-xs font-medium"> <Clock className="w-3.5 h-3.5 text-slate-400 shrink-0" /> <span> {isSelfDriveBooking(b) ? `รอผู้ขอใช้รถ (${b.name}) กดเริ่มงาน` : b.driverName && b.driverName !== 'ไม่ระบุ' && !b.driverName.includes('ยังไม่ระบุ') ? `รอ ${b.driverName} กดเริ่มงาน` : 'ยังไม่ระบุพนักงานขับรถ'} </span> </div> ) )} {/* CASE 2: IN PROGRESS -> COMPLETE MISSION BUTTON */} {isInProgress && ( canUserExecuteMission(b, currentUser, allUsers) ? ( <div className="flex flex-col sm:flex-row lg:flex-col gap-2 w-full sm:w-auto"> {b.missionStatus !== 'returning' && ( <button type="button" onClick={() => handleMarkReturning(b.id)} className="w-full sm:w-auto px-3.5 py-2 bg-purple-50 hover:bg-purple-100 text-purple-800 border border-purple-200 rounded-2xl text-xs font-semibold transition flex items-center justify-center space-x-1.5 shadow-2xs cursor-pointer" title="กดแจ้งว่ากำลังเดินทางกลับสำนักงาน" > <RotateCcw className="w-3.5 h-3.5 text-purple-600" /> <span>แจ้งกำลังเดินทางกลับ</span> </button> )} <button onClick={() => handleOpenCompleteModal(b)} className="w-full sm:w-auto px-5 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white rounded-2xl text-xs sm:text-sm font-bold transition shadow-lg shadow-emerald-600/30 flex items-center justify-center space-x-2 animate-bounce cursor-pointer" > <CheckCircle2 className="w-4 h-4" /> <span>ขับเสร็จแล้ว (กรอกไมล์กลับ)</span> </button> </div> ) : ( <div className="flex items-center space-x-1.5 px-3 py-2 bg-amber-50 border border-amber-200 text-amber-800 rounded-xl text-xs font-medium"> <Car className="w-3.5 h-3.5 text-amber-600 shrink-0" /> <span> {isSelfDriveBooking(b) ? `กำลังขับขี่โดย ${b.name}` : `กำลังปฏิบัติงานโดย ${b.driverName || 'ผู้ขับรถ'}`} </span> </div> ) )} {/* CASE 3: COMPLETED -> BADGE */} {isCompleted && ( onNavigateToAssetRegister ? ( <button onClick={onNavigateToAssetRegister} className="w-full sm:w-auto px-3.5 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 rounded-xl text-xs font-semibold transition flex items-center justify-center space-x-1.5" title="เปิดดูในเมนูสมุดทะเบียนคุม" > <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" /> <span>บันทึกไมล์กลับเรียบร้อย (ดูทะเบียนคุม) &rarr;</span> </button> ) : ( <div className="w-full sm:w-auto px-3.5 py-2 bg-emerald-50 text-emerald-800 border border-emerald-300 rounded-xl text-xs font-semibold flex items-center justify-center space-x-1.5"> <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" /> <span>เสร็จสิ้นภารกิจแล้ว (บันทึกไมล์กลับเรียบร้อย)</span> </div> ) )} <div className="flex items-center space-x-2"> <button onClick={() => onViewMemo(b)} className="px-3 py-2 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 rounded-xl text-xs font-medium transition flex items-center space-x-1" title="ดูใบคำขอขอใช้รถยนต์ส่วนกลาง" > <Eye className="w-3.5 h-3.5 text-orange-600" /> <span>ดูใบคำขอ</span> </button> {isInProgress && onNavigateToTracking && ( <button onClick={onNavigateToTracking} className="px-3 py-2 bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 rounded-xl text-xs font-medium transition" title="เปิด GPS ติดตามสด" > <span>GPS Live</span> </button> )} </div> </div> </div> </div> ); })}
+src/components/DriverMissionView.tsx:594 => {b.id}
+src/components/DriverMissionView.tsx:623 => {b.status}
+src/components/DriverMissionView.tsx:629 => {formatThaiDate(b.date, 'short')}
+src/components/DriverMissionView.tsx:635 => {b.actualDepartureTime || b.startTime}
+src/components/DriverMissionView.tsx:635 => {b.actualReturnTime || b.endTime || 'เสร็จสิ้น'}
+src/components/DriverMissionView.tsx:642 => {b.purpose}
+src/components/DriverMissionView.tsx:649 => {b.destination}
+src/components/DriverMissionView.tsx:654 => {b.carName}
+src/components/DriverMissionView.tsx:661 => {b.name}
+src/components/DriverMissionView.tsx:663 => {b.driverName || 'ไม่ระบุ'}
+src/components/DriverMissionView.tsx:673 => {b.name}
+src/components/DriverMissionView.tsx:673 => {b.department}
+src/components/DriverMissionView.tsx:677 => {b.driverName}
+src/components/DriverMissionView.tsx:677 => {b.driverUsername ? `(@${b.driverUsername})` : ''}
+src/components/DriverMissionView.tsx:684 => {b.startedByName}
+src/components/DriverMissionView.tsx:691 => {b.completedByName}
+src/components/DriverMissionView.tsx:702 => {b.startMileage.toLocaleString()}
+src/components/DriverMissionView.tsx:704 => {b.actualDepartureTime}
+src/components/DriverMissionView.tsx:712 => {b.endMileage.toLocaleString()}
+src/components/DriverMissionView.tsx:714 => {b.actualReturnTime}
+src/components/DriverMissionView.tsx:721 => {b.totalDistance}
+src/components/DriverMissionView.tsx:728 => {b.fuelRefilledLiters}
+src/components/DriverMissionView.tsx:728 => {b.fuelRefilledCost}
+src/components/DriverMissionView.tsx:736 => {b.driverNotes}
+src/components/DriverMissionView.tsx:745 => {isReadyToStart && ( canUserExecuteMission(b, currentUser, allUsers) ? ( <button onClick={() => handleOpenStartModal(b)} className="w-full sm:w-auto px-5 py-3 bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-700 hover:to-amber-700 text-white rounded-2xl text-xs sm:text-sm font-bold transition shadow-lg shadow-orange-600/30 flex items-center justify-center space-x-2 cursor-pointer" > <Play className="w-4 h-4 fill-white" /> <span>กดเริ่มงาน (กรอกไมล์ไป)</span> </button> ) : ( <div className="flex items-center space-x-1.5 px-3 py-2 bg-slate-100 border border-slate-200 text-slate-600 rounded-xl text-xs font-medium"> <Clock className="w-3.5 h-3.5 text-slate-400 shrink-0" /> <span> {isSelfDriveBooking(b) ? `รอผู้ขอใช้รถ (${b.name}) กดเริ่มงาน` : b.driverName && b.driverName !== 'ไม่ระบุ' && !b.driverName.includes('ยังไม่ระบุ') ? `รอ ${b.driverName} กดเริ่มงาน` : 'ยังไม่ระบุพนักงานขับรถ'} </span> </div> ) )}
+src/components/DriverMissionView.tsx:758 => {isSelfDriveBooking(b) ? `รอผู้ขอใช้รถ (${b.name}) กดเริ่มงาน` : b.driverName && b.driverName !== 'ไม่ระบุ' && !b.driverName.includes('ยังไม่ระบุ') ? `รอ ${b.driverName} กดเริ่มงาน` : 'ยังไม่ระบุพนักงานขับรถ'}
+src/components/DriverMissionView.tsx:769 => {isInProgress && ( canUserExecuteMission(b, currentUser, allUsers) ? ( <div className="flex flex-col sm:flex-row lg:flex-col gap-2 w-full sm:w-auto"> {b.missionStatus !== 'returning' && ( <button type="button" onClick={() => handleMarkReturning(b.id)} className="w-full sm:w-auto px-3.5 py-2 bg-purple-50 hover:bg-purple-100 text-purple-800 border border-purple-200 rounded-2xl text-xs font-semibold transition flex items-center justify-center space-x-1.5 shadow-2xs cursor-pointer" title="กดแจ้งว่ากำลังเดินทางกลับสำนักงาน" > <RotateCcw className="w-3.5 h-3.5 text-purple-600" /> <span>แจ้งกำลังเดินทางกลับ</span> </button> )} <button onClick={() => handleOpenCompleteModal(b)} className="w-full sm:w-auto px-5 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white rounded-2xl text-xs sm:text-sm font-bold transition shadow-lg shadow-emerald-600/30 flex items-center justify-center space-x-2 animate-bounce cursor-pointer" > <CheckCircle2 className="w-4 h-4" /> <span>ขับเสร็จแล้ว (กรอกไมล์กลับ)</span> </button> </div> ) : ( <div className="flex items-center space-x-1.5 px-3 py-2 bg-amber-50 border border-amber-200 text-amber-800 rounded-xl text-xs font-medium"> <Car className="w-3.5 h-3.5 text-amber-600 shrink-0" /> <span> {isSelfDriveBooking(b) ? `กำลังขับขี่โดย ${b.name}` : `กำลังปฏิบัติงานโดย ${b.driverName || 'ผู้ขับรถ'}`} </span> </div> ) )}
+src/components/DriverMissionView.tsx:795 => {isSelfDriveBooking(b) ? `กำลังขับขี่โดย ${b.name}` : `กำลังปฏิบัติงานโดย ${b.driverName || 'ผู้ขับรถ'}`}
+src/components/DriverMissionView.tsx:804 => {isCompleted && ( onNavigateToAssetRegister ? ( <button onClick={onNavigateToAssetRegister} className="w-full sm:w-auto px-3.5 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 rounded-xl text-xs font-semibold transition flex items-center justify-center space-x-1.5" title="เปิดดูในเมนูสมุดทะเบียนคุม" > <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" /> <span>บันทึกไมล์กลับเรียบร้อย (ดูทะเบียนคุม) &rarr;</span> </button> ) : ( <div className="w-full sm:w-auto px-3.5 py-2 bg-emerald-50 text-emerald-800 border border-emerald-300 rounded-xl text-xs font-semibold flex items-center justify-center space-x-1.5"> <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" /> <span>เสร็จสิ้นภารกิจแล้ว (บันทึกไมล์กลับเรียบร้อย)</span> </div> ) )}
+src/components/FleetMaintenanceView.tsx:194 => {totalMaintenanceCost.toLocaleString()}
+src/components/FleetMaintenanceView.tsx:247 => {vehicles.map((v) => { const taxDays = getDaysUntil(v.taxExpiry); const actDays = getDaysUntil(v.actExpiry); const serviceDue = v.nextServiceMileage ? v.nextServiceMileage - v.odometer : 5000; let statusBadge = ( <span className="bg-emerald-100 text-emerald-800 border border-emerald-300 text-[10px] font-bold px-2 py-0.5 rounded-full"> พร้อมใช้งาน (Available) </span> ); if (v.status === 'in_mission') { statusBadge = ( <span className="bg-blue-100 text-blue-800 border border-blue-300 text-[10px] font-bold px-2 py-0.5 rounded-full animate-pulse"> กำลังปฏิบัติภารกิจ (In Mission) </span> ); } else if (v.status === 'maintenance') { statusBadge = ( <span className="bg-rose-100 text-rose-800 border border-rose-300 text-[10px] font-bold px-2 py-0.5 rounded-full"> อยู่ระหว่างซ่อมบำรุง (Maintenance) </span> ); } return ( <div key={v.id} className="bg-white rounded-2xl p-5 border border-slate-200 shadow-xs hover:shadow-md transition space-y-4 flex flex-col justify-between" > <div className="space-y-3"> <div className="flex justify-between items-start"> <div className="flex items-center space-x-2"> <div className="w-9 h-9 rounded-xl bg-slate-100 text-slate-700 flex items-center justify-center font-bold"> <Car className="w-5 h-5 text-orange-600" /> </div> <div> <h3 className="font-bold text-xs md:text-sm text-slate-900 leading-tight"> {v.name} </h3> <span className="text-[11px] font-bold font-mono text-orange-600 bg-orange-50 px-1.5 py-0.2 rounded border border-orange-200"> {v.plate} </span> </div> </div> {/* Header quick actions */} {canManageVehicles && ( <div className="flex items-center space-x-1"> <button type="button" onClick={() => handleOpenEditVehicle(v)} title="แก้ไขข้อมูลรถยนต์" className="p-1.5 rounded-lg bg-slate-100 hover:bg-orange-50 hover:text-orange-600 text-slate-500 transition" > <Edit3 className="w-3.5 h-3.5" /> </button> <button type="button" onClick={() => handleOpenDeleteVehicle(v)} title="ลบข้อมูลรถยนต์" className="p-1.5 rounded-lg bg-slate-100 hover:bg-rose-50 hover:text-rose-600 text-slate-500 transition" > <Trash2 className="w-3.5 h-3.5" /> </button> </div> )} </div> <div className="flex items-center justify-between pt-1"> {statusBadge} <span className="text-[10px] text-slate-500">ปีจดทะเบียน {v.year || 2563}</span> </div> {/* Odometer & Next Service Gauge */} <div className="bg-slate-50 p-3 rounded-xl border border-slate-200 space-y-1.5"> <div className="flex justify-between text-[11px]"> <span className="text-slate-500">เลขไมล์ปัจจุบัน:</span> <span className="font-mono font-bold text-slate-900"> {v.odometer.toLocaleString()} กม. </span> </div> <div className="flex justify-between text-[11px]"> <span className="text-slate-500">รอบบริการถัดไป:</span> <span className={`font-mono font-bold ${serviceDue < 1000 ? 'text-rose-600' : 'text-slate-700'}`}> {v.nextServiceMileage?.toLocaleString() || '-'} กม. </span> </div> {/* Progress to next service */} <div className="w-full bg-slate-200 h-1.5 rounded-full overflow-hidden"> <div className={`h-full rounded-full ${serviceDue < 1500 ? 'bg-amber-500' : 'bg-teal-600'}`} style={{ width: `${Math.min(100, Math.max(15, (v.odometer % 10000) / 100))}%` }} /> </div> <div className="text-[9px] text-slate-400 text-right"> เหลืออีกประมาณ {Math.max(0, serviceDue).toLocaleString()} กม. ถึงรอบตรวจเช็ค </div> </div> {/* Tax & ACT Expiration Alert Box */} <div className="space-y-1.5 text-[11px]"> <div className="flex justify-between items-center bg-slate-50 p-2 rounded-lg border border-slate-200"> <span className="text-slate-600 flex items-center"> <Calendar className="w-3 h-3 text-slate-400 mr-1" /> ภาษี/พ.ร.บ. สิ้นสุด: </span> <span className={`font-semibold ${ taxDays && taxDays <= 30 ? 'text-rose-600 font-bold' : taxDays && taxDays <= 60 ? 'text-amber-600 font-bold' : 'text-emerald-700' }`} > {formatThaiDate(v.taxExpiry || '2026-12-31', 'short')} {taxDays && ( <span className="text-[10px] block text-right font-normal"> (เหลือ {taxDays} วัน) </span> )} </span> </div> <div className="flex justify-between items-center bg-slate-50 p-2 rounded-lg border border-slate-200"> <span className="text-slate-600 flex items-center"> <ShieldCheck className="w-3 h-3 text-slate-400 mr-1" /> ประกันภัย: </span> <span className="font-semibold text-slate-700 text-right text-[10px] max-w-[140px] truncate"> {v.insuranceCompany || 'ประกันภัยชั้น 1'} </span> </div> </div> <div className="text-[11px] text-slate-500 pt-1 flex justify-between items-center"> <span>ผู้รับผิดชอบดูแล:</span> <span className="font-semibold text-slate-800">{v.driverName}</span> </div> </div> {/* Status change actions and edit/delete buttons for Admin/Director */} {canManageVehicles && ( <div className="pt-3 border-t border-slate-100 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2"> <select value={v.status} onChange={(e) => onUpdateVehicleStatus(v.id, e.target.value as Vehicle['status'])} className="flex-1 text-[11px] bg-slate-100 hover:bg-slate-200 border border-slate-200 rounded-lg p-1.5 font-medium text-slate-700 focus:outline-none" > <option value="available">🟢 สถานะ: พร้อมใช้งาน</option> <option value="in_mission">🔵 สถานะ: ปฏิบัติภารกิจ</option> <option value="maintenance">🔴 สถานะ: ส่งซ่อมบำรุง</option> </select> <div className="flex items-center space-x-1.5 justify-end"> <button type="button" onClick={() => handleOpenEditVehicle(v)} className="px-2.5 py-1.5 rounded-lg bg-orange-50 hover:bg-orange-100 text-orange-700 text-[11px] font-semibold transition flex items-center space-x-1 border border-orange-200" > <Edit3 className="w-3 h-3" /> <span>แก้ไข</span> </button> <button type="button" onClick={() => handleOpenDeleteVehicle(v)} className="px-2.5 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 text-[11px] font-semibold transition flex items-center space-x-1 border border-rose-200" > <Trash2 className="w-3 h-3" /> <span>ลบ</span> </button> </div> </div> )} </div> ); })}
+src/components/FleetMaintenanceView.tsx:284 => {v.name}
+src/components/FleetMaintenanceView.tsx:287 => {v.plate}
+src/components/FleetMaintenanceView.tsx:316 => {statusBadge}
+src/components/FleetMaintenanceView.tsx:317 => {v.year || 2563}
+src/components/FleetMaintenanceView.tsx:325 => {v.odometer.toLocaleString()}
+src/components/FleetMaintenanceView.tsx:331 => {v.nextServiceMileage?.toLocaleString() || '-'}
+src/components/FleetMaintenanceView.tsx:344 => {Math.max(0, serviceDue).toLocaleString()}
+src/components/FleetMaintenanceView.tsx:364 => {formatThaiDate(v.taxExpiry || '2026-12-31', 'short')}
+src/components/FleetMaintenanceView.tsx:367 => {taxDays}
+src/components/FleetMaintenanceView.tsx:379 => {v.insuranceCompany || 'ประกันภัยชั้น 1'}
+src/components/FleetMaintenanceView.tsx:386 => {v.driverName}
+src/components/FleetMaintenanceView.tsx:434 => {filteredRecords.length}
+src/components/FleetMaintenanceView.tsx:446 => {vehicles.map((v) => ( <option key={v.id} value={v.id}> {v.name} ({v.plate}) </option> ))}
+src/components/FleetMaintenanceView.tsx:448 => {v.name}
+src/components/FleetMaintenanceView.tsx:448 => {v.plate}
+src/components/FleetMaintenanceView.tsx:474 => {filteredRecords.map((r) => ( <tr key={r.id} className="hover:bg-slate-50/80 transition"> <td className="p-3 whitespace-nowrap"> <div className="font-mono font-bold text-slate-900">{r.id}</div> <div className="text-[10px] text-slate-400">{formatThaiDate(r.date, 'short')}</div> </td> <td className="p-3 whitespace-nowrap"> <div className="font-semibold text-slate-900">{r.carName}</div> <div className="text-[10px] font-mono text-orange-600">{r.carPlate}</div> </td> <td className="p-3 max-w-xs"> <div className="font-medium text-slate-900">{r.title}</div> <div className="text-[10px] text-slate-500 line-clamp-1">{r.technicianNotes || r.serviceTypeLabel}</div> </td> <td className="p-3 whitespace-nowrap"> <div className="text-slate-800">{r.serviceCenter}</div> <div className="text-[10px] text-slate-400 font-mono">บิล: {r.invoiceNo || '-'}</div> </td> <td className="p-3 text-right font-mono whitespace-nowrap"> <div>{r.mileageAtService.toLocaleString()} กม.</div> {r.nextDueMileage && ( <div className="text-[10px] text-teal-700"> รอบถัดไป: {r.nextDueMileage.toLocaleString()} </div> )} </td> <td className="p-3 text-right font-mono font-bold text-slate-900 whitespace-nowrap"> {r.cost.toLocaleString()} บ. </td> <td className="p-3 text-center whitespace-nowrap"> {r.status === 'completed' && ( <span className="bg-emerald-100 text-emerald-800 text-[10px] font-semibold px-2.5 py-0.5 rounded-full"> เสร็จสมบูรณ์ </span> )} {r.status === 'in_progress' && ( <span className="bg-amber-100 text-amber-800 text-[10px] font-semibold px-2.5 py-0.5 rounded-full"> อยู่ระหว่างดำเนินการ </span> )} {r.status === 'scheduled' && ( <span className="bg-blue-100 text-blue-800 text-[10px] font-semibold px-2.5 py-0.5 rounded-full"> นัดหมายล่วงหน้า </span> )} </td> </tr> ))}
+src/components/FleetMaintenanceView.tsx:477 => {r.id}
+src/components/FleetMaintenanceView.tsx:478 => {formatThaiDate(r.date, 'short')}
+src/components/FleetMaintenanceView.tsx:481 => {r.carName}
+src/components/FleetMaintenanceView.tsx:482 => {r.carPlate}
+src/components/FleetMaintenanceView.tsx:485 => {r.title}
+src/components/FleetMaintenanceView.tsx:486 => {r.technicianNotes || r.serviceTypeLabel}
+src/components/FleetMaintenanceView.tsx:489 => {r.serviceCenter}
+src/components/FleetMaintenanceView.tsx:490 => {r.invoiceNo || '-'}
+src/components/FleetMaintenanceView.tsx:493 => {r.mileageAtService.toLocaleString()}
+src/components/FleetMaintenanceView.tsx:496 => {r.nextDueMileage.toLocaleString()}
+src/components/FleetMaintenanceView.tsx:501 => {r.cost.toLocaleString()}
+src/components/FleetMaintenanceView.tsx:556 => {vehicles.map((v) => ( <option key={v.id} value={v.id}> {v.name} — {v.plate} (ไมล์ปัจจุบัน: {v.odometer.toLocaleString()} กม.) </option> ))}
+src/components/FleetMaintenanceView.tsx:558 => {v.name}
+src/components/FleetMaintenanceView.tsx:558 => {v.plate}
+src/components/FleetMaintenanceView.tsx:558 => {v.odometer.toLocaleString()}
+src/components/FleetMaintenanceView.tsx:572 => {SERVICE_TYPE_OPTIONS.map((opt) => ( <option key={opt.type} value={opt.type}> {opt.icon} {opt.label} </option> ))}
+src/components/FleetMaintenanceView.tsx:574 => {opt.icon}
+src/components/FleetMaintenanceView.tsx:574 => {opt.label}
+src/components/FuelLogView.tsx:115 => {totalDistance.toLocaleString()}
+src/components/FuelLogView.tsx:119 => {totalFuelCost.toLocaleString()}
+src/components/FuelLogView.tsx:123 => {totalLitres.toFixed(1)}
+src/components/FuelLogView.tsx:152 => {approvedBookings.map((b) => ( <option key={b.id} value={b.id}> {b.id} - {b.purpose.slice(0, 30)}... ({b.carName.split(' ')[0]}) </option> ))}
+src/components/FuelLogView.tsx:154 => {b.id}
+src/components/FuelLogView.tsx:154 => {b.purpose.slice(0, 30)}
+src/components/FuelLogView.tsx:154 => {b.carName.split(' ')[0]}
+src/components/FuelLogView.tsx:188 => {distance}
+src/components/FuelLogView.tsx:218 => {fuelEfficiency}
+src/components/FuelLogView.tsx:219 => {costPerKm}
+src/components/FuelLogView.tsx:356 => {fuelLogs.length}
+src/components/FuelLogView.tsx:374 => {log.id}
+src/components/FuelLogView.tsx:376 => {log.bookingId}
+src/components/FuelLogView.tsx:380 => {formatThaiDate(log.date, 'short')}
+src/components/FuelLogView.tsx:387 => {log.carPlate}
+src/components/FuelLogView.tsx:389 => {log.driverName}
+src/components/FuelLogView.tsx:396 => {log.startMileage.toLocaleString()}
+src/components/FuelLogView.tsx:400 => {log.endMileage.toLocaleString()}
+src/components/FuelLogView.tsx:404 => {log.distance}
+src/components/FuelLogView.tsx:408 => {log.cost}
+src/components/FuelLogView.tsx:413 => {log.fuelStation}
+src/components/FuelLogView.tsx:413 => {log.receiptNo || '-'}
+src/components/FuelLogView.tsx:414 => {log.rating}
+src/components/GoogleSheetsSyncModal.tsx:90 => {googleUser.displayName ? googleUser.displayName.charAt(0) : 'G'}
+src/components/GoogleSheetsSyncModal.tsx:98 => {googleUser.displayName || 'ผู้ใช้งานสำนักงาน'}
+src/components/GoogleSheetsSyncModal.tsx:99 => {googleUser.email}
+src/components/GoogleSheetsSyncModal.tsx:150 => {isConnecting ? 'กำลังเชื่อมต่อบัญชี Google...' : 'เข้าสู่ระบบด้วย Google (Sign in with Google)'}
+src/components/GoogleSheetsSyncModal.tsx:179 => {spreadsheetInfo ? spreadsheetInfo.name : 'ระบบบริหารรถยนต์ราชการ สวจ.พังงา'}
+src/components/GoogleSheetsSyncModal.tsx:185 => {lastSyncedAt}
+src/components/GoogleSheetsSyncModal.tsx:194 => {bookingCount}
+src/components/GoogleSheetsSyncModal.tsx:199 => {fuelCount}
+src/components/GoogleSheetsSyncModal.tsx:204 => {maintenanceCount}
+src/components/GoogleSheetsSyncModal.tsx:242 => {isSyncing ? 'กำลังซิงค์ข้อมูล...' : 'ซิงค์ข้อมูลเดี๋ยวนี้ (Sync Now)'}
+src/components/GpsTrackingView.tsx:276 => {Object.values(GPS_PROFILES).map((p) => ( <option key={p.id} value={p.id}> {p.name} ({p.plate}) </option> ))}
+src/components/GpsTrackingView.tsx:278 => {p.name}
+src/components/GpsTrackingView.tsx:278 => {p.plate}
+src/components/GpsTrackingView.tsx:290 => {isPlaying ? 'หยุดชั่วคราว' : 'เล่นต่อ'}
+src/components/GpsTrackingView.tsx:316 => {activeCar.name}
+src/components/GpsTrackingView.tsx:317 => {activeCar.plate}
+src/components/GpsTrackingView.tsx:319 => {activeCar.status}
+src/components/GpsTrackingView.tsx:326 => {activeCar.speed}
+src/components/GpsTrackingView.tsx:366 => {activeCar.driver}
+src/components/GpsTrackingView.tsx:371 => {activeCar.destination}
+src/components/GpsTrackingView.tsx:378 => {activeCar.speed}
+src/components/GpsTrackingView.tsx:385 => {distanceKm}
+src/components/GpsTrackingView.tsx:399 => {Math.round(progress * 100)}
+src/components/HeaderNav.tsx:164 => {thaiTimeStr}
+src/components/HeaderNav.tsx:166 => {thaiDateStr}
+src/components/HeaderNav.tsx:243 => {firestoreStatus === 'connected' ? 'Firestore เชื่อมต่อแล้ว' : firestoreStatus === 'syncing' ? 'กำลังซิงก์...' : 'Cloud DB'}
+src/components/HeaderNav.tsx:314 => {unreadCount}
+src/components/HeaderNav.tsx:348 => {item.title}
+src/components/HeaderNav.tsx:349 => {item.time}
+src/components/HeaderNav.tsx:351 => {item.desc}
+src/components/HeaderNav.tsx:394 => {unreadCount}
+src/components/HeaderNav.tsx:428 => {currentUser.name}
+src/components/HeaderNav.tsx:431 => {currentUser.roleTitle}
+src/components/HeaderNav.tsx:460 => {currentUser.name}
+src/components/HeaderNav.tsx:461 => {currentUser.department}
+src/components/HeaderNav.tsx:463 => {currentUser.roleTitle}
+src/components/LineSimulatorModal.tsx:212 => {logs.length}
+src/components/LineSimulatorModal.tsx:359 => {latestLog.title}
+src/components/LineSimulatorModal.tsx:375 => {latestLog.message}
+src/components/LineSimulatorModal.tsx:379 => {latestLog.recipient}
+src/components/LineSimulatorModal.tsx:381 => {new Date(latestLog.timestamp).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })}
+src/components/LineSimulatorModal.tsx:389 => {latestLog.mode === 'simulation' ? '⚡ โหมดจำลอง (Simulator)' : '🌐 ส่งผ่าน API'}
+src/components/LineSimulatorModal.tsx:434 => {logs.map((log) => ( <div key={log.id} className="p-4 hover:bg-slate-50 transition space-y-2"> <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5"> <div className="flex items-center space-x-2"> <span className="w-2.5 h-2.5 rounded-full bg-[#06c755]" /> <span className="font-bold text-xs text-slate-800">{log.title}</span> <span className="px-2 py-0.5 rounded-md bg-slate-100 text-slate-600 text-[10px] font-mono"> {log.mode} </span> </div> <div className="text-[11px] text-slate-400"> {new Date(log.timestamp).toLocaleString('th-TH')} </div> </div> <div className="text-xs text-slate-600 flex flex-wrap items-center gap-3"> <span>ผู้รับ: <strong className="text-slate-800">{log.recipient}</strong></span> {log.lineUserId && ( <span>LINE User ID: <code className="text-purple-600 bg-purple-50 px-1.5 py-0.5 rounded text-[11px]">{log.lineUserId}</code></span> )} {log.details && ( <span className="text-[11px] text-slate-400 italic">({log.details})</span> )} </div> <div className="p-2.5 bg-slate-50 rounded-xl text-[11px] text-slate-700 whitespace-pre-wrap font-sans border border-slate-100"> {log.message} </div> </div> ))}
+src/components/LineSimulatorModal.tsx:439 => {log.title}
+src/components/LineSimulatorModal.tsx:441 => {log.mode}
+src/components/LineSimulatorModal.tsx:445 => {new Date(log.timestamp).toLocaleString('th-TH')}
+src/components/LineSimulatorModal.tsx:450 => {log.recipient}
+src/components/LineSimulatorModal.tsx:452 => {log.lineUserId}
+src/components/LineSimulatorModal.tsx:455 => {log.details}
+src/components/LineSimulatorModal.tsx:460 => {log.message}
+src/components/LoginScreen.tsx:135 => {errorMsg}
+src/components/MobileBottomNav.tsx:131 => {activeMissionsCount}
+src/components/MobileBottomNav.tsx:151 => {pendingDirectorCount}
+src/components/OfficialMemoModal.tsx:201 => {booking.id}
+src/components/OfficialMemoModal.tsx:205 => {booking.memoNo ? `บันทึกข้อความที่ ${booking.memoNo}` : 'สำนักงานวัฒนธรรมจังหวัดพังงา'}
+src/components/OfficialMemoModal.tsx:313 => {pdfSuccessMessage}
+src/components/OfficialMemoModal.tsx:330 => {justApproved ? 'ลงนามอนุมัติเรียบร้อยแล้ว!' : 'คำขอนี้ได้รับการลงนามอนุมัติแล้ว'}
+src/components/OfficialMemoModal.tsx:370 => {memoRefDisplay}
+src/components/OfficialMemoModal.tsx:377 => {statusInfo.label}
+src/components/OfficialMemoModal.tsx:386 => {memoDateDisplay}
+src/components/OfficialMemoModal.tsx:392 => {booking.id}
+src/components/OfficialMemoModal.tsx:401 => {booking.destProvince}
+src/components/OfficialMemoModal.tsx:422 => {booking.purpose}
+src/components/OfficialMemoModal.tsx:433 => {booking.destination}
+src/components/OfficialMemoModal.tsx:433 => {booking.destProvince && booking.destProvince !== 'พังงา' ? `(จ.${booking.destProvince})` : '(จ.พังงา)'}
+src/components/OfficialMemoModal.tsx:443 => {formatThaiDate(booking.date)}
+src/components/OfficialMemoModal.tsx:443 => {booking.startTime ? `(เวลา ${booking.startTime} - ${booking.endTime || 'เสร็จภารกิจ'} น.)` : ''}
+src/components/OfficialMemoModal.tsx:453 => {booking.carName}
+src/components/OfficialMemoModal.tsx:463 => {booking.driverType === 'self' ? `${booking.name} (ผู้ขอขับขี่ด้วยตนเอง)` : (booking.driverName || 'พนักงานขับรถประจำสำนักงาน')}
+src/components/OfficialMemoModal.tsx:471 => {booking.passengerCount || 1}
+src/components/OfficialMemoModal.tsx:473 => {booking.passengerNames || booking.name}
+src/components/OfficialMemoModal.tsx:484 => {booking.attachmentName}
+src/components/OfficialMemoModal.tsx:505 => {booking.name}
+src/components/OfficialMemoModal.tsx:511 => {booking.position}
+src/components/OfficialMemoModal.tsx:517 => {booking.department}
+src/components/OfficialMemoModal.tsx:537 => {booking.name}
+src/components/OfficialMemoModal.tsx:540 => {booking.position}
+src/components/OfficialMemoModal.tsx:569 => {booking.status === 'approved' ? 'อนุมัติ' : booking.status === 'rejected' ? 'ไม่อนุมัติ' : 'รอลงนาม'}
+src/components/OfficialMemoModal.tsx:579 => {booking.directorComment || 'อนุมัติ มอบหมายให้ผู้ขอและพนักงานขับรถปฏิบัติหน้าที่ด้วยความระมัดระวังและปฏิบัติตามระเบียบของทางราชการ'}
+src/components/OfficialMemoModal.tsx:602 => {booking.approvedBy || 'นางสาวอุไรวรรณ แดงงาม'}
+src/components/OfficialMemoModal.tsx:608 => {booking.approvedAt ? formatThaiDate(booking.approvedAt.split('T')[0], 'short') : memoDateDisplay}
+src/components/OfficialMemoModal.tsx:644 => {booking.startMileage ? `${booking.startMileage.toLocaleString()} กม.` : '-'}
+src/components/OfficialMemoModal.tsx:650 => {booking.endMileage ? `${booking.endMileage.toLocaleString()} กม.` : '-'}
+src/components/OfficialMemoModal.tsx:656 => {booking.totalDistance ? `${booking.totalDistance.toLocaleString()} กิโลเมตร` : booking.endMileage && booking.startMileage ? `${(booking.endMileage - booking.startMileage).toLocaleString()} กิโลเมตร` : '-'}
+src/components/OfficialMemoModal.tsx:667 => {booking.fuelRefilledLiters}
+src/components/OfficialMemoModal.tsx:667 => {booking.fuelRefilledCost?.toLocaleString() || 0}
+src/components/OfficialMemoModal.tsx:681 => {booking.assetInspectorName || 'เจ้าหน้าที่พัสดุ'}
+src/components/OfficialMemoModal.tsx:698 => {booking.driverName || booking.name}
+src/components/OfficialMemoModal.tsx:698 => {booking.carName}
+src/components/OfficialMemoModal.tsx:698 => {booking.destination}
+src/components/OfficialMemoModal.tsx:698 => {booking.destProvince}
+src/components/OfficialMemoModal.tsx:698 => {memoDateDisplay}
+src/components/OfficialMemoModal.tsx:698 => {booking.endDate ? formatThaiDate(booking.endDate, 'official') : memoDateDisplay}
+src/components/OfficialMemoModal.tsx:720 => {Math.round(a4Zoom * 100)}
+src/components/OfficialMemoModal.tsx:804 => {phoneDisplay}
+src/components/OfficialMemoModal.tsx:809 => {memoRefDisplay}
+src/components/OfficialMemoModal.tsx:812 => {memoDateDisplay}
+src/components/OfficialMemoModal.tsx:830 => {booking.name}
+src/components/OfficialMemoModal.tsx:830 => {booking.position}
+src/components/OfficialMemoModal.tsx:830 => {booking.department}
+src/components/OfficialMemoModal.tsx:830 => {booking.purpose}
+src/components/OfficialMemoModal.tsx:830 => {booking.destination}
+src/components/OfficialMemoModal.tsx:830 => {memoDateDisplay}
+src/components/OfficialMemoModal.tsx:833 => {num(booking.startTime)}
+src/components/OfficialMemoModal.tsx:834 => {booking.endTime ? `${num(booking.endTime)} น.` : 'เสร็จสิ้นภารกิจ'}
+src/components/OfficialMemoModal.tsx:840 => {num(booking.passengerCount || 1)}
+src/components/OfficialMemoModal.tsx:841 => {booking.passengerNames}
+src/components/OfficialMemoModal.tsx:842 => {booking.carName}
+src/components/OfficialMemoModal.tsx:843 => {booking.driverType === 'self' ? `${booking.name} (ผู้ขอขับขี่ด้วยตนเอง)` : booking.driverName}
+src/components/OfficialMemoModal.tsx:848 => {booking.attachmentName}
+src/components/OfficialMemoModal.tsx:870 => {booking.name}
+src/components/OfficialMemoModal.tsx:871 => {booking.position}
+src/components/OfficialMemoModal.tsx:895 => {booking.status === 'approved' ? '☑' : '☐'}
+src/components/OfficialMemoModal.tsx:899 => {booking.status === 'rejected' ? '☑' : '☐'}
+src/components/OfficialMemoModal.tsx:906 => {booking.directorComment}
+src/components/OfficialMemoModal.tsx:935 => {booking.approvedBy || 'นางสาวอุไรวรรณ แดงงาม'}
+src/components/OfficialMemoModal.tsx:938 => {booking.approvedAt ? formatThaiDate(booking.approvedAt.split('T')[0], 'short') : memoDateDisplay}
+src/components/OfficialMemoModal.tsx:948 => {booking.approvedBy || 'นางสาวอุไรวรรณ แดงงาม'}
+src/components/OfficialMemoModal.tsx:978 => {booking.startMileage ? `${num(booking.startMileage.toLocaleString())} กม.` : '........................ กม.'}
+src/components/OfficialMemoModal.tsx:981 => {booking.startMileageTime ? `(เวลา ${num(booking.startMileageTime)} น.)` : '(เวลา .............. น.)'}
+src/components/OfficialMemoModal.tsx:988 => {booking.endMileage ? `${num(booking.endMileage.toLocaleString())} กม.` : '........................ กม.'}
+src/components/OfficialMemoModal.tsx:991 => {booking.endMileageTime ? `(เวลา ${num(booking.endMileageTime)} น.)` : '(เวลา .............. น.)'}
+src/components/OfficialMemoModal.tsx:998 => {booking.totalDistance ? `${num(booking.totalDistance.toLocaleString())} กิโลเมตร` : booking.endMileage && booking.startMileage ? `${num((booking.endMileage - booking.startMileage).toLocaleString())} กิโลเมตร` : '........................ กิโลเมตร'}
+src/components/OfficialMemoModal.tsx:1010 => {booking.fuelRefilledLiters && booking.fuelRefilledLiters > 0 ? `${num(booking.fuelRefilledLiters)} ลิตร (${num(booking.fuelRefilledCost?.toLocaleString() || 0)} บาท)` : 'ไม่มีการเติมระหว่างทาง'}
+src/components/OfficialMemoModal.tsx:1016 => {booking.driverNotes}
+src/components/OfficialMemoModal.tsx:1027 => {booking.assetInspectionVehicleCondition === 'normal' || !booking.assetInspectionVehicleCondition ? '☑' : '☐'}
+src/components/OfficialMemoModal.tsx:1030 => {booking.assetInspectionVehicleCondition === 'needs_cleaning' ? '☑' : '☐'}
+src/components/OfficialMemoModal.tsx:1033 => {booking.assetInspectionVehicleCondition === 'needs_repair' ? '☑' : '☐'}
+src/components/OfficialMemoModal.tsx:1052 => {booking.assetInspectorName || '..........................................................'}
+src/components/OfficialMemoModal.tsx:1055 => {booking.assetInspectorPosition || 'เจ้าหน้าที่พัสดุ / ผู้ตรวจรับ'}
+src/components/OfficialMemoModal.tsx:1058 => {booking.assetInspectedAt ? formatThaiDate(booking.assetInspectedAt.split('T')[0], 'short') : '......./......./.......'}
+src/components/OfficialMemoModal.tsx:1106 => {phoneDisplay}
+src/components/OfficialMemoModal.tsx:1111 => {memoRefDisplay}
+src/components/OfficialMemoModal.tsx:1114 => {memoDateDisplay}
+src/components/OfficialMemoModal.tsx:1121 => {booking.driverName || booking.name}
+src/components/OfficialMemoModal.tsx:1122 => {booking.driverType === 'self' ? booking.position : 'พนักงานขับรถยนต์ประจำสำนักงาน'}
+src/components/OfficialMemoModal.tsx:1123 => {booking.carName}
+src/components/OfficialMemoModal.tsx:1124 => {booking.destination}
+src/components/OfficialMemoModal.tsx:1124 => {booking.destProvince || 'ปลายทาง'}
+src/components/OfficialMemoModal.tsx:1128 => {booking.purpose}
+src/components/OfficialMemoModal.tsx:1129 => {num(booking.passengerCount || 1)}
+src/components/OfficialMemoModal.tsx:1130 => {booking.passengerNames}
+src/components/OfficialMemoModal.tsx:1134 => {memoDateDisplay}
+src/components/OfficialMemoModal.tsx:1135 => {booking.endDate ? (useThaiNumerals ? toThaiNumerals(formatThaiDate(booking.endDate, 'official')) : formatThaiDate(booking.endDate, 'official')) : memoDateDisplay}
+src/components/OfficialMemoModal.tsx:1136 => {booking.endDate && booking.endDate !== booking.date ? num(2) : num(1)}
+src/components/OfficialMemoModal.tsx:1166 => {booking.approvedBy || 'นางสาวอุไรวรรณ แดงงาม'}
+src/components/OfficialMemoModal.tsx:1176 => {booking.approvedBy || 'นางสาวอุไรวรรณ แดงงาม'}
+src/components/OfficialMemoModal.tsx:1197 => {booking.id}
+src/components/OfficialMemoModal.tsx:1200 => {booking.destProvince}
+src/components/PrintOfficialRegisterModal.tsx:165 => {filterCarPlate === 'all' ? 'ทุกคันในสังกัด (Fleet Register)' : filterCarPlate}
+src/components/PrintOfficialRegisterModal.tsx:175 => {formatThaiDate(new Date().toISOString(), 'short')}
+src/components/PrintOfficialRegisterModal.tsx:234 => {idx + 1}
+src/components/PrintOfficialRegisterModal.tsx:236 => {formatThaiDate(b.date, 'short')}
+src/components/PrintOfficialRegisterModal.tsx:239 => {b.memoNo || b.id}
+src/components/PrintOfficialRegisterModal.tsx:242 => {b.carName.replace(/Toyota|Hilux|Camry|Commuter|Fortuner/gi, '').trim() || b.carName}
+src/components/PrintOfficialRegisterModal.tsx:245 => {b.name}
+src/components/PrintOfficialRegisterModal.tsx:246 => {b.department}
+src/components/PrintOfficialRegisterModal.tsx:249 => {b.destination}
+src/components/PrintOfficialRegisterModal.tsx:250 => {b.purpose}
+src/components/PrintOfficialRegisterModal.tsx:253 => {b.actualDepartureTime || b.startTime || '-'}
+src/components/PrintOfficialRegisterModal.tsx:254 => {b.actualReturnTime || b.endTime || '-'}
+src/components/PrintOfficialRegisterModal.tsx:257 => {startKm ? startKm.toLocaleString() : '-'}
+src/components/PrintOfficialRegisterModal.tsx:260 => {endKm ? endKm.toLocaleString() : (b.status === 'in_progress' ? 'กำลังเดินทาง' : '-')}
+src/components/PrintOfficialRegisterModal.tsx:263 => {kmDriven > 0 ? kmDriven.toLocaleString() : '-'}
+src/components/PrintOfficialRegisterModal.tsx:268 => {b.fuelRefilledLiters}
+src/components/PrintOfficialRegisterModal.tsx:270 => {b.fuelRefilledCost ? `${b.fuelRefilledCost.toLocaleString()} บ.` : ''}
+src/components/PrintOfficialRegisterModal.tsx:278 => {b.driverName || '-'}
+src/components/PrintOfficialRegisterModal.tsx:298 => {sortedMissionRecords.length}
+src/components/PrintOfficialRegisterModal.tsx:301 => {totalKm.toLocaleString()}
+src/components/PrintOfficialRegisterModal.tsx:304 => {totalLiters > 0 ? `${totalLiters} ล.` : '-'}
+src/components/PrintOfficialRegisterModal.tsx:305 => {totalCost.toLocaleString()}
+src/components/ProfilePhotoModal.tsx:376 => {user.name}
+src/components/ProfilePhotoModal.tsx:376 => {user.roleTitle}
+src/components/ProfilePhotoModal.tsx:397 => {toastMessage}
+src/components/ProfilePhotoModal.tsx:413 => {user.name.charAt(0)}
+src/components/ProfilePhotoModal.tsx:432 => {user.name}
+src/components/ProfilePhotoModal.tsx:435 => {user.position}
+src/components/ProfilePhotoModal.tsx:435 => {user.department}
+src/components/ProfilePhotoModal.tsx:553 => {cameraError || 'คลิกเปิดกล้องเพื่อถ่ายภาพเซลฟี่'}
+src/components/ProfilePhotoModal.tsx:724 => {filteredAvatars.map((preset) => ( <button key={preset.id} type="button" onClick={() => { setPreviewUrl(preset.url); showToast(`เลือก: ${preset.label}`); }} className={`p-2 rounded-2xl border text-center transition flex flex-col items-center space-y-1.5 cursor-pointer active:scale-95 ${ previewUrl === preset.url ? 'border-orange-500 bg-orange-50/80 dark:bg-orange-950/40 ring-2 ring-orange-400' : 'border-slate-200 dark:border-slate-700 hover:border-orange-300 bg-white dark:bg-slate-800' }`} > <div className="w-12 h-12 rounded-full overflow-hidden shadow-xs bg-slate-100 dark:bg-slate-700"> <img src={preset.url} alt={preset.label} className="w-full h-full object-cover" /> </div> <span className="text-[10px] font-medium text-slate-700 dark:text-slate-300 leading-tight line-clamp-2"> {preset.label} </span> </button> ))}
+src/components/ProfilePhotoModal.tsx:746 => {preset.label}
+src/components/Sidebar.tsx:209 => {currentUser.name.charAt(0)}
+src/components/Sidebar.tsx:212 => {currentUser.name}
+src/components/Sidebar.tsx:214 => {currentUser.roleTitle}
+src/components/Sidebar.tsx:216 => {currentUser.department}
+src/components/Sidebar.tsx:223 => {menuItems.map((item) => { const Icon = item.icon; const isDashboardItem = item.id === 'dashboard'; const isActive = activeTab === item.id; if (isDashboardItem) { return ( <div key={item.id} className="space-y-1"> <div className="flex items-center space-x-1"> <button onClick={() => { onSelectTab('dashboard', 'overview'); setIsDashboardExpanded(true); onClose(); }} className={`flex-grow flex items-center justify-between p-3 rounded-xl transition text-left group ${ isActive ? 'bg-orange-600 text-white shadow-md font-semibold' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }`} > <div className="flex items-center space-x-3"> <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${ isActive ? 'bg-white/20 text-white' : item.color }`} > <Icon className="w-4 h-4" /> </div> <div> <div className="text-xs font-medium leading-none">{item.label}</div> <div className={`text-[10px] mt-1 ${ isActive ? 'text-orange-100' : 'text-slate-400' }`} > {item.desc} </div> </div> </div> </button> <button type="button" onClick={(e) => { e.stopPropagation(); setIsDashboardExpanded(!isDashboardExpanded); }} className={`w-9 h-11 rounded-xl flex items-center justify-center transition ${ isActive ? 'bg-orange-700/80 text-white hover:bg-orange-800' : 'text-slate-400 hover:text-white hover:bg-slate-800' }`} title={isDashboardExpanded ? 'ซ่อนเมนูย่อย' : 'แสดงเมนูย่อย'} > {isDashboardExpanded ? ( <ChevronDown className="w-4 h-4" /> ) : ( <ChevronRight className="w-4 h-4" /> )} </button> </div> {/* Sub-menu under ภาพรวม */} {isDashboardExpanded && ( <div className="ml-4 pl-3 border-l-2 border-orange-500/40 space-y-1 py-1"> {/* Sub-item 1: ภาพรวม */} <button onClick={() => { onSelectTab('dashboard', 'overview'); onClose(); }} className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-left transition ${ activeTab === 'dashboard' && dashboardSubView === 'overview' ? 'bg-orange-500 text-white font-bold shadow-xs' : 'text-slate-300 hover:bg-slate-800/80 hover:text-white' }`} > <div className="flex items-center space-x-2.5"> <LayoutDashboard className={`w-3.5 h-3.5 shrink-0 ${ activeTab === 'dashboard' && dashboardSubView === 'overview' ? 'text-white' : 'text-orange-400' }`} /> <span className="text-xs">ภาพรวม</span> </div> <span className={`text-[10px] px-1.5 py-0.5 rounded-md font-medium ${ activeTab === 'dashboard' && dashboardSubView === 'overview' ? 'bg-white/20 text-white' : 'text-slate-400 bg-slate-800' }`}> KPI & สถิติ </span> </button> {/* Sub-item 2: รายการใบเบิก */} <button onClick={() => { onSelectTab('dashboard', 'bookings'); onClose(); }} className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-left transition ${ activeTab === 'dashboard' && dashboardSubView === 'bookings' ? 'bg-orange-500 text-white font-bold shadow-xs' : 'text-slate-300 hover:bg-slate-800/80 hover:text-white' }`} > <div className="flex items-center space-x-2.5"> <FileText className={`w-3.5 h-3.5 shrink-0 ${ activeTab === 'dashboard' && dashboardSubView === 'bookings' ? 'text-white' : 'text-orange-400' }`} /> <span className="text-xs">รายการใบเบิก</span> </div> {pendingBookingsCount && pendingBookingsCount > 0 ? ( <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${ activeTab === 'dashboard' && dashboardSubView === 'bookings' ? 'bg-white text-orange-600' : 'bg-amber-500/20 text-amber-300 border border-amber-500/30' }`}> {pendingBookingsCount} รออนุมัติ </span> ) : bookingsCount !== undefined ? ( <span className={`text-[10px] px-1.5 py-0.5 rounded-md font-medium ${ activeTab === 'dashboard' && dashboardSubView === 'bookings' ? 'bg-white/20 text-white' : 'text-slate-400 bg-slate-800' }`}> {bookingsCount} รายการ </span> ) : null} </button> {/* Sub-item 3: สถานะรถยนต์ราชการ */} <button onClick={() => { onSelectTab('dashboard', 'vehicles'); onClose(); }} className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-left transition ${ activeTab === 'dashboard' && dashboardSubView === 'vehicles' ? 'bg-orange-500 text-white font-bold shadow-xs' : 'text-slate-300 hover:bg-slate-800/80 hover:text-white' }`} > <div className="flex items-center space-x-2.5"> <Car className={`w-3.5 h-3.5 shrink-0 ${ activeTab === 'dashboard' && dashboardSubView === 'vehicles' ? 'text-white' : 'text-teal-400' }`} /> <span className="text-xs">สถานะรถยนต์ราชการ</span> </div> {availableVehiclesCount !== undefined && vehiclesCount !== undefined ? ( <span className={`text-[10px] px-1.5 py-0.5 rounded-md font-medium ${ activeTab === 'dashboard' && dashboardSubView === 'vehicles' ? 'bg-white/20 text-white' : 'text-teal-300 bg-teal-950/60 border border-teal-800/50' }`}> {availableVehiclesCount}/{vehiclesCount} คัน </span> ) : null} </button> </div> )} </div> ); } return ( <button key={item.id} onClick={() => { onSelectTab(item.id); onClose(); }} className={`w-full flex items-center justify-between p-3 rounded-xl transition text-left group ${ isActive ? 'bg-orange-600 text-white shadow-md font-semibold' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }`} > <div className="flex items-center space-x-3"> <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${ isActive ? 'bg-white/20 text-white' : item.color }`} > <Icon className="w-4 h-4" /> </div> <div> <div className="text-xs font-medium leading-none">{item.label}</div> <div className={`text-[10px] mt-1 ${ isActive ? 'text-orange-100' : 'text-slate-400' }`} > {item.desc} </div> </div> </div> <ChevronRight className={`w-4 h-4 opacity-50 transition-transform ${ isActive ? 'opacity-100 translate-x-0.5' : 'group-hover:translate-x-0.5' }`} /> </button> ); })}
+src/components/Sidebar.tsx:253 => {item.label}
+src/components/Sidebar.tsx:259 => {item.desc}
+src/components/Sidebar.tsx:340 => {pendingBookingsCount}
+src/components/Sidebar.tsx:348 => {bookingsCount}
+src/components/Sidebar.tsx:377 => {availableVehiclesCount}
+src/components/Sidebar.tsx:377 => {vehiclesCount}
+src/components/Sidebar.tsx:409 => {item.label}
+src/components/Sidebar.tsx:415 => {item.desc}
+src/components/Sidebar.tsx:503 => {darkMode ? 'โหมดมืด (Dark)' : 'โหมดสว่าง (Light)'}
+src/components/Sidebar.tsx:549 => {currentUser.name}
+src/components/Sidebar.tsx:550 => {currentUser.roleTitle}
+src/components/StartMissionModal.tsx:139 => {booking.id}
+src/components/StartMissionModal.tsx:142 => {formatThaiDate(booking.date, 'short')}
+src/components/StartMissionModal.tsx:147 => {booking.purpose}
+src/components/StartMissionModal.tsx:153 => {booking.destination}
+src/components/StartMissionModal.tsx:157 => {booking.carName}
+src/components/StartMissionModal.tsx:161 => {booking.driverName}
+src/components/StartMissionModal.tsx:161 => {booking.name}
+src/components/StartMissionModal.tsx:161 => {booking.department}
+src/components/StartMissionModal.tsx:180 => {currentUser.name}
+src/components/StartMissionModal.tsx:180 => {currentUser.username ? `(@${currentUser.username})` : ''}
+src/components/StartMissionModal.tsx:185 => {permission.isSelfDrive ? '🚗 ขับขี่ด้วยตนเอง' : '👔 พนักงานขับรถ'}
+src/components/StartMissionModal.tsx:198 => {booking.carName}
+src/components/StartMissionModal.tsx:198 => {vehicleConflict.conflictingBooking.memoNo || vehicleConflict.conflictingBooking.id}
+src/components/StartMissionModal.tsx:199 => {vehicleConflict.conflictingBooking.driverName}
+src/components/StartMissionModal.tsx:211 => {permission.reason || `สงวนสิทธิ์เฉพาะพนักงานขับรถ (${permission.driverDisplayName}) หรือผู้ขอใช้รถกรณีขับขี่ด้วยตนเอง`}
+src/components/StartMissionModal.tsx:220 => {errorMsg}
+src/components/StartMissionModal.tsx:233 => {vehicle.odometer.toLocaleString()}
+src/components/ToastBanner.tsx:23 => {icon}
+src/components/ToastBanner.tsx:24 => {message}
+src/components/UserManagementView.tsx:429 => {stats.total}
+src/components/UserManagementView.tsx:430 => {stats.active}
+src/components/UserManagementView.tsx:438 => {stats.admin}
+src/components/UserManagementView.tsx:447 => {stats.director}
+src/components/UserManagementView.tsx:456 => {stats.officer}
+src/components/UserManagementView.tsx:465 => {stats.driver}
+src/components/UserManagementView.tsx:474 => {APP_MENUS.length}
+src/components/UserManagementView.tsx:546 => {filteredUsers.length}
+src/components/UserManagementView.tsx:597 => {user.name}
+src/components/UserManagementView.tsx:607 => {user.username}
+src/components/UserManagementView.tsx:610 => {user.position}
+src/components/UserManagementView.tsx:616 => {user.department}
+src/components/UserManagementView.tsx:623 => {user.phone}
+src/components/UserManagementView.tsx:632 => {user.email}
+src/components/UserManagementView.tsx:650 => {user.signatureType === 'draw' ? 'วาดสด' : user.signatureType === 'image' ? 'ภาพ' : 'ดิจิทัล'}
+src/components/UserManagementView.tsx:675 => {user.lineUserId.substring(0, 6)}
+src/components/UserManagementView.tsx:698 => {roleMeta.label}
+src/components/UserManagementView.tsx:701 => {allowedMenus.length}
+src/components/UserManagementView.tsx:701 => {APP_MENUS.length}
+src/components/UserManagementView.tsx:707 => {APP_MENUS.map((menu) => { const hasAccess = allowedMenus.includes(menu.id); const Icon = MENU_ICONS[menu.id] || LayoutDashboard; return ( <span key={menu.id} title={`${menu.label}: ${hasAccess ? 'อนุญาตให้เข้าใช้งานได้' : 'ไม่อนุญาต/ซ่อนเมนู'}`} className={`inline-flex items-center space-x-1 px-2 py-0.5 rounded-lg text-[11px] font-medium transition ${ hasAccess ? 'bg-slate-100 text-slate-800 border border-slate-200' : 'bg-slate-50 text-slate-300 line-through border border-dashed border-slate-200' }`} > <Icon className={`w-3 h-3 ${hasAccess ? 'text-slate-700' : 'text-slate-300'}`} /> <span>{menu.label}</span> {hasAccess ? ( <Check className="w-2.5 h-2.5 text-emerald-600" /> ) : ( <X className="w-2.5 h-2.5 text-slate-300" /> )} </span> ); })}
+src/components/UserManagementView.tsx:722 => {menu.label}
+src/components/UserManagementView.tsx:821 => {editingUserId ? 'แก้ไขข้อมูลผู้ใช้งานและกำหนดสิทธิ์' : 'เพิ่มผู้ใช้งานใหม่เข้าสู่ระบบ'}
+src/components/UserManagementView.tsx:966 => {DEPARTMENTS.map((dept) => ( <option key={dept} value={dept}> {dept} </option> ))}
+src/components/UserManagementView.tsx:968 => {dept}
+src/components/UserManagementView.tsx:1134 => {testLineResult.message}
+src/components/UserManagementView.tsx:1181 => {APP_MENUS.map((menu) => { const isChecked = formData.allowedMenus.includes(menu.id); const Icon = MENU_ICONS[menu.id] || LayoutDashboard; return ( <div key={menu.id} onClick={() => handleToggleMenu(menu.id)} className={`p-3 rounded-xl border transition cursor-pointer flex items-start space-x-3 select-none ${ isChecked ? 'bg-purple-50/70 border-purple-300 ring-1 ring-purple-300 shadow-xs' : 'bg-slate-50/70 border-slate-200 hover:bg-slate-100 text-slate-400' }`} > <div className={`w-5 h-5 rounded-md flex items-center justify-center mt-0.5 transition ${ isChecked ? 'bg-purple-600 text-white' : 'border border-slate-300 bg-white' }`} > {isChecked && <Check className="w-3.5 h-3.5" />} </div> <div className="flex-1 min-w-0"> <div className="flex items-center space-x-1.5"> <Icon className={`w-4 h-4 ${isChecked ? 'text-purple-600' : 'text-slate-400'}`} /> <span className={`text-xs font-bold leading-tight ${ isChecked ? 'text-slate-900' : 'text-slate-500' }`} > {menu.label} </span> </div> <p className={`text-[10px] mt-0.5 line-clamp-1 ${ isChecked ? 'text-purple-900/70' : 'text-slate-400' }`} > {menu.desc} </p> </div> </div> ); })}
+src/components/UserManagementView.tsx:1213 => {menu.label}
+src/components/UserManagementView.tsx:1221 => {menu.desc}
+src/components/UserManagementView.tsx:1253 => {users.find((u) => u.id === editingUserId)?.signatureUrl ? 'จัดการ/แก้ไขลายเซ็น' : 'วาดหรือเพิ่มลายเซ็น'}
+src/components/UserManagementView.tsx:1288 => {editingUserId ? 'บันทึกการเปลี่ยนแปลง' : 'ยืนยันเพิ่มผู้ใช้งาน'}
+src/components/UserManagementView.tsx:1315 => {permissionTargetUser.name}
+src/components/UserManagementView.tsx:1315 => {permissionTargetUser.username}
+src/components/UserManagementView.tsx:1332 => {permissionTargetUser.name}
+src/components/UserManagementView.tsx:1334 => {permissionTargetUser.roleTitle}
+src/components/UserManagementView.tsx:1334 => {permissionTargetUser.department}
+src/components/UserManagementView.tsx:1338 => {getUserAllowedMenus(permissionTargetUser).length}
+src/components/UserManagementView.tsx:1338 => {APP_MENUS.length}
+src/components/UserManagementView.tsx:1383 => {APP_MENUS.map((menu) => { const allowedMenus = getUserAllowedMenus(permissionTargetUser); const isChecked = allowedMenus.includes(menu.id); const Icon = MENU_ICONS[menu.id] || LayoutDashboard; return ( <div key={menu.id} onClick={() => handleToggleQuickPermission(menu.id)} className={`p-3 rounded-xl border transition cursor-pointer flex items-center justify-between select-none ${ isChecked ? 'bg-purple-50/80 border-purple-300 text-slate-900' : 'bg-slate-50 border-slate-200 hover:bg-slate-100 text-slate-400' }`} > <div className="flex items-center space-x-3"> <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${ isChecked ? 'bg-purple-600 text-white shadow-xs' : 'bg-slate-200 text-slate-400' }`} > <Icon className="w-4 h-4" /> </div> <div> <div className={`text-xs font-bold leading-tight ${isChecked ? 'text-slate-900' : 'text-slate-500'}`}> {menu.label} </div> <div className="text-[10px] text-slate-400 mt-0.5">{menu.desc}</div> </div> </div> <div className="flex items-center space-x-2"> <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${ isChecked ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' : 'bg-slate-200 text-slate-600' }`} > {isChecked ? 'อนุญาต' : 'ปิดกั้น'} </span> <div className={`w-5 h-5 rounded-md flex items-center justify-center ${ isChecked ? 'bg-purple-600 text-white' : 'border border-slate-300 bg-white' }`} > {isChecked ? <Check className="w-3.5 h-3.5" /> : null} </div> </div> </div> ); })}
+src/components/UserManagementView.tsx:1408 => {menu.label}
+src/components/UserManagementView.tsx:1410 => {menu.desc}
+src/components/UserManagementView.tsx:1422 => {isChecked ? 'อนุญาต' : 'ปิดกั้น'}
+src/components/UserSignatureModal.tsx:360 => {user.name}
+src/components/UserSignatureModal.tsx:360 => {user.position || user.roleTitle}
+src/components/UserSignatureModal.tsx:672 => {customSignerText}
+src/components/UserSignatureModal.tsx:683 => {user.name}
+src/components/UserSignatureModal.tsx:684 => {user.position || 'ตำแหน่งตามคำสั่งราชการ'}
+src/components/VehicleModal.tsx:173 => {isEditing ? 'แก้ไขข้อมูลรถยนต์ราชการ' : 'เพิ่มรถยนต์ราชการคันใหม่'}
+src/components/VehicleModal.tsx:176 => {isEditing ? `แก้ไขข้อมูล: ${vehicle.name} (${vehicle.plate})` : 'บันทึกประวัติ ทะเบียน ภาษี และผู้รับผิดชอบดูแลรถราชการ'}
+src/components/VehicleModal.tsx:196 => {errorMsg}
+src/components/VehicleModal.tsx:247 => {VEHICLE_TYPE_PRESETS.map((t) => ( <option key={t} value={t}> {t} </option> ))}
+src/components/VehicleModal.tsx:249 => {t}
+src/components/VehicleModal.tsx:293 => {FUEL_TYPE_PRESETS.map((f) => ( <option key={f} value={f}> {f} </option> ))}
+src/components/VehicleModal.tsx:295 => {f}
+src/components/VehicleModal.tsx:341 => {driverList.map((d) => ( <option key={d.id} value={d.name} /> ))}
+src/components/VehicleModal.tsx:401 => {COLOR_TAG_OPTIONS.map((c) => ( <option key={c.value} value={c.value}> {c.label} </option> ))}
+src/components/VehicleModal.tsx:403 => {c.label}
+src/components/VehicleModal.tsx:486 => {isEditing ? 'บันทึกการแก้ไขข้อมูลรถ' : 'บันทึกเพิ่มรถใหม่'}

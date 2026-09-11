@@ -1,6 +1,6 @@
 {
   "name": "ระบบเบิกใช้งานรถยนต์ราชการ - M-Culture Phangnga Pro",
   "description": "ระบบบริหารจัดการยานพาหนะ ขออนุมัติใช้รถยนต์ราชการ ติดตามภารกิจ และบันทึกเชื้อเพลิง สำนักงานวัฒนธรรมจังหวัดพังงา",
-  "requestFramePermissions": [],
+  "requestFramePermissions": ["geolocation"],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

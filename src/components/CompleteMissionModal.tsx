@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { BookingRequest, Vehicle, User } from '../types';
 import { formatThaiDate } from '../utils/thaiDate';
-import { getMissionPermissionDetails } from '../utils/driverPermissions';
+import { getMissionPermissionDetails, validateMissionMileage } from '../utils/driverPermissions';
 import {
   X,
   Gauge,
@@ -16,7 +16,8 @@ import {
   ArrowRight,
   TrendingUp,
   Receipt,
-  Lock
+  Lock,
+  UserCheck
 } from 'lucide-react';
 
 interface CompleteMissionModalProps {
@@ -52,7 +53,7 @@ export const CompleteMissionModal: React.FC<CompleteMissionModalProps> = ({
   // Check driver execution permissions
   const permission = currentUser
     ? getMissionPermissionDetails(booking, currentUser, allUsers)
-    : { canExecute: true, driverDisplayName: booking.driverName || 'ผู้ขับรถ', reason: undefined };
+    : { canExecute: true, driverDisplayName: booking.driverName || 'ผู้ขับรถ', reason: undefined, isSelfDrive: false };
 
   const startMileage = booking.startMileage || vehicle?.odometer || 148520;
   
@@ -89,13 +90,9 @@ export const CompleteMissionModal: React.FC<CompleteMissionModalProps> = ({
       return;
     }
 
-    if (isNaN(endMileageNum) || endMileageNum <= 0) {
-      setErrorMsg('กรุณากรอกเลขไมล์ตอนกลับให้ถูกต้อง');
-      return;
-    }
-
-    if (endMileageNum <= startMileage) {
-      setErrorMsg(`เลขไมล์ตอนกลับ (${endMileageNum.toLocaleString()} กม.) ต้องมากกว่าเลขไมล์ตอนไป (${startMileage.toLocaleString()} กม.)`);
+    const mileageCheck = validateMissionMileage(startMileage, endMileageNum);
+    if (!mileageCheck.isValid) {
+      setErrorMsg(mileageCheck.error || 'กรุณากรอกเลขไมล์ตอนกลับให้ถูกต้อง');
       return;
     }
 
@@ -107,7 +104,7 @@ export const CompleteMissionModal: React.FC<CompleteMissionModalProps> = ({
     onConfirmComplete(booking.id, {
       endMileage: endMileageNum,
       actualReturnTime: returnTime,
-      totalDistance,
+      totalDistance: mileageCheck.totalDistance,
       fuelRefilledLiters: hasFuelRefill && fuelLiters ? parseFloat(fuelLiters) : undefined,
       fuelRefilledCost: hasFuelRefill && fuelCost ? parseFloat(fuelCost) : undefined,
       fuelStation: hasFuelRefill && fuelStation ? fuelStation : undefined,
@@ -170,6 +167,29 @@ export const CompleteMissionModal: React.FC<CompleteMissionModalProps> = ({
 
         {/* Form Body */}
         <form onSubmit={handleSubmit} className="p-6 space-y-5 max-h-[75vh] overflow-y-auto">
+          
+          {/* Identity & Role Verification Banner */}
+          {currentUser && (
+            <div className="p-3 bg-slate-50 border border-slate-200 rounded-2xl flex items-center justify-between text-xs">
+              <div className="flex items-center space-x-2">
+                <div className="w-7 h-7 rounded-xl bg-teal-500/10 text-teal-600 flex items-center justify-center font-bold">
+                  <UserCheck className="w-4 h-4" />
+                </div>
+                <div>
+                  <div className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">
+                    ผู้ดำเนินการบันทึกจบภารกิจ (ยืนยันตัวตน)
+                  </div>
+                  <div className="font-bold text-slate-800">
+                    {currentUser.name} {currentUser.username ? `(@${currentUser.username})` : ''}
+                  </div>
+                </div>
+              </div>
+              <span className="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-white border border-slate-200 text-slate-600 shadow-xs">
+                {permission.isSelfDrive ? '🚗 ขับขี่ด้วยตนเอง' : '👔 พนักงานขับรถ'}
+              </span>
+            </div>
+          )}
+
           {currentUser && !permission.canExecute && (
             <div className="p-4 bg-amber-50 border border-amber-300 text-amber-900 rounded-2xl text-xs space-y-1.5">
               <div className="flex items-center space-x-2 font-bold text-amber-800">

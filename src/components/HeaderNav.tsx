@@ -20,7 +20,10 @@ import {
   AlertCircle,
   Database,
   ShieldCheck,
-  FileSpreadsheet
+  FileSpreadsheet,
+  MessageSquare,
+  Sun,
+  Moon
 } from 'lucide-react';
 import {
   isBadgingSupported,
@@ -42,7 +45,11 @@ interface HeaderNavProps {
   onTabChange: (tab: string) => void;
   firestoreStatus?: 'connected' | 'syncing' | 'error' | 'idle';
   onUpdateProfilePhoto?: (userId: string, newAvatarUrl: string) => void;
+  onOpenProfilePhoto?: () => void;
+  onOpenLineSimulator?: () => void;
   onLogout?: () => void;
+  darkMode?: boolean;
+  onToggleDarkMode?: () => void;
 }
 
 export const HeaderNav: React.FC<HeaderNavProps> = ({
@@ -58,7 +65,11 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
   onTabChange,
   firestoreStatus = 'connected',
   onUpdateProfilePhoto,
-  onLogout
+  onOpenProfilePhoto,
+  onOpenLineSimulator,
+  onLogout,
+  darkMode = false,
+  onToggleDarkMode
 }) => {
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showNotifMenu, setShowNotifMenu] = useState(false);
@@ -66,6 +77,15 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
   const [badgePermission, setBadgePermission] = useState<NotificationPermission | 'unsupported'>('default');
 
   const unreadCount = notifications.filter((n) => !n.read).length;
+
+  const [currentTime, setCurrentTime] = useState<Date>(new Date());
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
 
   useEffect(() => {
     setBadgePermission(getNotificationPermission());
@@ -92,15 +112,21 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
     }
   };
 
+  const thaiTimeStr = currentTime.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  const thaiDateStr = currentTime.toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: '2-digit' });
+
   return (
-    <header className="px-4 md:px-8 py-3.5 bg-white/90 backdrop-blur-md border-b border-slate-200 sticky top-0 z-40 shadow-sm">
-      <div className="max-w-7xl mx-auto flex justify-between items-center">
+    <header className="relative bg-white/90 backdrop-blur-md border-b border-slate-200 sticky top-0 z-40 shadow-xs">
+      {/* Top Decorative Cultural Gold Stripe */}
+      <div className="h-0.5 w-full bg-gradient-to-r from-amber-600 via-orange-400 to-amber-500" />
+      
+      <div className="px-4 md:px-8 py-3 max-w-7xl mx-auto flex justify-between items-center">
         
         {/* Left: Brand & Menu Button */}
         <div className="flex items-center space-x-3.5">
           <button
             onClick={onToggleSidebar}
-            className="w-10 h-10 rounded-xl bg-orange-500 hover:bg-orange-600 text-white flex items-center justify-center transition shadow-md shadow-orange-500/20"
+            className="w-10 h-10 rounded-xl bg-gradient-to-tr from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white flex items-center justify-center transition shadow-sm shadow-orange-500/20 active:scale-95 cursor-pointer"
             title="เปิดเมนูนำทาง"
           >
             <Menu className="w-5 h-5" />
@@ -108,19 +134,19 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
 
           <div
             onClick={() => onTabChange('dashboard')}
-            className="cursor-pointer select-none flex items-center space-x-2.5"
+            className="cursor-pointer select-none flex items-center space-x-2.5 group"
           >
             <img
               src="/logo_mculture.svg"
               alt="ตรากระทรวงวัฒนธรรม"
-              className="w-9 h-11 object-contain drop-shadow-xs shrink-0"
+              className="w-9 h-11 object-contain drop-shadow-xs shrink-0 group-hover:scale-105 transition-transform duration-200"
             />
             <div>
               <div className="flex items-center space-x-2">
-                <h1 className="font-bold text-sm md:text-base text-slate-900 leading-tight">
+                <h1 className="font-bold text-sm md:text-base text-slate-900 leading-tight group-hover:text-orange-600 transition-colors">
                   M-Culture Phangnga Pro
                 </h1>
-                <span className="hidden sm:inline-block text-[10px] bg-orange-100 text-orange-800 font-semibold px-2 py-0.2 rounded-full">
+                <span className="hidden sm:inline-block text-[10px] bg-orange-100 text-orange-800 font-semibold px-2 py-0.2 rounded-full border border-orange-200/60">
                   v5.2
                 </span>
               </div>
@@ -129,14 +155,28 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
           </div>
         </div>
 
+        {/* Center: Decorative Live Clock & System Radar Status */}
+        <div className="hidden xl:flex items-center space-x-2 px-3.5 py-1.5 rounded-full bg-slate-100/90 border border-slate-200/80 shadow-2xs text-xs">
+          <span className="relative flex h-2 w-2">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+            <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+          </span>
+          <span className="font-bold text-slate-700 font-mono tracking-tight">{thaiTimeStr} น.</span>
+          <span className="text-slate-300">|</span>
+          <span className="text-slate-500 font-medium">{thaiDateStr}</span>
+          <span className="text-[10px] px-2 py-0.5 rounded-md bg-amber-100/90 text-amber-800 font-semibold border border-amber-200/60">
+            จ.พังงา
+          </span>
+        </div>
+
         {/* Right: Actions, Google Sheets, Sound, Notifications, User Switcher */}
         <div className="flex items-center space-x-2 sm:space-x-2.5">
           
-          {/* Quick Mission Button for Driver & Permitted Users */}
+          {/* Quick Mission Button for Driver & Permitted Users (desktop/tablet only, mobile has it on bottom bar) */}
           {(currentUser.role === 'driver' || getUserAllowedMenus(currentUser).includes('driver_mission')) && (
             <button
               onClick={() => onTabChange('driver_mission')}
-              className={`h-9 px-2.5 sm:px-3 rounded-xl flex items-center space-x-1.5 transition border text-xs font-semibold shadow-xs ${
+              className={`hidden md:flex h-9 px-2.5 sm:px-3 rounded-xl items-center space-x-1.5 transition border text-xs font-semibold shadow-xs ${
                 activeTab === 'driver_mission'
                   ? 'bg-amber-600 text-white border-amber-500 shadow-md shadow-amber-600/30'
                   : 'bg-amber-50 hover:bg-amber-100 text-amber-900 border-amber-200'
@@ -152,7 +192,7 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
           {getUserAllowedMenus(currentUser).includes('asset_register') && (
             <button
               onClick={() => onTabChange('asset_register')}
-              className={`h-9 px-2.5 sm:px-3 rounded-xl flex items-center space-x-1.5 transition border text-xs font-semibold shadow-xs ${
+              className={`hidden lg:flex h-9 px-2.5 sm:px-3 rounded-xl items-center space-x-1.5 transition border text-xs font-semibold shadow-xs ${
                 activeTab === 'asset_register'
                   ? 'bg-teal-600 text-white border-teal-500 shadow-md shadow-teal-600/30'
                   : 'bg-teal-50 hover:bg-teal-100 text-teal-900 border-teal-200'
@@ -168,7 +208,7 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
           {getUserAllowedMenus(currentUser).includes('asset_inspection') && (
             <button
               onClick={() => onTabChange('asset_inspection')}
-              className={`h-9 px-2.5 sm:px-3 rounded-xl flex items-center space-x-1.5 transition border text-xs font-semibold shadow-xs ${
+              className={`hidden lg:flex h-9 px-2.5 sm:px-3 rounded-xl items-center space-x-1.5 transition border text-xs font-semibold shadow-xs ${
                 activeTab === 'asset_inspection'
                   ? 'bg-emerald-600 text-white border-emerald-500 shadow-md shadow-emerald-600/30'
                   : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-900 border-emerald-200'
@@ -187,7 +227,7 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
                 onTabChange('backup');
               }
             }}
-            className={`h-9 px-2.5 sm:px-3 rounded-xl flex items-center space-x-1.5 border text-xs font-semibold shadow-xs transition cursor-pointer ${
+            className={`hidden sm:flex h-9 px-2.5 sm:px-3 rounded-xl items-center space-x-1.5 border text-xs font-semibold shadow-xs transition cursor-pointer ${
               activeTab === 'backup'
                 ? 'bg-sky-600 text-white border-sky-500 shadow-md shadow-sky-600/30'
                 : firestoreStatus === 'connected'
@@ -211,10 +251,44 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
             />
           </button>
 
+          {/* LINE Notification Simulator Quick Button */}
+          {onOpenLineSimulator && (
+            <button
+              onClick={onOpenLineSimulator}
+              className="hidden sm:flex px-2.5 py-1.5 rounded-xl border border-emerald-200 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-xs font-semibold items-center space-x-1.5 transition shadow-2xs cursor-pointer"
+              title="เปิดระบบจำลองและประวัติการแจ้งเตือน LINE"
+            >
+              <MessageSquare className="w-3.5 h-3.5 text-[#06c755]" />
+              <span className="hidden sm:inline">LINE Alert</span>
+              <span className="w-2 h-2 rounded-full bg-[#06c755] animate-pulse" />
+            </button>
+          )}
+
+          {/* Dark Mode Toggle */}
+          {onToggleDarkMode && (
+            <button
+              id="btn-toggle-dark-mode"
+              type="button"
+              onClick={onToggleDarkMode}
+              className={`w-9 h-9 rounded-xl flex items-center justify-center transition border cursor-pointer ${
+                darkMode
+                  ? 'bg-amber-950/40 hover:bg-amber-900/60 text-amber-300 border-amber-800/60 shadow-xs'
+                  : 'bg-slate-100 hover:bg-slate-200/80 text-slate-700 hover:text-indigo-600 border-slate-200'
+              }`}
+              title={darkMode ? 'เปลี่ยนเป็นโหมดสว่าง (Light Mode)' : 'เปลี่ยนเป็นโหมดกลางคืน ถนอมสายตา (Dark Mode)'}
+            >
+              {darkMode ? (
+                <Sun className="w-4 h-4 text-amber-400 transition-transform rotate-0 hover:rotate-45" />
+              ) : (
+                <Moon className="w-4 h-4 text-slate-700 hover:text-indigo-600 transition-transform -rotate-12 hover:rotate-0" />
+              )}
+            </button>
+          )}
+
           {/* Sound Toggle */}
           <button
             onClick={onToggleSound}
-            className={`w-9 h-9 rounded-xl flex items-center justify-center transition border ${
+            className={`hidden sm:flex w-9 h-9 rounded-xl items-center justify-center transition border ${
               soundEnabled
                 ? 'bg-slate-100 hover:bg-orange-50 text-slate-700 hover:text-orange-600 border-slate-200'
                 : 'bg-rose-50 text-rose-500 border-rose-200'
@@ -335,20 +409,25 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
                 setShowUserMenu(!showUserMenu);
                 setShowNotifMenu(false);
               }}
-              className="flex items-center space-x-2 pl-2 pr-3 py-1.5 rounded-xl hover:bg-slate-100 border border-slate-200 transition text-left group"
+              className="flex items-center space-x-2 pl-2 pr-3 py-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700 transition text-left group cursor-pointer"
             >
-              <div className="w-8 h-8 rounded-lg overflow-hidden bg-gradient-to-tr from-orange-500 to-amber-500 text-white flex items-center justify-center font-bold text-xs shadow-sm ring-1 ring-orange-300">
-                {currentUser.avatarUrl ? (
-                  <img src={currentUser.avatarUrl} alt={currentUser.name} className="w-full h-full object-cover" />
-                ) : (
-                  currentUser.name.charAt(0)
-                )}
+              <div className="relative">
+                <div className="w-8 h-8 rounded-lg overflow-hidden bg-gradient-to-tr from-orange-500 to-amber-500 text-white flex items-center justify-center font-bold text-xs shadow-sm ring-1 ring-orange-300">
+                  {currentUser.avatarUrl ? (
+                    <img src={currentUser.avatarUrl} alt={currentUser.name} className="w-full h-full object-cover" />
+                  ) : (
+                    currentUser.name.charAt(0)
+                  )}
+                </div>
+                <span className="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-orange-600 text-white rounded-full flex items-center justify-center ring-1 ring-white dark:ring-slate-900 shadow-2xs">
+                  <Camera className="w-2 h-2" />
+                </span>
               </div>
               <div className="hidden sm:block text-left">
-                <div className="text-xs font-bold text-slate-900 leading-none truncate max-w-[130px]">
+                <div className="text-xs font-bold text-slate-900 dark:text-slate-100 leading-none truncate max-w-[130px]">
                   {currentUser.name}
                 </div>
-                <div className="text-[10px] text-slate-500 mt-0.5 truncate max-w-[130px]">
+                <div className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5 truncate max-w-[130px]">
                   {currentUser.roleTitle}
                 </div>
               </div>
@@ -356,36 +435,53 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
             </button>
 
             {showUserMenu && (
-              <div className="absolute right-0 mt-2 w-72 bg-white rounded-2xl shadow-2xl border border-slate-200 py-3 z-50 animate-in fade-in slide-in-from-top-2">
-                <div className="px-4 pb-3 border-b border-slate-100">
-                  <div className="flex items-center space-x-3 mb-2">
-                    <div className="w-10 h-10 rounded-xl overflow-hidden bg-gradient-to-tr from-orange-500 to-amber-500 text-white flex items-center justify-center font-bold text-sm shadow-xs ring-2 ring-orange-100 shrink-0">
+              <div className="absolute right-0 mt-2 w-76 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 py-3 z-50 animate-in fade-in slide-in-from-top-2">
+                <div className="px-4 pb-3 border-b border-slate-100 dark:border-slate-800">
+                  <div className="flex items-center space-x-3 mb-2.5">
+                    <div 
+                      onClick={() => {
+                        setShowUserMenu(false);
+                        if (onOpenProfilePhoto) onOpenProfilePhoto();
+                        else setShowProfilePhotoModal(true);
+                      }}
+                      className="relative w-11 h-11 rounded-xl overflow-hidden bg-gradient-to-tr from-orange-500 to-amber-500 text-white flex items-center justify-center font-bold text-sm shadow-xs ring-2 ring-orange-200 shrink-0 cursor-pointer group"
+                      title="แตะเพื่อเปลี่ยนรูปโปรไฟล์"
+                    >
                       {currentUser.avatarUrl ? (
-                        <img src={currentUser.avatarUrl} alt={currentUser.name} className="w-full h-full object-cover" />
+                        <img src={currentUser.avatarUrl} alt={currentUser.name} className="w-full h-full object-cover group-hover:scale-110 transition duration-200" />
                       ) : (
                         currentUser.name.charAt(0)
                       )}
+                      <div className="absolute inset-0 bg-black/35 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                        <Camera className="w-4 h-4 text-white" />
+                      </div>
                     </div>
-                    <div className="overflow-hidden">
-                      <div className="text-xs font-bold text-slate-900 truncate">{currentUser.name}</div>
-                      <div className="text-[10px] text-slate-500 truncate">{currentUser.department}</div>
-                      <span className="inline-block mt-0.5 px-1.5 py-0.2 rounded text-[9px] font-semibold bg-orange-100 text-orange-800">
+                    <div className="overflow-hidden min-w-0">
+                      <div className="text-xs font-bold text-slate-900 dark:text-slate-100 truncate">{currentUser.name}</div>
+                      <div className="text-[10px] text-slate-500 dark:text-slate-400 truncate">{currentUser.department}</div>
+                      <span className="inline-block mt-0.5 px-1.5 py-0.2 rounded text-[9px] font-semibold bg-orange-100 dark:bg-orange-950/60 text-orange-800 dark:text-orange-300">
                         {currentUser.roleTitle}
                       </span>
                     </div>
                   </div>
 
-                  {/* Profile photo change button */}
+                  {/* Profile photo change floating pop-up trigger button */}
                   <button
                     type="button"
                     onClick={() => {
-                      setShowProfilePhotoModal(true);
                       setShowUserMenu(false);
+                      if (onOpenProfilePhoto) onOpenProfilePhoto();
+                      else setShowProfilePhotoModal(true);
                     }}
-                    className="w-full mt-1.5 flex items-center justify-center space-x-1.5 py-1.5 px-2.5 bg-orange-50 hover:bg-orange-100 text-orange-700 rounded-xl text-xs font-semibold border border-orange-200 transition cursor-pointer"
+                    className="w-full mt-1.5 flex items-center justify-between py-2 px-3 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white rounded-xl text-xs font-bold shadow-xs transition cursor-pointer active:scale-95"
                   >
-                    <Camera className="w-3.5 h-3.5" />
-                    <span>เปลี่ยนรูปโปรไฟล์ของคุณ</span>
+                    <div className="flex items-center space-x-2">
+                      <Camera className="w-4 h-4" />
+                      <span>เปลี่ยนรูปโปรไฟล์ (กล้อง/AI)</span>
+                    </div>
+                    <span className="text-[10px] bg-white/20 px-1.5 py-0.5 rounded-md font-semibold">
+                      Pop-up ลอย
+                    </span>
                   </button>
                 </div>
 
@@ -423,17 +519,19 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
               </div>
             )}
 
-            {/* Profile Photo Modal for current user */}
-            <ProfilePhotoModal
-              isOpen={showProfilePhotoModal}
-              user={currentUser}
-              onClose={() => setShowProfilePhotoModal(false)}
-              onSave={(userId, newAvatarUrl) => {
-                if (onUpdateProfilePhoto) {
-                  onUpdateProfilePhoto(userId, newAvatarUrl);
-                }
-              }}
-            />
+            {/* Profile Photo Modal fallback if onOpenProfilePhoto not provided */}
+            {!onOpenProfilePhoto && (
+              <ProfilePhotoModal
+                isOpen={showProfilePhotoModal}
+                user={currentUser}
+                onClose={() => setShowProfilePhotoModal(false)}
+                onSave={(userId, newAvatarUrl) => {
+                  if (onUpdateProfilePhoto) {
+                    onUpdateProfilePhoto(userId, newAvatarUrl);
+                  }
+                }}
+              />
+            )}
           </div>
 
         </div>

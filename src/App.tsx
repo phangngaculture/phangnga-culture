@@ -62,17 +62,34 @@ import { OfficialMemoModal } from './components/OfficialMemoModal';
 import { ApprovalSignatureModal } from './components/ApprovalSignatureModal';
 import { ClearAllBookingsModal } from './components/ClearAllBookingsModal';
 import { GoogleSheetsSyncModal } from './components/GoogleSheetsSyncModal';
+import { ProfilePhotoModal } from './components/ProfilePhotoModal';
 import { IPhoneInstallPrompt } from './components/IPhoneInstallPrompt';
+import { MobileBottomNav } from './components/MobileBottomNav';
+import { MobileAppInstallBanner } from './components/MobileAppInstallBanner';
 import { ToastBanner } from './components/ToastBanner';
 import { LoginScreen } from './components/LoginScreen';
+import { LineSimulatorModal } from './components/LineSimulatorModal';
 import { ShieldAlert } from 'lucide-react';
 import { registerServiceWorker, updateAppBadge, clearAppBadge } from './services/badgingService';
+import {
+  notifyNewBooking,
+  notifyBookingApproved,
+  notifyBookingRejected,
+  notifyMissionStarted,
+  notifyMissionCompleted
+} from './services/lineNotificationService';
 
 export default function App() {
   // Authentication State
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() =>
     loadSavedData<boolean>(STORAGE_KEYS.IS_AUTHENTICATED, false)
   );
+
+  // Global LINE Simulator Modal State
+  const [isGlobalLineSimulatorOpen, setIsGlobalLineSimulatorOpen] = useState(false);
+
+  // Floating Profile Photo Studio Modal State
+  const [isProfilePhotoModalOpen, setIsProfilePhotoModalOpen] = useState(false);
 
   // Load persistent state - reset to only admin as requested
   const [users, setUsers] = useState<User[]>(() => {
@@ -173,6 +190,22 @@ export default function App() {
   const [soundEnabled, setSoundEnabled] = useState<boolean>(() =>
     loadSavedData<boolean>(STORAGE_KEYS.SOUND_ENABLED, true)
   );
+
+  const [darkMode, setDarkMode] = useState<boolean>(() => {
+    const saved = loadSavedData<boolean | null>(STORAGE_KEYS.DARK_MODE, null);
+    if (saved !== null) return saved;
+    return typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  });
+
+  useEffect(() => {
+    if (darkMode) {
+      document.documentElement.classList.add('dark');
+      saveLocalData(STORAGE_KEYS.DARK_MODE, true);
+    } else {
+      document.documentElement.classList.remove('dark');
+      saveLocalData(STORAGE_KEYS.DARK_MODE, false);
+    }
+  }, [darkMode]);
 
   const [vehicles, setVehicles] = useState<Vehicle[]>(() =>
     loadSavedData<Vehicle[]>(STORAGE_KEYS.VEHICLES, VEHICLES)
@@ -689,6 +722,14 @@ export default function App() {
     showToast(nextVal ? 'เปิดเสียงตอบรับเรียบร้อยแล้ว' : 'ปิดเสียงแจ้งเตือนแล้ว', 'info');
   };
 
+  // Handle Toggle Dark Mode
+  const handleToggleDarkMode = () => {
+    const nextVal = !darkMode;
+    setDarkMode(nextVal);
+    playAppSound('click', soundEnabled);
+    showToast(nextVal ? 'เปิดโหมดถนอมสายตา (Dark Mode) เรียบร้อยแล้ว' : 'เปลี่ยนเป็นโหมดสว่าง (Light Mode) เรียบร้อยแล้ว', 'info');
+  };
+
   // Handle Open Booking Form
   const handleOpenBookingForm = (prefillDate?: string) => {
     setEditingBooking(null);
@@ -731,6 +772,7 @@ export default function App() {
         endDate: data.endDate || data.date,
         startTime: data.startTime || '08:30',
         endTime: data.endTime || '16:30',
+        userId: currentUser.id,
         name: data.name || currentUser.name,
         username: currentUser.username,
         position: data.position || currentUser.position,
@@ -771,6 +813,15 @@ export default function App() {
       };
       setNotifications((prev) => [newNotif, ...prev]);
       await saveNotificationToFirestore(newNotif);
+
+      // Trigger LINE Notification to Director & Admins
+      notifyNewBooking(newBooking, users)
+        .then((count) => {
+          if (count > 0) {
+            showToast(`ส่งการแจ้งเตือน LINE ไปยังผู้บริหาร/แอดมิน (${count} ท่าน)`, 'info');
+          }
+        })
+        .catch((err) => console.warn('[LINE] notifyNewBooking error:', err));
 
       playAppSound('success', soundEnabled);
       showToast(`ส่งใบเบิก ${newId} สำเร็จ รอดำเนินการอนุมัติ`, 'success');
@@ -968,6 +1019,17 @@ export default function App() {
     playAppSound('success', soundEnabled);
     showToast(`ลงนามอนุมัติคำขอ ${bookingId} เรียบร้อยแล้ว พร้อมแสดงใบคำขอขอใช้รถยนต์ส่วนกลาง`, 'success');
 
+    // Trigger LINE Notification to Requester and Driver
+    if (updatedTargetBooking) {
+      notifyBookingApproved(updatedTargetBooking, users, approvalData.signerName || currentUser.name)
+        .then((count) => {
+          if (count > 0) {
+            showToast(`ส่งแจ้งเตือนผลอนุมัติผ่าน LINE เรียบร้อยแล้ว (${count} ท่าน)`, 'info');
+          }
+        })
+        .catch((err) => console.warn('[LINE] notifyBookingApproved error:', err));
+    }
+
     // Close signature modal
     setIsSignatureModalOpen(false);
     setSigningBooking(null);
@@ -1091,6 +1153,12 @@ export default function App() {
     setNotifications((prev) => [rejNotif, ...prev]);
     await saveNotificationToFirestore(rejNotif);
 
+    if (targetBooking) {
+      notifyBookingRejected(targetBooking, users, comment).catch((err) =>
+        console.warn('[LINE] notifyBookingRejected error:', err)
+      );
+    }
+
     playAppSound('alert', soundEnabled);
     showToast(`ส่งกลับ / ปฏิเสธคำขอ ${bookingId}`, 'info');
   };
@@ -1105,6 +1173,10 @@ export default function App() {
 
     // If started mission
     if (updatedBooking.status === 'in_progress') {
+      notifyMissionStarted(updatedBooking, users).catch((err) =>
+        console.warn('[LINE] notifyMissionStarted error:', err)
+      );
+
       const notif: NotificationItem = {
         id: `notif-${Date.now()}`,
         title: 'พนักงานขับรถเริ่มปฏิบัติภารกิจแล้ว',
@@ -1121,6 +1193,10 @@ export default function App() {
 
     // If completed mission
     if (updatedBooking.status === 'completed') {
+      notifyMissionCompleted(updatedBooking, users).catch((err) =>
+        console.warn('[LINE] notifyMissionCompleted error:', err)
+      );
+
       const notif: NotificationItem = {
         id: `notif-${Date.now()}`,
         title: 'ภารกิจเสร็จสิ้น & ลงทะเบียนคุมพัสดุแล้ว',
@@ -1370,7 +1446,7 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-100/70 text-slate-800 flex flex-col justify-between selection:bg-orange-500 selection:text-white">
+    <div className="min-h-screen bg-slate-100/70 dark:bg-slate-950 text-slate-800 dark:text-slate-100 flex flex-col justify-between selection:bg-orange-500 selection:text-white transition-colors duration-200">
       
       {/* Toast Banner */}
       <ToastBanner message={toast.message} type={toast.type} />
@@ -1390,6 +1466,9 @@ export default function App() {
         pendingBookingsCount={bookings.filter((b) => b.status === 'pending' || b.status === 'pending_director').length}
         vehiclesCount={vehicles.length}
         availableVehiclesCount={vehicles.filter((v) => v.status === 'available').length}
+        darkMode={darkMode}
+        onToggleDarkMode={handleToggleDarkMode}
+        onOpenProfilePhoto={() => setIsProfilePhotoModalOpen(true)}
       />
 
       {/* Top Header Navbar */}
@@ -1406,11 +1485,18 @@ export default function App() {
         onTabChange={handleTabChange}
         firestoreStatus={firestoreStatus}
         onUpdateProfilePhoto={(userId, newAvatarUrl) => handleUpdateUser(userId, { avatarUrl: newAvatarUrl })}
+        onOpenProfilePhoto={() => setIsProfilePhotoModalOpen(true)}
+        onOpenLineSimulator={() => setIsGlobalLineSimulatorOpen(true)}
         onLogout={handleLogout}
+        darkMode={darkMode}
+        onToggleDarkMode={handleToggleDarkMode}
       />
 
+      {/* Mobile PWA Install Banner */}
+      <MobileAppInstallBanner />
+
       {/* Main Content Area */}
-      <main className="flex-grow max-w-7xl w-full mx-auto px-4 md:px-8 py-6">
+      <main className="flex-grow max-w-7xl w-full mx-auto px-3 sm:px-4 md:px-8 py-4 sm:py-6 pb-28 md:pb-8">
         {activeTab === 'dashboard' && (
           <DashboardView
             bookings={bookings}
@@ -1550,11 +1636,13 @@ export default function App() {
           <UserManagementView
             users={users}
             currentUser={currentUser}
+            bookings={bookings}
             onAddUser={handleAddUser}
             onBulkAddUsers={handleBulkAddUsers}
             onUpdateUser={handleUpdateUser}
             onDeleteUser={handleDeleteUser}
             onSwitchUser={handleSwitchUser}
+            onShowToast={showToast}
           />
         )}
 
@@ -1674,7 +1762,7 @@ export default function App() {
       />
 
       {/* Footer */}
-      <footer className="border-t border-slate-200 bg-white/70 backdrop-blur-xs py-4 px-6 text-center text-xs text-slate-500 no-print">
+      <footer className="border-t border-slate-200 bg-white/70 backdrop-blur-xs py-4 px-6 text-center text-xs text-slate-500 no-print mb-20 md:mb-0">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-2">
           <div className="flex items-center space-x-2">
             <img src="/logo_mculture.svg" alt="ตราสัญลักษณ์กระทรวงวัฒนธรรม" className="w-4 h-5 object-contain inline-block" />
@@ -1690,8 +1778,40 @@ export default function App() {
         </div>
       </footer>
 
+      {/* Mobile Native-Style Bottom Navigation Bar */}
+      <MobileBottomNav
+        activeTab={activeTab}
+        onSelectTab={handleTabChange}
+        onOpenBookingForm={handleOpenBookingForm}
+        onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
+        currentUser={currentUser}
+        pendingDirectorCount={bookings.filter((b) => b.status === 'pending_director').length}
+        activeMissionsCount={bookings.filter((b) => b.status === 'in_progress' || b.status === 'approved').length}
+        onPlaySound={() => playAppSound('click')}
+      />
+
       {/* iPhone PWA Install Helper */}
       <IPhoneInstallPrompt />
+
+      {/* Global LINE Simulator Modal */}
+      <LineSimulatorModal
+        isOpen={isGlobalLineSimulatorOpen}
+        onClose={() => setIsGlobalLineSimulatorOpen(false)}
+        currentUser={currentUser}
+        users={users}
+        bookings={bookings}
+        onShowToast={showToast}
+      />
+
+      {/* Floating Profile Photo Studio Pop-up Modal */}
+      <ProfilePhotoModal
+        isOpen={isProfilePhotoModalOpen}
+        user={currentUser}
+        onClose={() => setIsProfilePhotoModalOpen(false)}
+        onSave={(userId, newAvatarUrl) => {
+          handleUpdateUser(userId, { avatarUrl: newAvatarUrl });
+        }}
+      />
 
     </div>
   );

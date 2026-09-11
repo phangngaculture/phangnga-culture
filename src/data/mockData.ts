@@ -126,7 +126,9 @@ export const SYSTEM_USERS: User[] = [
     phone: '076-481-482 ต่อ 11',
     email: 'admin.phangnga@m-culture.go.th',
     status: 'active',
-    allowedMenus: ['dashboard', 'calendar', 'booking', 'director', 'driver_mission', 'asset_register', 'asset_inspection', 'fuel', 'fleet', 'analytics', 'tracking', 'users']
+    allowedMenus: ['dashboard', 'calendar', 'booking', 'director', 'driver_mission', 'asset_register', 'asset_inspection', 'fuel', 'fleet', 'analytics', 'tracking', 'users'],
+    lineUserId: 'U8f9a2b1c3d4e5f60718293a4b5c6d7e8',
+    lineNotificationEnabled: true
   }
 ];
 
@@ -960,6 +962,7 @@ export const STORAGE_KEYS = {
   CURRENT_USER: 'mculture_fleet_user_v2',
   NOTIFICATIONS: 'mculture_fleet_notifs_v2',
   SOUND_ENABLED: 'mculture_fleet_sound_v2',
+  DARK_MODE: 'mculture_fleet_dark_mode_v2',
   GOOGLE_SHEET_INFO: 'mculture_fleet_sheet_info_v2',
   LAST_SYNCED_TIME: 'mculture_fleet_last_sync_v2',
   IS_AUTHENTICATED: 'mculture_fleet_auth_status_v2'

@@ -1,33 +1,91 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+
+    // Helper functions for validating statuses, mileage, and mission integrity
+    function isValidStatus(status) {
+      return status in ['pending', 'approved', 'in_progress', 'completed', 'rejected', 'cancelled'];
+    }
+
+    function isValidMissionStatus(mStatus) {
+      return mStatus in ['not_started', 'in_progress', 'returning', 'completed', 'cancelled'];
+    }
+
+    function isValidMileage(data) {
+      return (!('startMileage' in data) || data.startMileage == null || data.startMileage >= 0) &&
+             (!('endMileage' in data) || data.endMileage == null || data.endMileage >= 0) &&
+             (!('totalDistance' in data) || data.totalDistance == null || data.totalDistance >= 0) &&
+             (!('startMileage' in data) || !('endMileage' in data) || 
+              data.startMileage == null || data.endMileage == null || 
+              data.endMileage >= data.startMileage);
+    }
+
+    function isValidBooking(data) {
+      return data.memoNo is string &&
+             data.date is string &&
+             data.name is string &&
+             isValidStatus(data.status) &&
+             (!('missionStatus' in data) || data.missionStatus == null || isValidMissionStatus(data.missionStatus)) &&
+             isValidMileage(data);
+    }
+
     // Official vehicle management collections - Phangnga Provincial Cultural Office
     match /bookings/{bookingId} {
-      allow read, write: if true;
+      allow read: if true;
+      allow create: if isValidBooking(request.resource.data);
+      allow update: if isValidBooking(request.resource.data) &&
+        // Prevent starting a mission if the booking is not approved (can only transition to in_progress if approved or already in_progress)
+        (
+          request.resource.data.status != 'in_progress' ||
+          resource.data.status == 'approved' ||
+          resource.data.status == 'in_progress'
+        );
+      allow delete: if true;
     }
 
     match /vehicles/{vehicleId} {
-      allow read, write: if true;
+      allow read: if true;
+      allow create, update: if request.resource.data.name is string &&
+                               request.resource.data.plate is string &&
+                               request.resource.data.status in ['available', 'in_mission', 'maintenance'];
+      allow delete: if true;
     }
 
     match /fuelLogs/{logId} {
-      allow read, write: if true;
+      allow read: if true;
+      allow create, update: if request.resource.data.carPlate is string &&
+                               request.resource.data.cost is number &&
+                               request.resource.data.cost >= 0;
+      allow delete: if true;
     }
 
     match /maintenanceRecords/{recordId} {
-      allow read, write: if true;
+      allow read: if true;
+      allow create, update: if request.resource.data.carId is string &&
+                               request.resource.data.title is string &&
+                               request.resource.data.cost is number &&
+                               request.resource.data.cost >= 0;
+      allow delete: if true;
     }
 
     match /users/{userId} {
-      allow read, write: if true;
+      allow read: if true;
+      allow create, update: if request.resource.data.username is string &&
+                               request.resource.data.name is string &&
+                               request.resource.data.role is string;
+      allow delete: if true;
     }
 
     match /passengers/{passengerId} {
-      allow read, write: if true;
+      allow read: if true;
+      allow create, update: if request.resource.data.name is string;
+      allow delete: if true;
     }
 
     match /notifications/{notificationId} {
-      allow read, write: if true;
+      allow read: if true;
+      allow create, update: if request.resource.data.title is string;
+      allow delete: if true;
     }
 
     // Health check & connection validation collection
@@ -36,3 +94,4 @@ service cloud.firestore {
     }
   }
 }
+
