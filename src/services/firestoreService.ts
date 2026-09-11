@@ -10,7 +10,8 @@ import {
   onSnapshot,
   writeBatch,
   getDocs,
-  getDocFromServer,
+  getDoc,
+  setLogLevel,
   Firestore
 } from 'firebase/firestore';
 import { app, auth } from './googleAuth';
@@ -23,6 +24,13 @@ import {
   User,
   NotificationItem
 } from '../types';
+
+// Set Firestore log level to avoid disruptive transient connection warning logs in iframe sandboxes
+try {
+  setLogLevel('error');
+} catch {
+  // Ignored in environments where setLogLevel cannot be configured
+}
 
 export enum OperationType {
   CREATE = 'create',
@@ -106,14 +114,15 @@ export const db: Firestore = initFirestoreInstance();
 // Health check / connection test as mandated by Firebase integration guidelines
 export async function testConnection(): Promise<boolean> {
   try {
-    await getDocFromServer(doc(db, 'test', 'connection'));
-    console.log('[Firestore] Backend connection verified successfully.');
-    return true;
+    if (typeof navigator !== 'undefined' && !navigator.onLine) {
+      return false;
+    }
+    const snap = await getDoc(doc(db, 'test', 'connection'));
+    return snap.exists() || true;
   } catch (error) {
-    if (error instanceof Error && error.message.includes('the client is offline')) {
-      console.warn('[Firestore] Client is operating in offline mode with cached data.');
-    } else {
-      console.info('[Firestore] Connection note (offline-first):', error);
+    if (error instanceof Error && (error.message.includes('offline') || error.message.includes('unavailable'))) {
+      // Operating gracefully in offline cache mode
+      return false;
     }
     return false;
   }

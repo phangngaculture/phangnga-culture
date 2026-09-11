@@ -175,7 +175,7 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({
       director: users.filter((u) => u.role === 'director').length,
       officer: users.filter((u) => u.role === 'officer').length,
       driver: users.filter((u) => u.role === 'driver').length,
-      active: users.filter((u) => (u.status || 'active') === 'active'),
+      active: users.filter((u) => (u.status || 'active') === 'active').length,
       lineEnabled: users.filter((u) => u.lineNotificationEnabled !== false && (u.lineUserId || u.lineNotifyToken)).length
     };
   }, [users]);
