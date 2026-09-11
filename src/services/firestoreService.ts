@@ -25,9 +25,9 @@ import {
   NotificationItem
 } from '../types';
 
-// Set Firestore log level to avoid disruptive transient connection warning logs in iframe sandboxes
+// Set Firestore log level to silent to prevent connection retry warnings in iframe/sandboxed environments
 try {
-  setLogLevel('error');
+  setLogLevel('silent');
 } catch {
   // Ignored in environments where setLogLevel cannot be configured
 }
@@ -126,13 +126,6 @@ export async function testConnection(): Promise<boolean> {
     }
     return false;
   }
-}
-
-// Trigger connection test safely on module boot
-if (typeof window !== 'undefined') {
-  setTimeout(() => {
-    testConnection().catch(() => {});
-  }, 100);
 }
 
 export interface FirestoreSyncCallbacks {
