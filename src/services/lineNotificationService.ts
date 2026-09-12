@@ -212,8 +212,47 @@ export const sendLineNotification = async (
   const globalConfig = getGlobalLineConfig();
   const timestamp = new Date().toISOString();
   const lineUserId = payload.lineUserId || '';
-  const token = payload.token || globalConfig.channelAccessToken || globalConfig.notifyToken || '';
   const webhookUrl = globalConfig.webhookUrl || '';
+
+  // The access token must stay on the server. The browser calls the same-origin
+  // Vercel function, which then calls LINE Messaging API securely.
+  if (lineUserId && !globalConfig.simulationModeOnly) {
+    try {
+      const resp = await fetch('/api/line/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          to: lineUserId,
+          title: payload.title,
+          message: payload.message,
+          eventType: payload.eventType,
+          bookingId: payload.bookingId
+        })
+      });
+
+      if (resp.ok) {
+        const log: LineNotificationLog = {
+          id: `line-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+          timestamp,
+          recipient: payload.recipientName,
+          lineUserId,
+          title: payload.title,
+          message: payload.message,
+          status: 'success',
+          mode: 'messaging_api',
+          eventType: payload.eventType,
+          details: 'ส่งผ่าน Vercel Serverless Function และ LINE Messaging API สำเร็จ'
+        };
+        saveLineNotificationLog(log);
+        return { success: true, mode: 'messaging_api', message: 'ส่งผ่าน LINE Messaging API สำเร็จ' };
+      }
+
+      const errorDetail = await resp.text().catch(() => '');
+      console.warn('[LINE] Server notification failed:', resp.status, errorDetail);
+    } catch (err) {
+      console.warn('[LINE] Server notification request failed:', err);
+    }
+  }
 
   // 1. Check if Webhook URL provided (Custom Webhook / Google Apps Script proxy)
   if (webhookUrl && !globalConfig.simulationModeOnly) {
@@ -253,49 +292,7 @@ export const sendLineNotification = async (
     }
   }
 
-  // 2. Direct LINE Messaging API Push (if Channel Access Token + lineUserId exists)
-  if (token && lineUserId && !globalConfig.simulationModeOnly) {
-    try {
-      const resp = await fetch('https://api.line.me/v2/bot/message/push', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          to: lineUserId,
-          messages: [
-            {
-              type: 'text',
-              text: payload.message
-            }
-          ]
-        })
-      });
-
-      if (resp.ok) {
-        const log: LineNotificationLog = {
-          id: `line-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
-          timestamp,
-          recipient: payload.recipientName,
-          lineUserId,
-          title: payload.title,
-          message: payload.message,
-          status: 'success',
-          mode: 'messaging_api',
-          eventType: payload.eventType,
-          details: `ส่งผ่าน LINE Messaging API Push สำเร็จ`
-        };
-        saveLineNotificationLog(log);
-        return { success: true, mode: 'messaging_api', message: 'ส่งผ่าน LINE Messaging API สำเร็จ' };
-      }
-    } catch (err) {
-      // Browsers often block direct cross-origin calls to api.line.me (CORS restriction)
-      console.info('[LINE] Direct push API restricted by browser CORS. Handled smoothly via Simulation Engine.');
-    }
-  }
-
-  // 3. Fallback to Simulation Mode (always succeeds & provides 100% interactive testing)
+  // Fallback to simulation mode only when the server is unavailable or simulation is enabled.
   const log: LineNotificationLog = {
     id: `line-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
     timestamp,
