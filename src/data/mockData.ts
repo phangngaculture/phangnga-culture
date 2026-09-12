@@ -127,7 +127,7 @@ export const SYSTEM_USERS: User[] = [
     email: 'admin.phangnga@m-culture.go.th',
     status: 'active',
     allowedMenus: ['dashboard', 'calendar', 'booking', 'director', 'driver_mission', 'asset_register', 'asset_inspection', 'fuel', 'fleet', 'analytics', 'tracking', 'users'],
-    lineUserId: 'U8f9a2b1c3d4e5f60718293a4b5c6d7e8',
+    lineUserId: 'Ue3609b77d75e903ea3e3a4868b236e6f',
     lineNotificationEnabled: true
   }
 ];
