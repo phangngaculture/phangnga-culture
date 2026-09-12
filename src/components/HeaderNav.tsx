@@ -81,6 +81,10 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showNotifMenu, setShowNotifMenu] = useState(false);
   const [showProfilePhotoModal, setShowProfilePhotoModal] = useState(false);
+  const [showTopActions, setShowTopActions] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return true;
+    return localStorage.getItem('mculture_show_top_actions') !== 'false';
+  });
   const [badgePermission, setBadgePermission] = useState<NotificationPermission | 'unsupported'>('default');
 
   const unreadCount = notifications.filter((n) => !n.read).length;
@@ -104,6 +108,14 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
     if (result === 'granted') {
       updateAppBadge(unreadCount);
     }
+  };
+
+  const toggleTopActions = () => {
+    setShowTopActions((visible) => {
+      const next = !visible;
+      localStorage.setItem('mculture_show_top_actions', String(next));
+      return next;
+    });
   };
 
   const getRoleBadge = (role: string) => {
@@ -178,6 +190,23 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
 
         {/* Right: Actions, Google Sheets, Sound, Notifications, User Switcher */}
         <div className="flex items-center space-x-2 sm:space-x-2.5">
+
+          <button
+            type="button"
+            onClick={toggleTopActions}
+            className={`w-9 h-9 rounded-xl flex items-center justify-center transition border cursor-pointer ${
+              showTopActions
+                ? 'bg-orange-50 hover:bg-orange-100 text-orange-700 border-orange-200'
+                : 'bg-slate-100 hover:bg-slate-200 text-slate-600 border-slate-200'
+            }`}
+            title={showTopActions ? 'ซ่อนเมนูไอคอนด้านบน' : 'แสดงเมนูไอคอนด้านบน'}
+            aria-label={showTopActions ? 'ซ่อนเมนูไอคอนด้านบน' : 'แสดงเมนูไอคอนด้านบน'}
+          >
+            <Sliders className="w-4 h-4" />
+          </button>
+
+          {showTopActions && (
+            <>
           
           {/* Quick Mission Button for Driver & Permitted Users (desktop/tablet only, mobile has it on bottom bar) */}
           {(currentUser.role === 'driver' || getUserAllowedMenus(currentUser).includes('driver_mission')) && (
@@ -325,6 +354,9 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
           >
             {soundEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
           </button>
+
+            </>
+          )}
 
           {/* Notifications Dropdown */}
           <div className="relative">
