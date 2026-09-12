@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { User, NotificationItem } from '../types';
 import { SYSTEM_USERS, getUserAllowedMenus } from '../data/mockData';
 import { ProfilePhotoModal } from './ProfilePhotoModal';
+import { VoiceSettings } from '../utils/voiceAlerts';
 import {
   Car,
   Bell,
@@ -23,7 +24,9 @@ import {
   FileSpreadsheet,
   MessageSquare,
   Sun,
-  Moon
+  Moon,
+  Mic,
+  Sliders
 } from 'lucide-react';
 import {
   isBadgingSupported,
@@ -39,6 +42,8 @@ interface HeaderNavProps {
   onToggleSidebar: () => void;
   soundEnabled: boolean;
   onToggleSound: () => void;
+  voiceSettings?: VoiceSettings;
+  onOpenVoiceSettings?: () => void;
   notifications: NotificationItem[];
   onMarkAllNotificationsRead: () => void;
   activeTab: string;
@@ -59,6 +64,8 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
   onToggleSidebar,
   soundEnabled,
   onToggleSound,
+  voiceSettings,
+  onOpenVoiceSettings,
   notifications,
   onMarkAllNotificationsRead,
   activeTab,
@@ -285,6 +292,27 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
             </button>
           )}
 
+          {/* Voice Alerts Button */}
+          {onOpenVoiceSettings && (
+            <button
+              id="btn-voice-alerts-settings"
+              type="button"
+              onClick={onOpenVoiceSettings}
+              className={`hidden sm:flex h-9 px-2.5 rounded-xl items-center space-x-1.5 transition border text-xs font-semibold cursor-pointer ${
+                voiceSettings?.enabled
+                  ? 'bg-amber-50 hover:bg-amber-100 text-amber-900 border-amber-300 shadow-2xs'
+                  : 'bg-slate-100 hover:bg-slate-200 text-slate-500 border-slate-200'
+              }`}
+              title="ตั้งค่าและทดสอบการแจ้งเตือนด้วยเสียง (Voice Alerts - อ่านออกเสียงภาษาไทย)"
+            >
+              <Volume2 className={`w-3.5 h-3.5 ${voiceSettings?.enabled ? 'text-amber-600 animate-pulse' : 'text-slate-400'}`} />
+              <span className="hidden xl:inline">เสียงพูดเตือน</span>
+              {voiceSettings?.enabled && (
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+              )}
+            </button>
+          )}
+
           {/* Sound Toggle */}
           <button
             onClick={onToggleSound}
@@ -293,7 +321,7 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
                 ? 'bg-slate-100 hover:bg-orange-50 text-slate-700 hover:text-orange-600 border-slate-200'
                 : 'bg-rose-50 text-rose-500 border-rose-200'
             }`}
-            title={soundEnabled ? 'เปิดเสียงแจ้งเตือนแล้ว' : 'ปิดเสียงแล้ว'}
+            title={soundEnabled ? 'เปิดเสียงเอฟเฟกต์แล้ว' : 'ปิดเสียงแล้ว'}
           >
             {soundEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
           </button>
@@ -353,6 +381,44 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
                     ))
                   )}
                 </div>
+
+                {/* Voice Alerts Quick Row in Notification Menu */}
+                {onOpenVoiceSettings && (
+                  <div className="p-3 bg-amber-50/80 dark:bg-amber-950/40 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                    <div className="flex items-center space-x-2.5">
+                      <div className="w-8 h-8 rounded-xl bg-amber-100 dark:bg-amber-900/60 text-amber-700 dark:text-amber-300 flex items-center justify-center shrink-0">
+                        <Volume2 className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <div className="text-xs font-bold text-slate-800 dark:text-slate-100 flex items-center gap-1.5">
+                          <span>เสียงพูดเตือน (Voice Alerts)</span>
+                          {voiceSettings?.enabled ? (
+                            <span className="text-[9px] bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 px-1.5 py-0.2 rounded-full font-bold">
+                              เปิดอยู่
+                            </span>
+                          ) : (
+                            <span className="text-[9px] bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 px-1.5 py-0.2 rounded-full">
+                              ปิดอยู่
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                          อ่านออกเสียงภาษาไทยเมื่อมีคำขอใหม่หรืออนุมัติ
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => {
+                        setShowNotifMenu(false);
+                        onOpenVoiceSettings();
+                      }}
+                      className="px-2.5 py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-xs font-semibold flex items-center space-x-1 shadow-xs transition cursor-pointer"
+                    >
+                      <Sliders className="w-3.5 h-3.5" />
+                      <span>ตั้งค่า</span>
+                    </button>
+                  </div>
+                )}
 
                 {/* Mobile App Icon Badging Section */}
                 <div className="p-3 bg-slate-50 border-t border-slate-100 rounded-b-2xl">

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   BookingRequest,
   FuelLog,
@@ -21,6 +21,17 @@ import {
   getUserAllowedMenus
 } from './data/mockData';
 import { playAppSound } from './utils/thaiDate';
+import {
+  VoiceSettings,
+  getVoiceSettings,
+  saveVoiceSettings,
+  announceNewBooking,
+  announceBookingApproved,
+  announceBookingRejected,
+  announceMissionStarted,
+  announceMissionCompleted,
+  announceAssetInspection
+} from './utils/voiceAlerts';
 import { User as FirebaseUser } from 'firebase/auth';
 import { initAuth, googleSignIn, googleLogout, getAccessToken } from './services/googleAuth';
 import {
@@ -69,6 +80,7 @@ import { MobileAppInstallBanner } from './components/MobileAppInstallBanner';
 import { ToastBanner } from './components/ToastBanner';
 import { LoginScreen } from './components/LoginScreen';
 import { LineSimulatorModal } from './components/LineSimulatorModal';
+import { VoiceAlertSettingsModal } from './components/VoiceAlertSettingsModal';
 import { ShieldAlert } from 'lucide-react';
 import { registerServiceWorker, updateAppBadge, clearAppBadge } from './services/badgingService';
 import {
@@ -227,6 +239,12 @@ export default function App() {
   const [targetMissionBooking, setTargetMissionBooking] = useState<BookingRequest | null>(null);
   const [initialBookingDate, setInitialBookingDate] = useState<string | undefined>(undefined);
 
+  // Voice Alerts State
+  const [voiceSettings, setVoiceSettings] = useState<VoiceSettings>(() => getVoiceSettings());
+  const [isVoiceSettingsModalOpen, setIsVoiceSettingsModalOpen] = useState<boolean>(false);
+  const prevBookingsRef = useRef<BookingRequest[]>(bookings);
+  const isInitialFirestoreLoadRef = useRef<boolean>(true);
+
   // Toast
   const [toast, setToast] = useState<{ message: string | null; type?: 'success' | 'error' | 'info' }>({
     message: null,
@@ -259,6 +277,31 @@ export default function App() {
       {
         onBookingsChange: (cloudBookings) => {
           if (cloudBookings) {
+            // Check for remote events (new booking created or approved on another device)
+            if (!isInitialFirestoreLoadRef.current && prevBookingsRef.current.length > 0) {
+              const prevIds = new Set(prevBookingsRef.current.map((b) => b.id));
+              const newlyAdded = cloudBookings.find((b) => !prevIds.has(b.id));
+
+              if (newlyAdded && newlyAdded.userId !== currentUser.id) {
+                // Announce newly arrived booking from another client
+                announceNewBooking(newlyAdded);
+              } else {
+                // Check if any booking's status changed
+                for (const cb of cloudBookings) {
+                  const prev = prevBookingsRef.current.find((b) => b.id === cb.id);
+                  if (prev && prev.status !== cb.status) {
+                    if (cb.status === 'approved' && cb.approvedBy !== currentUser.name) {
+                      announceBookingApproved(cb);
+                    } else if (cb.status === 'rejected') {
+                      announceBookingRejected({ id: cb.id, comment: cb.directorComment });
+                    }
+                  }
+                }
+              }
+            }
+
+            isInitialFirestoreLoadRef.current = false;
+            prevBookingsRef.current = cloudBookings;
             setBookings(cloudBookings);
           }
         },
@@ -823,6 +866,9 @@ export default function App() {
         })
         .catch((err) => console.warn('[LINE] notifyNewBooking error:', err));
 
+      // Announce Voice Alert (Thai TTS)
+      announceNewBooking(newBooking);
+
       playAppSound('success', soundEnabled);
       showToast(`ส่งใบเบิก ${newId} สำเร็จ รอดำเนินการอนุมัติ`, 'success');
     }
@@ -1016,6 +1062,11 @@ export default function App() {
     setNotifications((prev) => [approvedNotif, ...prev]);
     await saveNotificationToFirestore(approvedNotif);
 
+    // Announce Voice Alert (Thai TTS)
+    if (updatedTargetBooking) {
+      announceBookingApproved(updatedTargetBooking);
+    }
+
     playAppSound('success', soundEnabled);
     showToast(`ลงนามอนุมัติคำขอ ${bookingId} เรียบร้อยแล้ว พร้อมแสดงใบคำขอขอใช้รถยนต์ส่วนกลาง`, 'success');
 
@@ -1099,6 +1150,11 @@ export default function App() {
     setNotifications((prev) => [inspectionNotif, ...prev]);
     await saveNotificationToFirestore(inspectionNotif);
 
+    // Announce Voice Alert
+    if (updatedTargetBooking) {
+      announceAssetInspection(updatedTargetBooking);
+    }
+
     playAppSound('success', soundEnabled);
     showToast(`เจ้าหน้าที่พัสดุตรวจรับรถและลงชื่อในใบบันทึกขอใช้รถ ${bookingId} สำเร็จ`, 'success');
 
@@ -1157,6 +1213,7 @@ export default function App() {
       notifyBookingRejected(targetBooking, users, comment).catch((err) =>
         console.warn('[LINE] notifyBookingRejected error:', err)
       );
+      announceBookingRejected({ id: bookingId, comment });
     }
 
     playAppSound('alert', soundEnabled);
@@ -1176,6 +1233,7 @@ export default function App() {
       notifyMissionStarted(updatedBooking, users).catch((err) =>
         console.warn('[LINE] notifyMissionStarted error:', err)
       );
+      announceMissionStarted(updatedBooking);
 
       const notif: NotificationItem = {
         id: `notif-${Date.now()}`,
@@ -1196,6 +1254,7 @@ export default function App() {
       notifyMissionCompleted(updatedBooking, users).catch((err) =>
         console.warn('[LINE] notifyMissionCompleted error:', err)
       );
+      announceMissionCompleted(updatedBooking);
 
       const notif: NotificationItem = {
         id: `notif-${Date.now()}`,
@@ -1468,6 +1527,8 @@ export default function App() {
         availableVehiclesCount={vehicles.filter((v) => v.status === 'available').length}
         darkMode={darkMode}
         onToggleDarkMode={handleToggleDarkMode}
+        onOpenVoiceSettings={() => setIsVoiceSettingsModalOpen(true)}
+        voiceAlertsEnabled={voiceSettings.enabled}
         onOpenProfilePhoto={() => setIsProfilePhotoModalOpen(true)}
       />
 
@@ -1479,6 +1540,8 @@ export default function App() {
         onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
         soundEnabled={soundEnabled}
         onToggleSound={handleToggleSound}
+        voiceSettings={voiceSettings}
+        onOpenVoiceSettings={() => setIsVoiceSettingsModalOpen(true)}
         notifications={notifications}
         onMarkAllNotificationsRead={handleMarkAllNotificationsRead}
         activeTab={activeTab}
@@ -1811,6 +1874,13 @@ export default function App() {
         onSave={(userId, newAvatarUrl) => {
           handleUpdateUser(userId, { avatarUrl: newAvatarUrl });
         }}
+      />
+
+      {/* Voice Alerts Settings & Testing Modal */}
+      <VoiceAlertSettingsModal
+        isOpen={isVoiceSettingsModalOpen}
+        onClose={() => setIsVoiceSettingsModalOpen(false)}
+        onSettingsChanged={(newSettings) => setVoiceSettings(newSettings)}
       />
 
     </div>

@@ -29,7 +29,8 @@ import {
   CheckCircle2,
   Clock,
   Shield,
-  FileCheck
+  FileCheck,
+  Volume2
 } from 'lucide-react';
 import { getUserAllowedMenus } from '../data/mockData';
 
@@ -52,6 +53,8 @@ interface SidebarProps {
   pendingDirectorCount?: number;
   darkMode?: boolean;
   onToggleDarkMode?: () => void;
+  onOpenVoiceSettings?: () => void;
+  voiceAlertsEnabled?: boolean;
   onOpenProfilePhoto?: () => void;
   onOpenGoogleSync?: () => void;
   googleUser?: any;
@@ -77,6 +80,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
   pendingDirectorCount = 0,
   darkMode = false,
   onToggleDarkMode,
+  onOpenVoiceSettings,
+  voiceAlertsEnabled = true,
   onOpenProfilePhoto,
   onOpenGoogleSync,
   isGoogleConnected = false
@@ -890,7 +895,29 @@ export const Sidebar: React.FC<SidebarProps> = ({
             </div>
           )}
 
-          {/* Google Sheets Sync Button if provided */}
+          {/* Voice Alerts Settings Button */}
+          {onOpenVoiceSettings && (
+            <button
+              type="button"
+              onClick={() => {
+                onClose();
+                onOpenVoiceSettings();
+              }}
+              className="w-full flex items-center justify-between px-3 py-2 rounded-xl bg-slate-800/60 hover:bg-slate-800 border border-slate-700/40 text-xs font-medium text-slate-300 transition cursor-pointer"
+            >
+              <div className="flex items-center space-x-2">
+                <div className="w-6 h-6 rounded-lg bg-orange-500/20 text-orange-400 flex items-center justify-center">
+                  <Volume2 className="w-3.5 h-3.5" />
+                </div>
+                <span>เสียงแจ้งเตือน (Voice Alerts)</span>
+              </div>
+              <span className={`text-[10px] px-2 py-0.5 rounded-full font-semibold ${
+                voiceAlertsEnabled ? 'bg-emerald-950/80 text-emerald-300 border border-emerald-800/60' : 'bg-slate-700 text-slate-400'
+              }`}>
+                {voiceAlertsEnabled ? 'เปิด' : 'ปิด'}
+              </span>
+            </button>
+          )}
           {onOpenGoogleSync && (
             <button
               type="button"
