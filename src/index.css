@@ -814,3 +814,52 @@ html.dark .theme-ai-minimal aside {
   color: #f1efff !important;
   box-shadow: 12px 0 36px rgba(0, 0, 0, 0.28) !important;
 }
+
+/* AI Minimal reference-match light mode: bright white canvas + lavender actions */
+html:not(.dark) .theme-ai-minimal {
+  background: linear-gradient(180deg, #ffffff 0%, #f8f8ff 58%, #f2f0ff 100%) !important;
+}
+
+html:not(.dark) .theme-ai-minimal header {
+  background: rgba(255, 255, 255, 0.94) !important;
+  border-color: #eeeafa !important;
+  box-shadow: 0 6px 24px rgba(91, 73, 170, 0.05) !important;
+}
+
+html:not(.dark) .theme-ai-minimal header > div > div:first-child > button {
+  background: linear-gradient(135deg, #f0eaff, #e8ddff) !important;
+  color: #7256ea !important;
+  box-shadow: 0 8px 18px rgba(115, 86, 234, 0.14) !important;
+}
+
+html:not(.dark) .theme-ai-minimal main {
+  background: radial-gradient(circle at 70% 12%, rgba(239, 234, 255, 0.55), transparent 36%);
+}
+
+html:not(.dark) .theme-ai-minimal aside {
+  background: rgba(255, 255, 255, 0.98) !important;
+  border-right-color: #eeeafa !important;
+}
+
+html:not(.dark) .theme-ai-minimal aside button {
+  border-radius: 999px !important;
+}
+
+html:not(.dark) .theme-ai-minimal aside button:hover {
+  background: #f1edff !important;
+  color: #7256ea !important;
+}
+
+html:not(.dark) .theme-ai-minimal .bg-indigo-600,
+html:not(.dark) .theme-ai-minimal .bg-violet-600,
+html:not(.dark) .theme-ai-minimal .bg-purple-600,
+html:not(.dark) .theme-ai-minimal .bg-orange-600 {
+  background: linear-gradient(135deg, #7054ee, #895df2) !important;
+  color: #ffffff !important;
+  box-shadow: 0 10px 24px rgba(112, 84, 238, 0.22) !important;
+}
+
+html:not(.dark) .theme-ai-minimal .rounded-2xl,
+html:not(.dark) .theme-ai-minimal .rounded-3xl {
+  box-shadow: 0 12px 30px rgba(91, 73, 170, 0.08) !important;
+}
