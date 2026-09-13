@@ -275,6 +275,9 @@ export default function App() {
   const [sidebarOpacity, setSidebarOpacity] = useState<number>(() =>
     loadSavedData<number>('mculture_sidebar_opacity', 1.0)
   );
+  const [landingTheme, setLandingTheme] = useState<'default' | 'obsidian_prism'>(() =>
+    loadSavedData<'default' | 'obsidian_prism'>('mculture_landing_theme', 'obsidian_prism')
+  );
   const [isUiCustomizerOpen, setIsUiCustomizerOpen] = useState<boolean>(false);
 
   // Apply Font Size and colors
@@ -299,7 +302,8 @@ export default function App() {
     saveLocalData('mculture_icon_style', iconStyle);
     saveLocalData('mculture_font_size', fontSize);
     saveLocalData('mculture_sidebar_opacity', sidebarOpacity);
-  }, [uiStyle, menuButtonColor, iconStyle, fontSize, sidebarOpacity]);
+    saveLocalData('mculture_landing_theme', landingTheme);
+  }, [uiStyle, menuButtonColor, iconStyle, fontSize, sidebarOpacity, landingTheme]);
 
   const [activeTab, setActiveTab] = useState<string>('dashboard');
   const [dashboardSubView, setDashboardSubView] = useState<DashboardSubView>('overview');
@@ -1631,7 +1635,7 @@ export default function App() {
     return (
       <div className="min-h-screen bg-slate-900 selection:bg-orange-500 selection:text-white">
         <ToastBanner message={toast.message} type={toast.type} />
-        <LoginScreen users={users} onLogin={handleLogin} />
+        <LoginScreen users={users} onLogin={handleLogin} landingTheme={landingTheme} />
         <IPhoneInstallPrompt />
       </div>
     );
@@ -1889,6 +1893,8 @@ export default function App() {
             onSetFontSize={setFontSize}
             sidebarOpacity={sidebarOpacity}
             onSetSidebarOpacity={setSidebarOpacity}
+            landingTheme={landingTheme}
+            onSetLandingTheme={setLandingTheme}
             soundEnabled={soundEnabled}
           />
         )}

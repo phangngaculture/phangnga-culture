@@ -16,9 +16,10 @@ import {
 interface LoginScreenProps {
   users: User[];
   onLogin: (user: User) => void;
+  landingTheme?: 'default' | 'obsidian_prism';
 }
 
-export const LoginScreen: React.FC<LoginScreenProps> = ({ users, onLogin }) => {
+export const LoginScreen: React.FC<LoginScreenProps> = ({ users, onLogin, landingTheme = 'obsidian_prism' }) => {
   const [usernameInput, setUsernameInput] = useState('');
   const [passwordInput, setPasswordInput] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -80,31 +81,33 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ users, onLogin }) => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-900 flex flex-col justify-center items-center p-4 sm:p-6 relative overflow-hidden font-sans">
+    <div className="min-h-screen bg-[#070817] flex flex-col justify-center items-center p-4 sm:p-6 relative overflow-hidden font-sans">
       {/* Background Decorative Gradient Orbs */}
-      <div className="absolute -top-40 -left-40 w-96 h-96 bg-orange-500/15 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute -bottom-40 -right-40 w-96 h-96 bg-teal-500/15 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute -top-40 -left-40 w-[28rem] h-[28rem] bg-violet-600/25 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute top-1/3 -right-40 w-[26rem] h-[26rem] bg-cyan-500/20 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute -bottom-52 left-1/3 w-[30rem] h-[30rem] bg-fuchsia-600/15 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute inset-0 opacity-20 pointer-events-none bg-[radial-gradient(rgba(148,163,184,0.35)_1px,transparent_1px)] [background-size:24px_24px]" />
 
       {/* Main Login Card Container */}
       <div className="w-full max-w-md relative z-10">
-        <div className="bg-white rounded-3xl shadow-2xl border border-slate-200/80 overflow-hidden">
+        <div className="bg-white/[0.07] backdrop-blur-2xl rounded-[2rem] shadow-[0_25px_90px_rgba(0,0,0,0.48),0_0_55px_rgba(139,92,246,0.16)] border border-white/15 overflow-hidden">
           
           {/* Top Banner with Garuda & Header */}
-          <div className="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 text-white p-6 sm:p-8 text-center relative border-b border-orange-500/30">
-            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-orange-500 via-amber-400 to-teal-400" />
+          <div className="bg-gradient-to-br from-slate-950/95 via-violet-950/85 to-cyan-950/90 text-white p-6 sm:p-8 text-center relative border-b border-fuchsia-400/25">
+            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-violet-500 via-fuchsia-400 to-cyan-400" />
             
             {/* Ministry of Culture Official Seal Emblem */}
             <div className="inline-flex items-center justify-center mb-2">
               <img
                 src="/logo_mculture.svg"
                 alt="ตราสัญลักษณ์กระทรวงวัฒนธรรม"
-                className="w-20 h-28 sm:w-24 sm:h-32 object-contain drop-shadow-xl animate-in zoom-in-95 duration-500"
+                className="w-20 h-28 sm:w-24 sm:h-32 object-contain drop-shadow-[0_0_20px_rgba(167,139,250,0.45)] animate-in zoom-in-95 duration-500"
               />
             </div>
 
             <div className="space-y-1">
-              <div className="inline-flex items-center space-x-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-orange-500/20 text-orange-300 border border-orange-500/30 mb-1">
-                <Car className="w-3 h-3 text-orange-400" />
+              <div className="inline-flex items-center space-x-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-fuchsia-500/15 text-fuchsia-200 border border-fuchsia-400/30 mb-1">
+                <Car className="w-3 h-3 text-cyan-300" />
                 <span>e-Service Platform v5.2</span>
               </div>
               <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-white">
@@ -117,7 +120,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ users, onLogin }) => {
           </div>
 
           {/* Form Content Area */}
-          <div className="p-6 sm:p-8">
+          <div className="p-6 sm:p-8 bg-slate-950/45">
             <div className="mb-6 text-center">
               <h2 className="text-base font-bold text-slate-900 flex items-center justify-center space-x-1.5">
                 <Lock className="w-4 h-4 text-orange-600" />
@@ -242,4 +245,3 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ users, onLogin }) => {
     </div>
   );
 };
-

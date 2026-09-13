@@ -40,6 +40,8 @@ interface WebsiteCustomizerViewProps {
   sidebarOpacity: number;
   onSetSidebarOpacity: (opacity: number) => void;
   soundEnabled?: boolean;
+  landingTheme: 'default' | 'obsidian_prism';
+  onSetLandingTheme: (theme: 'default' | 'obsidian_prism') => void;
 }
 
 export const WebsiteCustomizerView: React.FC<WebsiteCustomizerViewProps> = ({
@@ -53,7 +55,9 @@ export const WebsiteCustomizerView: React.FC<WebsiteCustomizerViewProps> = ({
   onSetFontSize,
   sidebarOpacity,
   onSetSidebarOpacity,
-  soundEnabled = true
+  soundEnabled = true,
+  landingTheme,
+  onSetLandingTheme
 }) => {
   // Local playground states for interactive prototype (แบบทดลองตัวโชว์)
   const [localStyle, setLocalStyle] = useState<UiStyleType>(uiStyle);
@@ -232,6 +236,23 @@ export const WebsiteCustomizerView: React.FC<WebsiteCustomizerViewProps> = ({
         >
           บันทึกและนำไปใช้ทั่วทั้งแอปพลิเคชัน
         </button>
+      </div>
+
+      <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/60 dark:border-slate-800 p-5 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h3 className="text-sm font-bold text-slate-900 dark:text-white">ตกแต่งหน้าแรก (Landing Page)</h3>
+          <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">เลือกธีมหน้าเข้าสู่ระบบให้เข้ากับ Sidebar และภาพลักษณ์ใหม่ของระบบ</p>
+        </div>
+        <div className="flex gap-2">
+          <button
+            onClick={() => { onSetLandingTheme('obsidian_prism'); playAppSound('click', soundEnabled); }}
+            className={`px-4 py-2 rounded-xl text-xs font-bold border transition ${landingTheme === 'obsidian_prism' ? 'bg-gradient-to-r from-violet-600 to-cyan-500 text-white border-transparent shadow-md' : 'bg-transparent text-slate-500 border-slate-200 dark:border-slate-700'}`}
+          >Obsidian Prism</button>
+          <button
+            onClick={() => { onSetLandingTheme('default'); playAppSound('click', soundEnabled); }}
+            className={`px-4 py-2 rounded-xl text-xs font-bold border transition ${landingTheme === 'default' ? 'bg-slate-800 text-white border-slate-800' : 'bg-transparent text-slate-500 border-slate-200 dark:border-slate-700'}`}
+          >ค่าเริ่มต้น</button>
+        </div>
       </div>
 
       {/* Main Grid: Playground on Left, Controls on Right */}
