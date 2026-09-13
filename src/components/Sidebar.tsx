@@ -471,13 +471,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 setIsDashboardExpanded(true);
                 onClose();
               }}
-              className={`flex-1 flex items-center justify-between px-3.5 py-2.5 rounded-full transition-all duration-300 text-left cursor-pointer ${
+              className={`app-menu-button flex-1 flex items-center justify-between px-3.5 py-2.5 rounded-full transition-all duration-300 text-left cursor-pointer active:scale-[0.98] ${
                 getActiveButtonClass(isActive)
               }`}
             >
               <div className="flex items-center space-x-3 min-w-0 pl-1">
                 <div
-                  className={`${uiStyle === 'ai_minimal' ? 'w-11 h-11 rounded-[1rem]' : 'w-9 h-9 rounded-full'} flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-105 ${
+                  className={`app-icon-press ${uiStyle === 'ai_minimal' ? 'w-11 h-11 rounded-[1rem]' : 'w-9 h-9 rounded-full'} flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-105 ${
                     getIconContainerClass(isActive, item.gradient)
                   }`}
                 >
@@ -622,13 +622,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
             onSelectTab(item.id);
             onClose();
           }}
-          className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-full transition-all duration-300 text-left cursor-pointer group ${
+          className={`app-menu-button w-full flex items-center justify-between px-3.5 py-2.5 rounded-full transition-all duration-300 text-left cursor-pointer group active:scale-[0.98] ${
             getActiveButtonClass(isActive)
           }`}
         >
           <div className="flex items-center space-x-3 min-w-0 pl-1">
             <div
-              className={`${uiStyle === 'ai_minimal' ? 'w-11 h-11 rounded-[1rem]' : 'w-9 h-9 rounded-full'} flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-105 ${
+              className={`app-icon-press ${uiStyle === 'ai_minimal' ? 'w-11 h-11 rounded-[1rem]' : 'w-9 h-9 rounded-full'} flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-105 ${
                 getIconContainerClass(isActive, item.gradient)
               }`}
             >
