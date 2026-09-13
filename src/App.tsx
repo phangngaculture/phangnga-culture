@@ -414,6 +414,25 @@ export default function App() {
     saveLocalData(STORAGE_KEYS.SOUND_ENABLED, soundEnabled);
   }, [soundEnabled]);
 
+  // Global typing sound listener for all inputs/textareas
+  useEffect(() => {
+    const handleInput = (e: Event) => {
+      const target = e.target as HTMLElement;
+      if (
+        target.tagName === 'INPUT' ||
+        target.tagName === 'TEXTAREA' ||
+        target.isContentEditable
+      ) {
+        playAppSound('type', soundEnabled);
+      }
+    };
+
+    window.addEventListener('input', handleInput, true);
+    return () => {
+      window.removeEventListener('input', handleInput, true);
+    };
+  }, [soundEnabled]);
+
   useEffect(() => {
     saveLocalData(STORAGE_KEYS.GOOGLE_SHEET_INFO, spreadsheetInfo);
   }, [spreadsheetInfo]);
@@ -1505,7 +1524,7 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-100/70 dark:bg-slate-950 text-slate-800 dark:text-slate-100 flex flex-col justify-between selection:bg-orange-500 selection:text-white transition-colors duration-200">
+    <div className="h-screen h-dvh 2xl:h-auto 2xl:min-h-screen overflow-hidden 2xl:overflow-visible bg-slate-100/70 dark:bg-slate-950 text-slate-800 dark:text-slate-100 flex flex-col justify-between selection:bg-orange-500 selection:text-white transition-colors duration-200">
       
       {/* Toast Banner */}
       <ToastBanner message={toast.message} type={toast.type} />
@@ -1530,6 +1549,7 @@ export default function App() {
         onOpenVoiceSettings={() => setIsVoiceSettingsModalOpen(true)}
         voiceAlertsEnabled={voiceSettings.enabled}
         onOpenProfilePhoto={() => setIsProfilePhotoModalOpen(true)}
+        soundEnabled={soundEnabled}
       />
 
       {/* Top Header Navbar */}
@@ -1559,7 +1579,7 @@ export default function App() {
       <MobileAppInstallBanner />
 
       {/* Main Content Area */}
-      <main className="flex-grow max-w-7xl w-full mx-auto px-3 sm:px-4 md:px-8 py-4 sm:py-6 pb-28 md:pb-8">
+      <main className="flex-grow flex-shrink min-h-0 overflow-y-auto 2xl:overflow-visible max-w-7xl w-full mx-auto px-3 sm:px-4 md:px-8 py-4 sm:py-6 pb-36 2xl:pb-8">
         {activeTab === 'dashboard' && (
           <DashboardView
             bookings={bookings}
@@ -1748,6 +1768,23 @@ export default function App() {
               </button>
             </div>
           )}
+
+        {/* Footer inside scrollable main area to maximize real estate on mobile/iPad */}
+        <footer className="border-t border-slate-200/50 dark:border-slate-800/50 bg-white/40 dark:bg-slate-900/40 backdrop-blur-xs py-6 px-4 text-center text-xs text-slate-500 no-print mt-12 mb-2">
+          <div className="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-3">
+            <div className="flex flex-wrap items-center justify-center gap-1.5 sm:gap-2">
+              <img src="/logo_mculture.svg" alt="ตราสัญลักษณ์กระทรวงวัฒนธรรม" className="w-4 h-5 object-contain inline-block" />
+              <span className="font-semibold text-slate-700 dark:text-slate-300">
+                สำนักงานวัฒนธรรมจังหวัดพังงา (Phangnga Provincial Cultural Office)
+              </span>
+              <span className="hidden sm:inline">•</span>
+              <span className="dark:text-slate-400">กระทรวงวัฒนธรรม</span>
+            </div>
+            <div className="text-slate-600 dark:text-slate-400 font-medium text-[11px]">
+              developer by Thon Saengsawang
+            </div>
+          </div>
+        </footer>
       </main>
 
       {/* Official Memorandum Modal (Full A4 Print & View) */}
@@ -1824,22 +1861,7 @@ export default function App() {
         maintenanceCount={maintenanceRecords.length}
       />
 
-      {/* Footer */}
-      <footer className="border-t border-slate-200 bg-white/70 backdrop-blur-xs py-4 px-6 text-center text-xs text-slate-500 no-print mb-20 md:mb-0">
-        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-2">
-          <div className="flex items-center space-x-2">
-            <img src="/logo_mculture.svg" alt="ตราสัญลักษณ์กระทรวงวัฒนธรรม" className="w-4 h-5 object-contain inline-block" />
-            <span className="font-semibold text-slate-700">
-              สำนักงานวัฒนธรรมจังหวัดพังงา (Phangnga Provincial Cultural Office)
-            </span>
-            <span>•</span>
-            <span>กระทรวงวัฒนธรรม</span>
-          </div>
-          <div className="text-slate-600 font-medium">
-            developer by Thon Saengsawang
-          </div>
-        </div>
-      </footer>
+
 
       {/* Mobile Native-Style Bottom Navigation Bar */}
       <MobileBottomNav

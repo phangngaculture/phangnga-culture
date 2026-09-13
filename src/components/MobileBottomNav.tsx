@@ -53,12 +53,12 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
     <nav
       id="mobile-bottom-navigation"
       aria-label="เมนูนำทางหลักบนมือถือ"
-      className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-lg border-t border-slate-200/80 dark:border-slate-800 shadow-[0_-4px_24px_rgba(0,0,0,0.08)] select-none no-print transition-colors duration-200"
+      className="2xl:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-lg border-t border-slate-200/80 dark:border-slate-800 shadow-[0_-4px_24px_rgba(0,0,0,0.08)] select-none no-print transition-colors duration-200"
       style={{
         paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 8px)'
       }}
     >
-      <div className="grid grid-cols-5 items-center h-16 max-w-lg mx-auto px-2 relative">
+      <div className="grid grid-cols-5 items-center h-16 max-w-lg md:max-w-xl mx-auto px-2 relative">
         
         {/* 1. หน้าหลัก (Dashboard) */}
         <button

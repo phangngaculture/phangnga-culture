@@ -212,7 +212,7 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
           {(currentUser.role === 'driver' || getUserAllowedMenus(currentUser).includes('driver_mission')) && (
             <button
               onClick={() => onTabChange('driver_mission')}
-              className={`hidden md:flex h-9 px-2.5 sm:px-3 rounded-xl items-center space-x-1.5 transition border text-xs font-semibold shadow-xs ${
+              className={`hidden 2xl:flex h-9 px-2.5 sm:px-3 rounded-xl items-center space-x-1.5 transition border text-xs font-semibold shadow-xs ${
                 activeTab === 'driver_mission'
                   ? 'bg-amber-600 text-white border-amber-500 shadow-md shadow-amber-600/30'
                   : 'bg-amber-50 hover:bg-amber-100 text-amber-900 border-amber-200'
@@ -228,7 +228,7 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
           {getUserAllowedMenus(currentUser).includes('asset_register') && (
             <button
               onClick={() => onTabChange('asset_register')}
-              className={`hidden lg:flex h-9 px-2.5 sm:px-3 rounded-xl items-center space-x-1.5 transition border text-xs font-semibold shadow-xs ${
+              className={`hidden 2xl:flex h-9 px-2.5 sm:px-3 rounded-xl items-center space-x-1.5 transition border text-xs font-semibold shadow-xs ${
                 activeTab === 'asset_register'
                   ? 'bg-teal-600 text-white border-teal-500 shadow-md shadow-teal-600/30'
                   : 'bg-teal-50 hover:bg-teal-100 text-teal-900 border-teal-200'
@@ -244,7 +244,7 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
           {getUserAllowedMenus(currentUser).includes('asset_inspection') && (
             <button
               onClick={() => onTabChange('asset_inspection')}
-              className={`hidden lg:flex h-9 px-2.5 sm:px-3 rounded-xl items-center space-x-1.5 transition border text-xs font-semibold shadow-xs ${
+              className={`hidden 2xl:flex h-9 px-2.5 sm:px-3 rounded-xl items-center space-x-1.5 transition border text-xs font-semibold shadow-xs ${
                 activeTab === 'asset_inspection'
                   ? 'bg-emerald-600 text-white border-emerald-500 shadow-md shadow-emerald-600/30'
                   : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-900 border-emerald-200'

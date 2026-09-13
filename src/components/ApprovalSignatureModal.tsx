@@ -340,31 +340,46 @@ export const ApprovalSignatureModal: React.FC<ApprovalSignatureModalProps> = ({
     ctx.clearRect(0, 0, 500, 160);
 
     if (electronicStyle === 'stamp') {
-      // Official Digital Certificate Stamp
-      ctx.strokeStyle = '#0284c7';
-      ctx.lineWidth = 2.5;
-      ctx.strokeRect(8, 8, 484, 144);
-      ctx.strokeStyle = '#38bdf8';
+      // Official Digital Certificate Stamp (Admin/Director Approval Stamp)
+      // We make it look like a highly professional, beautiful official stamp
+      ctx.strokeStyle = '#0284c7'; // deep sky blue
+      ctx.lineWidth = 3;
+      ctx.strokeRect(10, 10, 480, 140);
+      
+      ctx.strokeStyle = '#38bdf8'; // light blue inner frame
       ctx.lineWidth = 1;
-      ctx.strokeRect(13, 13, 474, 134);
+      ctx.strokeRect(16, 16, 468, 128);
 
+      // Top header banner
       ctx.fillStyle = '#0369a1';
-      ctx.font = 'bold 16px Sarabun, sans-serif';
+      ctx.font = 'bold 13px "Sarabun", sans-serif';
       ctx.textAlign = 'center';
-      ctx.fillText('อนุมัติผ่านระบบอิเล็กทรอนิกส์', 250, 42);
+      ctx.textBaseline = 'middle';
+      ctx.fillText('อนุมัติผ่านระบบอิเล็กทรอนิกส์ • สำนักงานวัฒนธรรมจังหวัดพังงา', 250, 36);
 
-      ctx.font = 'bold 20px "TH Sarabun New", Sarabun, serif';
+      // Decorative divider line
+      ctx.strokeStyle = 'rgba(3, 105, 161, 0.15)';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(30, 48);
+      ctx.lineTo(470, 48);
+      ctx.stroke();
+
+      // Signer Name - Perfectly Centered
+      ctx.font = 'bold 20px "Sarabun", sans-serif';
       ctx.fillStyle = '#0f172a';
-      ctx.fillText(`(${signerName})`, 250, 78);
+      ctx.fillText(`(${signerName})`, 250, 74);
 
-      ctx.font = '13px Sarabun, sans-serif';
+      // Role/Position - Perfectly Centered
+      ctx.font = '13px "Sarabun", sans-serif';
       ctx.fillStyle = '#475569';
       ctx.fillText(effectiveApproverRole, 250, 102);
 
+      // Digital ID & timestamp
       const nowStr = formatThaiDate(new Date().toISOString().split('T')[0], 'short');
-      ctx.font = '11px monospace';
+      ctx.font = '10px monospace';
       ctx.fillStyle = '#0284c7';
-      ctx.fillText(`[DIGITAL ID: PNA-CULT-${Date.now().toString(36).toUpperCase()} • ${nowStr}]`, 250, 130);
+      ctx.fillText(`[DIGITAL APPROVAL CERTIFICATE • ID: PNA-CULT-${Date.now().toString(36).toUpperCase()} • ${nowStr}]`, 250, 128);
     } else {
       // Calligraphy Signature
       ctx.font = 'italic bold 32px "Angsana New", "TH Sarabun New", cursive, serif';

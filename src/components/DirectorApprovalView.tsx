@@ -124,12 +124,12 @@ export const DirectorApprovalView: React.FC<DirectorApprovalViewProps> = ({
                       setSelectedBookingId(b.id);
                       if (b.directorComment) setComment(b.directorComment);
                     }}
-                    className={`p-3.5 rounded-2xl border transition cursor-pointer space-y-1.5 text-xs ${
+                    className={`p-3.5 rounded-2xl border transition cursor-pointer space-y-1.5 text-xs card-3d-hover ${
                       isSelected
-                        ? 'bg-teal-900 text-white border-teal-700 shadow-md ring-2 ring-teal-500/40'
+                        ? 'bg-gradient-to-br from-teal-800 to-emerald-900 text-white border-teal-600 shadow-md ring-2 ring-teal-500/40'
                         : isPending
-                        ? 'bg-amber-50/50 hover:bg-amber-100/60 border-amber-200 text-slate-900'
-                        : 'bg-slate-50 hover:bg-slate-100 border-slate-200 text-slate-800'
+                        ? 'bg-gradient-to-br from-amber-50/70 to-amber-100/40 dark:from-amber-950/20 dark:to-amber-900/10 hover:from-amber-100/80 dark:hover:from-amber-900/30 border-amber-200 dark:border-amber-500/30 text-slate-900 dark:text-slate-100'
+                        : 'bg-gradient-to-br from-slate-50/60 to-slate-100/40 dark:from-slate-800/40 dark:to-slate-900/60 hover:from-white hover:to-white dark:hover:from-slate-800/80 dark:hover:to-slate-800/95 border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-100'
                     }`}
                   >
                     <div className="flex justify-between items-center">

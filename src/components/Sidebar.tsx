@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { User, MenuKey, DashboardSubView, BookingRequest } from '../types';
 import { canUserExecuteMission } from '../utils/driverPermissions';
+import { playAppSound } from '../utils/thaiDate';
 import {
   LayoutDashboard,
   Calendar,
@@ -59,6 +60,7 @@ interface SidebarProps {
   onOpenGoogleSync?: () => void;
   googleUser?: any;
   isGoogleConnected?: boolean;
+  soundEnabled?: boolean;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
@@ -84,7 +86,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
   voiceAlertsEnabled = true,
   onOpenProfilePhoto,
   onOpenGoogleSync,
-  isGoogleConnected = false
+  isGoogleConnected = false,
+  soundEnabled = true
 }) => {
   const allowedMenus = getUserAllowedMenus(currentUser);
   const canAccessDirector = allowedMenus.includes('director');
@@ -333,9 +336,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
       return (
         <div key={item.id} className="space-y-1">
           <div className="relative group flex items-center">
-            {/* Left Active Glow Indicator */}
             {isActive && (
-              <div className="absolute -left-3 top-1.5 bottom-1.5 w-1.5 bg-gradient-to-b from-orange-400 to-amber-500 rounded-r-full shadow-lg shadow-orange-500/50" />
+              <div className="absolute -left-2 top-2 bottom-2 w-1 bg-blue-600 rounded-r-full shadow-lg shadow-blue-500/50" />
             )}
 
             <button
@@ -344,40 +346,35 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 setIsDashboardExpanded(true);
                 onClose();
               }}
-              className={`flex-1 flex items-center justify-between p-2.5 rounded-2xl transition-all duration-200 text-left cursor-pointer ${
+              className={`flex-1 flex items-center justify-between px-3.5 py-2.5 rounded-full transition-all duration-300 text-left cursor-pointer ${
                 isActive
-                  ? 'bg-gradient-to-r from-orange-500/90 to-amber-600/90 text-white shadow-lg shadow-orange-500/25 border border-orange-400/40 backdrop-blur-xs'
-                  : 'text-slate-300 hover:bg-slate-800/80 hover:text-white border border-transparent hover:border-slate-700/60'
+                  ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/25 border border-blue-500/15 font-bold'
+                  : darkMode
+                    ? 'text-slate-400 hover:bg-[#151c2c] hover:text-white border border-transparent'
+                    : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900 border border-transparent'
               }`}
             >
-              <div className="flex items-center space-x-3 min-w-0">
+              <div className="flex items-center space-x-3 min-w-0 pl-1">
                 <div
-                  className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-105 ${
+                  className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-105 ${
                     isActive
                       ? 'bg-white/20 text-white shadow-inner'
-                      : `bg-gradient-to-tr ${item.gradient} text-white shadow-sm opacity-90 group-hover:opacity-100`
+                      : darkMode
+                        ? 'bg-slate-800 text-slate-400 group-hover:bg-slate-700'
+                        : 'bg-slate-100 text-slate-500 group-hover:bg-slate-200'
                   }`}
                 >
-                  <Icon className="w-4.5 h-4.5" />
+                  <Icon className="w-4 h-4" />
                 </div>
                 <div className="truncate">
-                  <div className="flex items-center space-x-1.5">
-                    <span className="text-xs font-bold leading-tight truncate">{item.label}</span>
-                  </div>
-                  <div
-                    className={`text-[10px] truncate mt-0.5 ${
-                      isActive ? 'text-orange-100' : 'text-slate-400'
-                    }`}
-                  >
-                    {item.desc}
-                  </div>
+                  <span className="text-xs font-bold leading-none truncate">{item.label}</span>
                 </div>
               </div>
 
               {item.badge && (
                 <span
-                  className={`text-[10px] px-2 py-0.5 rounded-full font-bold border shrink-0 mr-1 ${
-                    isActive ? 'bg-white text-orange-600 border-white/40' : item.badgeColor
+                  className={`text-[9px] px-2 py-0.5 rounded-full font-bold border shrink-0 mr-1 ${
+                    isActive ? 'bg-white/25 text-white border-white/20' : item.badgeColor
                   }`}
                 >
                   {item.badge}
@@ -391,56 +388,48 @@ export const Sidebar: React.FC<SidebarProps> = ({
               onClick={(e) => {
                 e.stopPropagation();
                 setIsDashboardExpanded(!isDashboardExpanded);
+                playAppSound('click', soundEnabled);
               }}
-              className={`w-8 h-10 ml-1 rounded-xl flex items-center justify-center transition-all cursor-pointer ${
+              className={`w-8 h-8 ml-1 rounded-full flex items-center justify-center transition-all cursor-pointer ${
                 isActive
-                  ? 'bg-orange-600/50 hover:bg-orange-600 text-orange-100 hover:text-white'
-                  : 'text-slate-400 hover:text-white hover:bg-slate-800'
+                  ? 'bg-blue-700 text-blue-100 hover:text-white'
+                  : darkMode
+                    ? 'text-slate-400 hover:text-white hover:bg-[#151c2c]'
+                    : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100'
               }`}
               title={isDashboardExpanded ? 'ซ่อนเมนูย่อย' : 'แสดงเมนูย่อย'}
             >
               {isDashboardExpanded ? (
-                <ChevronDown className="w-4 h-4 transition-transform duration-200" />
+                <ChevronDown className="w-3.5 h-3.5 transition-transform duration-200" />
               ) : (
-                <ChevronRight className="w-4 h-4 transition-transform duration-200" />
+                <ChevronRight className="w-3.5 h-3.5 transition-transform duration-200" />
               )}
             </button>
           </div>
 
           {/* Sub-menu accordion */}
           {isDashboardExpanded && (
-            <div className="ml-5 pl-3.5 border-l-2 border-orange-500/40 space-y-1 py-1 transition-all duration-200">
+            <div className={`ml-6 pl-3.5 border-l space-y-1 py-1 transition-all duration-200 ${
+              darkMode ? 'border-slate-800' : 'border-slate-200'
+            }`}>
               {/* Sub-item 1: ภาพรวม & KPI */}
               <button
                 onClick={() => {
                   onSelectTab('dashboard', 'overview');
                   onClose();
                 }}
-                className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-left transition-all duration-150 cursor-pointer ${
+                className={`w-full flex items-center justify-between px-3.5 py-1.5 rounded-full text-left transition-all duration-150 cursor-pointer ${
                   activeTab === 'dashboard' && dashboardSubView === 'overview'
-                    ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-white font-bold shadow-md shadow-orange-500/20 border border-orange-400/30'
-                    : 'text-slate-300 hover:bg-slate-800/80 hover:text-white'
+                    ? 'bg-blue-600 text-white font-bold shadow-sm shadow-blue-500/20'
+                    : darkMode
+                      ? 'text-slate-400 hover:bg-[#151c2c] hover:text-white'
+                      : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900'
                 }`}
               >
-                <div className="flex items-center space-x-2.5">
-                  <LayoutDashboard
-                    className={`w-3.5 h-3.5 shrink-0 ${
-                      activeTab === 'dashboard' && dashboardSubView === 'overview'
-                        ? 'text-white'
-                        : 'text-orange-400'
-                    }`}
-                  />
-                  <span className="text-xs font-medium">ภาพรวม & สรุป KPI</span>
+                <div className="flex items-center space-x-2">
+                  <LayoutDashboard className="w-3.5 h-3.5 shrink-0" />
+                  <span className="text-xs font-semibold">ภาพรวม & สรุป KPI</span>
                 </div>
-                <span
-                  className={`text-[9px] px-1.5 py-0.5 rounded-md font-semibold ${
-                    activeTab === 'dashboard' && dashboardSubView === 'overview'
-                      ? 'bg-white/20 text-white'
-                      : 'text-slate-400 bg-slate-800/90'
-                  }`}
-                >
-                  KPI
-                </span>
               </button>
 
               {/* Sub-item 2: รายการใบเบิก */}
@@ -449,41 +438,27 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   onSelectTab('dashboard', 'bookings');
                   onClose();
                 }}
-                className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-left transition-all duration-150 cursor-pointer ${
+                className={`w-full flex items-center justify-between px-3.5 py-1.5 rounded-full text-left transition-all duration-150 cursor-pointer ${
                   activeTab === 'dashboard' && dashboardSubView === 'bookings'
-                    ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-white font-bold shadow-md shadow-orange-500/20 border border-orange-400/30'
-                    : 'text-slate-300 hover:bg-slate-800/80 hover:text-white'
+                    ? 'bg-blue-600 text-white font-bold shadow-sm shadow-blue-500/20'
+                    : darkMode
+                      ? 'text-slate-400 hover:bg-[#151c2c] hover:text-white'
+                      : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900'
                 }`}
               >
-                <div className="flex items-center space-x-2.5">
-                  <FileText
-                    className={`w-3.5 h-3.5 shrink-0 ${
-                      activeTab === 'dashboard' && dashboardSubView === 'bookings'
-                        ? 'text-white'
-                        : 'text-orange-400'
-                    }`}
-                  />
-                  <span className="text-xs font-medium">รายการใบเบิกทั้งหมด</span>
+                <div className="flex items-center space-x-2">
+                  <FileText className="w-3.5 h-3.5 shrink-0" />
+                  <span className="text-xs font-semibold">รายการใบเบิกทั้งหมด</span>
                 </div>
                 {pendingBookingsCount > 0 ? (
                   <span
-                    className={`text-[9px] px-1.5 py-0.5 rounded-full font-bold ${
+                    className={`text-[9px] px-1.5 py-0.2 rounded-full font-bold ${
                       activeTab === 'dashboard' && dashboardSubView === 'bookings'
-                        ? 'bg-white text-orange-600'
-                        : 'bg-amber-500/20 text-amber-300 border border-amber-500/40 animate-pulse'
+                        ? 'bg-white text-blue-600'
+                        : 'bg-amber-500/20 text-amber-500 dark:text-amber-400'
                     }`}
                   >
-                    {pendingBookingsCount} รออนุมัติ
-                  </span>
-                ) : bookingsCount > 0 ? (
-                  <span
-                    className={`text-[9px] px-1.5 py-0.5 rounded-md font-medium ${
-                      activeTab === 'dashboard' && dashboardSubView === 'bookings'
-                        ? 'bg-white/20 text-white'
-                        : 'text-slate-400 bg-slate-800/90'
-                    }`}
-                  >
-                    {bookingsCount} รายการ
+                    {pendingBookingsCount}
                   </span>
                 ) : null}
               </button>
@@ -494,33 +469,18 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   onSelectTab('dashboard', 'vehicles');
                   onClose();
                 }}
-                className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-left transition-all duration-150 cursor-pointer ${
+                className={`w-full flex items-center justify-between px-3.5 py-1.5 rounded-full text-left transition-all duration-150 cursor-pointer ${
                   activeTab === 'dashboard' && dashboardSubView === 'vehicles'
-                    ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-white font-bold shadow-md shadow-orange-500/20 border border-orange-400/30'
-                    : 'text-slate-300 hover:bg-slate-800/80 hover:text-white'
+                    ? 'bg-blue-600 text-white font-bold shadow-sm shadow-blue-500/20'
+                    : darkMode
+                      ? 'text-slate-400 hover:bg-[#151c2c] hover:text-white'
+                      : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900'
                 }`}
               >
-                <div className="flex items-center space-x-2.5">
-                  <Car
-                    className={`w-3.5 h-3.5 shrink-0 ${
-                      activeTab === 'dashboard' && dashboardSubView === 'vehicles'
-                        ? 'text-white'
-                        : 'text-teal-400'
-                    }`}
-                  />
-                  <span className="text-xs font-medium">สถานะรถยนต์ราชการ</span>
+                <div className="flex items-center space-x-2">
+                  <Car className="w-3.5 h-3.5 shrink-0" />
+                  <span className="text-xs font-semibold">สถานะรถยนต์ราชการ</span>
                 </div>
-                {availableVehiclesCount !== undefined && vehiclesCount > 0 ? (
-                  <span
-                    className={`text-[9px] px-1.5 py-0.5 rounded-md font-semibold ${
-                      activeTab === 'dashboard' && dashboardSubView === 'vehicles'
-                        ? 'bg-white/20 text-white'
-                        : 'text-teal-300 bg-teal-950/80 border border-teal-800/60'
-                    }`}
-                  >
-                    ว่าง {availableVehiclesCount}/{vehiclesCount}
-                  </span>
-                ) : null}
               </button>
             </div>
           )}
@@ -530,9 +490,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
     return (
       <div key={item.id} className="relative group">
-        {/* Left Active Glow Indicator */}
         {isActive && (
-          <div className="absolute -left-3 top-1.5 bottom-1.5 w-1.5 bg-gradient-to-b from-orange-400 to-amber-500 rounded-r-full shadow-lg shadow-orange-500/50" />
+          <div className="absolute -left-2 top-2 bottom-2 w-1 bg-blue-600 rounded-r-full shadow-lg shadow-blue-500/50" />
         )}
 
         <button
@@ -540,65 +499,46 @@ export const Sidebar: React.FC<SidebarProps> = ({
             onSelectTab(item.id);
             onClose();
           }}
-          className={`w-full flex items-center justify-between p-2.5 rounded-2xl transition-all duration-200 text-left cursor-pointer group ${
+          className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-full transition-all duration-300 text-left cursor-pointer group ${
             isActive
-              ? item.special === 'director'
-                ? 'bg-gradient-to-r from-teal-600 to-emerald-600 text-white shadow-lg shadow-teal-600/30 border border-teal-400/40'
-                : item.special === 'users'
-                ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-lg shadow-purple-600/30 border border-purple-400/40'
-                : 'bg-gradient-to-r from-orange-500 to-amber-600 text-white shadow-lg shadow-orange-500/25 border border-orange-400/40'
-              : item.special === 'director'
-              ? 'bg-teal-950/30 text-teal-200 border border-teal-800/40 hover:bg-teal-900/40 hover:border-teal-700/60'
-              : item.special === 'users'
-              ? 'bg-purple-950/30 text-purple-200 border border-purple-800/40 hover:bg-purple-900/40 hover:border-purple-700/60'
-              : 'text-slate-300 hover:bg-slate-800/80 hover:text-white border border-transparent hover:border-slate-700/60'
+              ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/25 border border-blue-500/15 font-bold'
+              : darkMode
+                ? 'text-slate-400 hover:bg-[#151c2c] hover:text-white border border-transparent'
+                : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900 border border-transparent'
           }`}
         >
-          <div className="flex items-center space-x-3 min-w-0">
+          <div className="flex items-center space-x-3 min-w-0 pl-1">
             <div
-              className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-105 ${
+              className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-105 ${
                 isActive
                   ? 'bg-white/20 text-white shadow-inner'
-                  : `bg-gradient-to-tr ${item.gradient} text-white shadow-sm opacity-90 group-hover:opacity-100`
+                  : darkMode
+                    ? 'bg-slate-800 text-slate-400 group-hover:bg-slate-700'
+                    : 'bg-slate-100 text-slate-500 group-hover:bg-slate-200'
               }`}
             >
-              <Icon className="w-4.5 h-4.5" />
+              <Icon className="w-4 h-4" />
             </div>
             <div className="truncate">
-              <div className="flex items-center space-x-1.5">
-                <span className="text-xs font-bold leading-tight truncate">{item.label}</span>
-              </div>
-              <div
-                className={`text-[10px] truncate mt-0.5 ${
-                  isActive
-                    ? 'text-orange-100'
-                    : item.special === 'director'
-                    ? 'text-teal-300/80'
-                    : item.special === 'users'
-                    ? 'text-purple-300/80'
-                    : 'text-slate-400'
-                }`}
-              >
-                {item.desc}
-              </div>
+              <span className="text-xs font-bold leading-none truncate">{item.label}</span>
             </div>
           </div>
 
           <div className="flex items-center space-x-1.5 shrink-0 ml-2">
             {item.badge && (
               <span
-                className={`text-[10px] px-2 py-0.5 rounded-full font-bold border ${
-                  isActive ? 'bg-white/20 text-white border-white/30' : item.badgeColor
+                className={`text-[9px] px-2 py-0.5 rounded-full font-bold border ${
+                  isActive ? 'bg-white/25 text-white border-white/20' : item.badgeColor
                 }`}
               >
                 {item.badge}
               </span>
             )}
             <ChevronRight
-              className={`w-4 h-4 transition-transform duration-200 ${
+              className={`w-3.5 h-3.5 transition-transform duration-200 ${
                 isActive
                   ? 'text-white translate-x-0.5 opacity-100'
-                  : 'text-slate-500 opacity-40 group-hover:opacity-100 group-hover:translate-x-0.5'
+                  : 'text-slate-400 dark:text-slate-500 opacity-40 group-hover:opacity-100 group-hover:translate-x-0.5'
               }`}
             />
           </div>
@@ -612,66 +552,51 @@ export const Sidebar: React.FC<SidebarProps> = ({
       {/* Backdrop */}
       {isOpen && (
         <div
-          onClick={onClose}
+          onClick={() => {
+            onClose();
+            playAppSound('click', soundEnabled);
+          }}
           className="fixed inset-0 bg-slate-950/70 backdrop-blur-sm z-50 transition-opacity duration-300 animate-in fade-in"
         />
       )}
 
       {/* Sidebar Panel */}
       <aside
-        className={`fixed top-0 bottom-0 left-0 w-84 max-w-[85vw] bg-slate-900/98 backdrop-blur-xl text-white z-50 transform transition-all duration-300 ease-out flex flex-col shadow-2xl border-r border-slate-800/80 ${
+        className={`fixed top-0 bottom-0 left-0 w-84 max-w-[85vw] z-50 transform transition-all duration-300 ease-out flex flex-col shadow-2xl border-r ${
           isOpen ? 'translate-x-0' : '-translate-x-full'
+        } ${
+          darkMode
+            ? 'bg-[#0c101b] border-slate-800/80 text-white'
+            : 'bg-[#ffffff] border-slate-200 text-slate-800'
         }`}
       >
-        {/* Top Header */}
-        <div className="p-4 border-b border-slate-800/80 bg-slate-950/50 flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <div className="relative">
-              <img
-                src="/logo_mculture.svg"
-                alt="ตรากระทรวงวัฒนธรรม"
-                className="w-9 h-11 object-contain drop-shadow-md shrink-0 transition-transform duration-200 hover:scale-105"
-              />
-              <span className="absolute -top-0.5 -right-0.5 flex h-2.5 w-2.5">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
-              </span>
-            </div>
-            <div>
-              <div className="flex items-center space-x-1.5">
-                <h2 className="font-extrabold text-xs tracking-wide text-white">สนง.วัฒนธรรมจังหวัดพังงา</h2>
-              </div>
-              <p className="text-[10px] text-orange-400 font-medium flex items-center space-x-1">
-                <Sparkles className="w-2.5 h-2.5" />
-                <span>ระบบบริหารยานพาหนะราชการ</span>
-              </p>
-            </div>
+        {/* Top macOS Traffic Lights & Header Block */}
+        <div className={`p-4 border-b flex flex-col space-y-3.5 shrink-0 ${
+          darkMode ? 'border-slate-800/60 bg-slate-950/20' : 'border-slate-100 bg-slate-50/40'
+        }`}>
+          {/* macOS Style Traffic Window Controls */}
+          <div className="flex space-x-1.5">
+            <div className="w-3 h-3 rounded-full bg-rose-500/90 shadow-xs shadow-rose-500/10" />
+            <div className="w-3 h-3 rounded-full bg-amber-500/90 shadow-xs shadow-amber-500/10" />
+            <div className="w-3 h-3 rounded-full bg-emerald-500/90 shadow-xs shadow-emerald-500/10" />
           </div>
 
-          <button
-            onClick={onClose}
-            className="w-8 h-8 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center transition cursor-pointer border border-slate-700/50"
-            title="ปิดเมนู"
-          >
-            <X className="w-4 h-4" />
-          </button>
-        </div>
-
-        {/* User Card with Switcher Dropdown */}
-        <div className="p-3 bg-gradient-to-b from-slate-950/80 to-slate-900/90 border-b border-slate-800/80 relative">
+          {/* User Profile Header Section */}
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2.5 min-w-0">
+            <div className="flex items-center space-x-3 min-w-0">
+              {/* Profile Avatar with status ring */}
               <div
                 onClick={() => {
                   if (onOpenProfilePhoto) {
                     onClose();
                     onOpenProfilePhoto();
+                    playAppSound('click', soundEnabled);
                   }
                 }}
                 className="relative cursor-pointer group shrink-0"
                 title="แตะเพื่อเปลี่ยนรูปโปรไฟล์"
               >
-                <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-orange-500 via-amber-500 to-yellow-500 text-white flex items-center justify-center font-bold text-xs shrink-0 overflow-hidden ring-2 ring-orange-400/40 group-hover:ring-orange-400 shadow-md transition-transform duration-200 group-hover:scale-105">
+                <div className="w-11 h-11 rounded-full bg-gradient-to-tr from-orange-500 via-amber-500 to-yellow-500 text-white flex items-center justify-center font-bold text-sm shrink-0 overflow-hidden ring-2 ring-orange-400/30 group-hover:ring-orange-400 shadow-md transition duration-300 transform group-hover:scale-105">
                   {currentUser.avatarUrl ? (
                     <img
                       src={currentUser.avatarUrl}
@@ -682,125 +607,87 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     currentUser.name.charAt(0)
                   )}
                 </div>
-                <span className="absolute -bottom-1 -right-1 w-4 h-4 bg-orange-600 text-white rounded-full flex items-center justify-center ring-1 ring-slate-900 shadow-xs">
-                  <Camera className="w-2.5 h-2.5" />
+                <span className="absolute -bottom-0.5 -right-0.5 flex h-3 w-3">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span className={`relative inline-flex rounded-full h-3 w-3 bg-emerald-500 ring-2 ${
+                    darkMode ? 'ring-[#0c101b]' : 'ring-white'
+                  }`}></span>
                 </span>
               </div>
 
-              <div className="min-w-0 flex-1">
-                <div className="text-xs font-bold text-white truncate flex items-center space-x-1.5">
-                  <span className="truncate">{currentUser.name}</span>
-                </div>
-                <div className="flex items-center space-x-1 mt-0.5">
-                  <span
-                    className={`inline-block px-1.5 py-0.2 rounded-md text-[9px] font-bold border ${roleBadgeStyle}`}
-                  >
-                    {currentUser.roleTitle || currentUser.role}
-                  </span>
-                </div>
+              <div className="min-w-0">
+                <h3 className={`font-bold text-sm tracking-tight truncate ${darkMode ? 'text-white' : 'text-slate-800'}`}>
+                  {currentUser.name}
+                </h3>
+                <p className={`text-[11px] font-medium truncate mt-0.5 ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>
+                  {currentUser.roleTitle || currentUser.role}
+                </p>
               </div>
             </div>
 
-            {/* Quick Switch User Toggle */}
-            {onSwitchUser && effectiveUsers.length > 1 && (
-              <button
-                type="button"
-                onClick={() => setShowUserSwitcher(!showUserSwitcher)}
-                className={`p-1.5 rounded-xl border transition cursor-pointer ${
-                  showUserSwitcher
-                    ? 'bg-orange-500/20 text-orange-300 border-orange-500/40'
-                    : 'bg-slate-800/80 hover:bg-slate-700 text-slate-300 border-slate-700/60'
-                }`}
-                title="สลับบัญชีผู้ใช้งานทดสอบ"
-              >
-                <ArrowRightLeft className="w-3.5 h-3.5" />
-              </button>
-            )}
+            {/* Dynamic Green Collapse Button matching mockup exactly */}
+            <button
+              onClick={() => {
+                onClose();
+                playAppSound('click', soundEnabled);
+              }}
+              className="w-8 h-8 rounded-full bg-emerald-500 hover:bg-emerald-600 active:scale-95 text-white flex items-center justify-center transition shadow-lg shadow-emerald-500/25 border-none cursor-pointer"
+              title="ปิดเมนู"
+            >
+              <ChevronRight className="w-5 h-5 rotate-180" />
+            </button>
           </div>
-
-          {/* User Switcher Dropdown */}
-          {showUserSwitcher && (
-            <div className="mt-2.5 p-2 bg-slate-950/95 border border-slate-800 rounded-2xl shadow-xl space-y-1 animate-in fade-in slide-in-from-top-2 duration-150">
-              <div className="text-[10px] font-semibold text-slate-400 px-2 py-0.5 flex items-center justify-between">
-                <span>สลับบัญชีผู้ใช้งาน ({effectiveUsers.length} ท่าน)</span>
-                <span className="text-[9px] text-orange-400 font-normal">ทดสอบระบบ</span>
-              </div>
-              <div className="max-h-40 overflow-y-auto space-y-0.5 pr-1 custom-scrollbar">
-                {effectiveUsers.map((u) => {
-                  const isSelected = u.id === currentUser.id;
-                  return (
-                    <button
-                      key={u.id}
-                      type="button"
-                      onClick={() => {
-                        if (onSwitchUser) {
-                          onSwitchUser(u);
-                          setShowUserSwitcher(false);
-                        }
-                      }}
-                      className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl text-left text-xs transition cursor-pointer ${
-                        isSelected
-                          ? 'bg-orange-500 text-white font-bold'
-                          : 'text-slate-300 hover:bg-slate-800 hover:text-white'
-                      }`}
-                    >
-                      <div className="flex items-center space-x-2 truncate">
-                        <div className="w-6 h-6 rounded-lg bg-slate-800 flex items-center justify-center text-[10px] font-bold shrink-0">
-                          {u.avatarUrl ? (
-                            <img src={u.avatarUrl} alt={u.name} className="w-full h-full object-cover rounded-lg" />
-                          ) : (
-                            u.name.charAt(0)
-                          )}
-                        </div>
-                        <span className="truncate">{u.name}</span>
-                      </div>
-                      <span className={`text-[9px] px-1.5 py-0.2 rounded font-medium shrink-0 ml-1 ${
-                        isSelected ? 'bg-white/20 text-white' : 'text-slate-400 bg-slate-900'
-                      }`}>
-                        {u.roleTitle || u.role}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          )}
         </div>
 
         {/* Menu Quick Search Input */}
-        <div className="px-3 pt-2.5 pb-1">
+        <div className="px-4 pt-4 pb-1 shrink-0">
           <div className="relative flex items-center">
-            <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 pointer-events-none" />
+            <Search className="w-4 h-4 text-slate-400 absolute left-3.5 pointer-events-none" />
             <input
               type="text"
               value={menuSearch}
-              onChange={(e) => setMenuSearch(e.target.value)}
-              placeholder="ค้นหาเมนู (เช่น ไมล์, ทะเบียน, gps)..."
-              className="w-full pl-8.5 pr-7 py-1.5 bg-slate-950/60 border border-slate-800 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-orange-500/80 focus:ring-1 focus:ring-orange-500/30 transition"
+              onChange={(e) => {
+                setMenuSearch(e.target.value);
+                playAppSound('type', soundEnabled);
+              }}
+              placeholder="ค้นหาเมนูในระบบ..."
+              className={`w-full pl-10 pr-9 py-2 rounded-full text-xs transition duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500/30 ${
+                darkMode
+                  ? 'bg-[#151c2c] border border-slate-800/80 text-white placeholder-slate-500 focus:border-blue-500/50'
+                  : 'bg-slate-100 border border-slate-200 text-slate-800 placeholder-slate-400 focus:border-blue-500/50'
+              }`}
             />
             {menuSearch && (
               <button
                 type="button"
-                onClick={() => setMenuSearch('')}
-                className="absolute right-2.5 text-slate-400 hover:text-white p-0.5"
+                onClick={() => {
+                  setMenuSearch('');
+                  playAppSound('click', soundEnabled);
+                }}
+                className="absolute right-3 text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 p-0.5"
               >
-                <X className="w-3 h-3" />
+                <X className="w-3.5 h-3.5" />
               </button>
             )}
           </div>
         </div>
 
-        {/* Navigation Items List */}
-        <div className="flex-1 px-3 py-2 space-y-4 overflow-y-auto custom-scrollbar">
-          {/* If Search Active */}
+        {/* Scrollable Navigation Area */}
+        <div className="flex-1 px-4 py-3 space-y-5 overflow-y-auto custom-scrollbar">
+          {/* Search Result */}
           {allFilteredItems !== null ? (
             <div className="space-y-1">
-              <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-2 flex items-center justify-between">
-                <span>ผลการค้นหา ({allFilteredItems.length})</span>
+              <div className="text-[10px] font-bold uppercase tracking-widest px-2 pb-1.5 flex items-center justify-between border-b border-dashed border-slate-700/20">
+                <span className={darkMode ? 'text-slate-400' : 'text-slate-500'}>
+                  ผลการค้นหา ({allFilteredItems.length})
+                </span>
                 <button
                   type="button"
-                  onClick={() => setMenuSearch('')}
-                  className="text-orange-400 hover:underline"
+                  onClick={() => {
+                    setMenuSearch('');
+                    playAppSound('click', soundEnabled);
+                  }}
+                  className="text-blue-500 hover:underline font-bold text-[9px]"
                 >
                   ล้างค้นหา
                 </button>
@@ -810,159 +697,266 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   ไม่พบเมนูที่ตรงกับคำค้นหา
                 </div>
               ) : (
-                allFilteredItems.map(renderMenuItem)
+                <div className="space-y-1">{allFilteredItems.map(renderMenuItem)}</div>
               )}
             </div>
           ) : (
             <>
-              {/* Category 1: เมนูหลัก (Core) */}
+              {/* Category 1: Core */}
               {coreMenuItems.length > 0 && (
-                <div className="space-y-1">
-                  <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-2 py-0.5 flex items-center space-x-1.5">
-                    <span className="w-1.5 h-1.5 rounded-full bg-orange-400" />
-                    <span>เมนูหลัก & การขอใช้รถ</span>
+                <div className="space-y-1.5">
+                  <div className="text-[10px] font-bold uppercase tracking-widest flex items-center justify-between px-2 mb-2">
+                    <span className={darkMode ? 'text-slate-400' : 'text-slate-500'}>
+                      เมนูหลัก & การขอใช้รถ
+                    </span>
+                    <span className="text-[9px] text-orange-500 font-bold uppercase hover:underline cursor-pointer">
+                      VIEW ALL
+                    </span>
                   </div>
                   <div className="space-y-1">{coreMenuItems.map(renderMenuItem)}</div>
                 </div>
               )}
 
-              {/* Category 2: ปฏิบัติการ & งานยานพาหนะ (Operations) */}
+              {/* Category 2: Operations */}
               {operationMenuItems.length > 0 && (
-                <div className="space-y-1 pt-1">
-                  <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-2 py-0.5 flex items-center space-x-1.5">
-                    <span className="w-1.5 h-1.5 rounded-full bg-cyan-400" />
-                    <span>งานคนขับ / พัสดุ / ยานพาหนะ</span>
+                <div className="space-y-1.5">
+                  <div className="text-[10px] font-bold uppercase tracking-widest flex items-center justify-between px-2 mb-2">
+                    <span className={darkMode ? 'text-slate-400' : 'text-slate-500'}>
+                      งานคนขับ / พัสดุ / ยานพาหนะ
+                    </span>
+                    <span className="text-[9px] text-orange-500 font-bold uppercase hover:underline cursor-pointer">
+                      VIEW ALL
+                    </span>
                   </div>
                   <div className="space-y-1">{operationMenuItems.map(renderMenuItem)}</div>
                 </div>
               )}
 
-              {/* Category 3: รายงาน & ผู้บริหาร & ระบบ (System & Reports) */}
+              {/* Category 3: System */}
               {systemMenuItems.length > 0 && (
-                <div className="space-y-1 pt-1">
-                  <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-2 py-0.5 flex items-center space-x-1.5">
-                    <span className="w-1.5 h-1.5 rounded-full bg-purple-400" />
-                    <span>รายงาน สถิติ & สิทธิ์ผู้ดูแล</span>
+                <div className="space-y-1.5">
+                  <div className="text-[10px] font-bold uppercase tracking-widest flex items-center justify-between px-2 mb-2">
+                    <span className={darkMode ? 'text-slate-400' : 'text-slate-500'}>
+                      รายงาน สถิติ & สิทธิ์ผู้ดูแล
+                    </span>
+                    <span className="text-[9px] text-orange-500 font-bold uppercase hover:underline cursor-pointer">
+                      VIEW ALL
+                    </span>
                   </div>
                   <div className="space-y-1">{systemMenuItems.map(renderMenuItem)}</div>
+                </div>
+              )}
+
+              {/* Category 4: Quick Switch User (Teams) inline with mockup */}
+              {onSwitchUser && effectiveUsers.length > 1 && (
+                <div className="space-y-2 pt-2 border-t border-slate-700/10">
+                  <div className="text-[10px] font-bold uppercase tracking-widest flex items-center justify-between px-2 mb-2">
+                    <span className={darkMode ? 'text-slate-400' : 'text-slate-500'}>
+                      สลับผู้ใช้งานทดสอบ (Teams)
+                    </span>
+                    <span className="text-[9px] text-orange-500 font-bold uppercase hover:underline cursor-pointer">
+                      VIEW ALL
+                    </span>
+                  </div>
+                  <div className="space-y-1.5">
+                    {effectiveUsers.slice(0, 5).map((u) => {
+                      const isSelected = u.id === currentUser.id;
+                      
+                      let roleIconColor = 'text-purple-400';
+                      let roleLabel = u.roleTitle || u.role;
+                      
+                      if (u.role === 'admin') roleIconColor = 'text-purple-400 bg-purple-500/10 border-purple-500/20';
+                      else if (u.role === 'director') roleIconColor = 'text-teal-400 bg-teal-500/10 border-teal-500/20';
+                      else if (u.role === 'driver') roleIconColor = 'text-blue-400 bg-blue-500/10 border-blue-500/20';
+                      else roleIconColor = 'text-orange-400 bg-orange-500/10 border-orange-500/20';
+
+                      return (
+                        <button
+                          key={u.id}
+                          type="button"
+                          onClick={() => onSwitchUser(u)}
+                          className={`w-full flex items-center justify-between p-2 rounded-2xl transition duration-200 text-left border cursor-pointer ${
+                            isSelected 
+                              ? darkMode ? 'bg-blue-500/10 border-blue-500/30' : 'bg-blue-50 border-blue-200'
+                              : 'border-transparent hover:bg-slate-100 dark:hover:bg-slate-800/40'
+                          }`}
+                        >
+                          <div className="flex items-center space-x-2.5 min-w-0">
+                            <div className="relative shrink-0">
+                              <div className="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center font-bold text-xs overflow-hidden">
+                                {u.avatarUrl ? (
+                                  <img src={u.avatarUrl} alt={u.name} className="w-full h-full object-cover" />
+                                ) : (
+                                  u.name.charAt(0)
+                                )}
+                              </div>
+                              <span className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full ring-2 ${
+                                darkMode ? 'ring-[#0c101b]' : 'ring-white'
+                              } ${isSelected ? 'bg-emerald-500' : 'bg-slate-400'}`} />
+                            </div>
+                            <div className="min-w-0">
+                              <p className={`text-xs font-bold truncate ${
+                                isSelected 
+                                  ? 'text-blue-600 dark:text-blue-400' 
+                                  : darkMode ? 'text-slate-200' : 'text-slate-800'
+                              }`}>
+                                {u.name}
+                              </p>
+                              <p className={`text-[10px] truncate ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>
+                                {roleLabel}
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className={`w-6 h-6 rounded-lg border flex items-center justify-center shrink-0 ${roleIconColor}`}>
+                            {u.role === 'admin' ? (
+                              <Shield className="w-3.5 h-3.5" />
+                            ) : u.role === 'director' ? (
+                              <FileCheck className="w-3.5 h-3.5" />
+                            ) : u.role === 'driver' ? (
+                              <Car className="w-3.5 h-3.5" />
+                            ) : (
+                              <Users className="w-3.5 h-3.5" />
+                            )}
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
               )}
             </>
           )}
         </div>
 
-        {/* Quick System Status Snapshot Mini Bar */}
-        <div className="px-3 py-2 bg-slate-950/60 border-t border-slate-800/80 flex items-center justify-between text-[11px] text-slate-400">
-          <div className="flex items-center space-x-1 text-teal-400">
-            <Car className="w-3.5 h-3.5" />
-            <span>รถว่าง {availableVehiclesCount}/{vehiclesCount} คัน</span>
-          </div>
-          <div className="flex items-center space-x-1 text-amber-400">
-            <Clock className="w-3.5 h-3.5" />
-            <span>รอ {pendingBookingsCount} รายการ</span>
-          </div>
-        </div>
-
-        {/* Preferences & Quick Toggles */}
-        <div className="p-3 bg-slate-950/80 border-t border-slate-800/80 space-y-2">
-          {/* Dark Mode Switch */}
-          {onToggleDarkMode && (
-            <div className="px-3 py-2 rounded-xl bg-slate-800/60 border border-slate-700/40 flex items-center justify-between">
-              <div className="flex items-center space-x-2 text-xs text-slate-300 font-medium">
-                <div
-                  className={`w-6 h-6 rounded-lg flex items-center justify-center ${
-                    darkMode ? 'bg-amber-500/20 text-amber-400' : 'bg-slate-700 text-slate-300'
-                  }`}
-                >
-                  {darkMode ? <Sun className="w-3 h-3" /> : <Moon className="w-3 h-3" />}
-                </div>
-                <span className="text-xs">{darkMode ? 'โหมดมืด (Dark)' : 'โหมดสว่าง (Light)'}</span>
-              </div>
-              <button
-                type="button"
-                onClick={onToggleDarkMode}
-                className={`w-9 h-5 rounded-full p-0.5 transition-colors duration-200 cursor-pointer relative ${
-                  darkMode ? 'bg-amber-500 shadow-xs shadow-amber-500/30' : 'bg-slate-700'
-                }`}
-                title={darkMode ? 'สลับเป็นโหมดสว่าง' : 'สลับเป็นโหมดมืด'}
-              >
-                <div
-                  className={`w-4 h-4 rounded-full bg-white shadow-xs transition-transform duration-200 ${
-                    darkMode ? 'translate-x-4' : 'translate-x-0'
-                  }`}
-                />
-              </button>
-            </div>
-          )}
-
-          {/* Voice Alerts Settings Button */}
-          {onOpenVoiceSettings && (
-            <button
-              type="button"
-              onClick={() => {
-                onClose();
-                onOpenVoiceSettings();
-              }}
-              className="w-full flex items-center justify-between px-3 py-2 rounded-xl bg-slate-800/60 hover:bg-slate-800 border border-slate-700/40 text-xs font-medium text-slate-300 transition cursor-pointer"
-            >
-              <div className="flex items-center space-x-2">
-                <div className="w-6 h-6 rounded-lg bg-orange-500/20 text-orange-400 flex items-center justify-center">
-                  <Volume2 className="w-3.5 h-3.5" />
-                </div>
-                <span>เสียงแจ้งเตือน (Voice Alerts)</span>
-              </div>
-              <span className={`text-[10px] px-2 py-0.5 rounded-full font-semibold ${
-                voiceAlertsEnabled ? 'bg-emerald-950/80 text-emerald-300 border border-emerald-800/60' : 'bg-slate-700 text-slate-400'
-              }`}>
-                {voiceAlertsEnabled ? 'เปิด' : 'ปิด'}
-              </span>
-            </button>
-          )}
-          {onOpenGoogleSync && (
-            <button
-              type="button"
+        {/* Drag-n-Drop Google Sync upload box mockup */}
+        {onOpenGoogleSync && (
+          <div className={`px-4 py-2 shrink-0 border-t ${darkMode ? 'border-slate-800/40 bg-slate-950/20' : 'border-slate-100 bg-slate-50/40'}`}>
+            <div 
               onClick={() => {
                 onClose();
                 onOpenGoogleSync();
               }}
-              className={`w-full flex items-center justify-between px-3 py-1.5 rounded-xl border text-xs font-medium transition cursor-pointer ${
+              className={`p-3.5 rounded-2xl border-2 border-dashed transition cursor-pointer text-center space-y-1.5 group ${
                 isGoogleConnected
-                  ? 'bg-emerald-950/40 text-emerald-300 border-emerald-800/50 hover:bg-emerald-900/50'
-                  : 'bg-slate-800/60 text-slate-300 border-slate-700/50 hover:bg-slate-800'
+                  ? 'border-emerald-500/40 bg-emerald-500/5 hover:bg-emerald-500/10'
+                  : darkMode
+                    ? 'border-slate-800 bg-[#121824]/30 hover:bg-[#121824]/50'
+                    : 'border-slate-200 bg-slate-50 hover:bg-slate-100'
               }`}
             >
-              <div className="flex items-center space-x-2">
-                <div className={`w-2 h-2 rounded-full ${isGoogleConnected ? 'bg-emerald-400 animate-pulse' : 'bg-slate-500'}`} />
-                <span>Google Sheets Sync</span>
+              <div className="w-7 h-7 rounded-full bg-blue-500/10 text-blue-500 flex items-center justify-center mx-auto transition-transform group-hover:scale-110">
+                <FileSpreadsheet className="w-4 h-4" />
               </div>
-              <span className="text-[10px] text-slate-400 font-normal">
-                {isGoogleConnected ? 'เชื่อมต่อแล้ว' : 'แตะเพื่อซิงค์'}
-              </span>
-            </button>
+              <div>
+                <h4 className={`text-xs font-bold ${darkMode ? 'text-slate-200' : 'text-slate-700'}`}>
+                  {isGoogleConnected ? 'Google Sheets เชื่อมต่อแล้ว' : 'ซิงค์ข้อมูล Google Sheets'}
+                </h4>
+                <p className={`text-[9px] mt-0.5 ${darkMode ? 'text-slate-500' : 'text-slate-400'}`}>
+                  e-Fleet Database Cloud Synchronization
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Bottom Preferences, Theme Toggle & Status */}
+        <div className={`p-4 border-t space-y-3 shrink-0 ${
+          darkMode ? 'border-slate-800/80 bg-slate-950/40' : 'border-slate-100 bg-slate-50/30'
+        }`}>
+          {/* Pill Theme Toggle */}
+          {onToggleDarkMode && (
+            <div className={`p-1 rounded-full flex items-center border ${
+              darkMode 
+                ? 'bg-[#151c2c] border-slate-800' 
+                : 'bg-slate-100 border-slate-200'
+            }`}>
+              {/* Light Tab */}
+              <button
+                type="button"
+                onClick={() => {
+                  if (darkMode && onToggleDarkMode) {
+                    onToggleDarkMode();
+                    playAppSound('click', soundEnabled);
+                  }
+                }}
+                className={`flex-1 py-1.5 rounded-full flex items-center justify-center space-x-1.5 text-xs font-bold transition cursor-pointer border-none ${
+                  !darkMode
+                    ? 'bg-white text-slate-900 shadow-sm'
+                    : 'text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                <Sun className="w-3.5 h-3.5 text-amber-500" />
+                <span>Light</span>
+              </button>
+              
+              {/* Dark Tab */}
+              <button
+                type="button"
+                onClick={() => {
+                  if (!darkMode && onToggleDarkMode) {
+                    onToggleDarkMode();
+                    playAppSound('click', soundEnabled);
+                  }
+                }}
+                className={`flex-1 py-1.5 rounded-full flex items-center justify-center space-x-1.5 text-xs font-bold transition cursor-pointer border-none ${
+                  darkMode
+                    ? 'bg-blue-600 text-white shadow-sm shadow-blue-500/20'
+                    : 'text-slate-500 hover:text-slate-800'
+                }`}
+              >
+                <Moon className={`w-3.5 h-3.5 ${darkMode ? 'text-amber-300' : 'text-slate-500'}`} />
+                <span>Dark</span>
+              </button>
+            </div>
           )}
 
-          {/* Logout Button */}
-          {onLogout && (
-            <button
-              onClick={() => {
-                onClose();
-                onLogout();
-              }}
-              className="w-full flex items-center justify-center space-x-2 py-2 px-3 bg-rose-500/10 hover:bg-rose-500/20 active:scale-98 text-rose-300 border border-rose-500/30 rounded-xl text-xs font-bold transition cursor-pointer"
-            >
-              <LogOut className="w-3.5 h-3.5" />
-              <span>ออกจากระบบ (Sign Out)</span>
-            </button>
-          )}
+          {/* Additional Quick Action buttons */}
+          <div className="flex gap-2">
+            {onOpenVoiceSettings && (
+              <button
+                type="button"
+                onClick={() => {
+                  onClose();
+                  onOpenVoiceSettings();
+                  playAppSound('click', soundEnabled);
+                }}
+                className={`flex-1 flex items-center justify-center space-x-1 py-2 rounded-xl border text-xs font-semibold transition cursor-pointer ${
+                  darkMode 
+                    ? 'bg-slate-800/40 text-slate-300 border-slate-700/40 hover:bg-slate-800' 
+                    : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
+                }`}
+              >
+                <Volume2 className="w-3.5 h-3.5 text-orange-500" />
+                <span>เสียงแจ้งเตือน ({voiceAlertsEnabled ? 'เปิด' : 'ปิด'})</span>
+              </button>
+            )}
+
+            {onLogout && (
+              <button
+                onClick={() => {
+                  onClose();
+                  onLogout();
+                  playAppSound('click', soundEnabled);
+                }}
+                className="flex-1 flex items-center justify-center space-x-1 py-2 bg-rose-500/10 hover:bg-rose-500/20 active:scale-95 text-rose-500 border border-rose-500/20 rounded-xl text-xs font-semibold transition cursor-pointer"
+              >
+                <LogOut className="w-3.5 h-3.5" />
+                <span>ออกระบบ</span>
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Footer */}
-        <div className="px-4 py-2.5 border-t border-slate-800/80 bg-slate-950/90 text-center">
-          <div className="text-[10px] text-slate-400 font-semibold">
+        <div className={`px-4 py-2 text-center border-t select-none ${
+          darkMode ? 'border-slate-800/40 bg-slate-950/80' : 'border-slate-100 bg-slate-50/50'
+        }`}>
+          <div className={`text-[10px] font-bold ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>
             สำนักงานวัฒนธรรมจังหวัดพังงา
           </div>
-          <div className="text-[9px] text-slate-500 mt-0.5">
-            e-Fleet Service Platform • v2.6.0
+          <div className="text-[9px] text-slate-400/80 mt-0.5">
+            e-Fleet Platform v2.6.0
           </div>
         </div>
       </aside>

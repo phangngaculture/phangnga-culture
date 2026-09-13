@@ -534,4 +534,26 @@ aside ::-webkit-scrollbar-thumb:hover,
   100% { transform: translateX(100%) rotate(30deg); }
 }
 
+/* ==========================================================================
+   Mobile/Tablet App Shell Locking (ล็อกหน้าจอสำหรับ iPad และมือถือ)
+   ========================================================================== */
+@media (max-width: 1535px) {
+  html, body {
+    overflow: hidden !important;
+    height: 100% !important;
+    height: 100vh !important;
+    height: 100dvh !important;
+    overscroll-behavior: none !important;
+    -webkit-overflow-scrolling: auto !important;
+  }
+  
+  #root {
+    height: 100% !important;
+    height: 100dvh !important;
+    overflow: hidden !important;
+    display: flex !important;
+    flex-direction: column !important;
+  }
+}
+
 

@@ -1040,7 +1040,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                 return (
                   <div
                     key={b.id}
-                    className="p-4 rounded-2xl border border-slate-200 hover:border-orange-300 bg-slate-50/50 hover:bg-white transition flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shadow-2xs group"
+                    className="p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-gradient-to-br from-slate-50/60 to-slate-100/40 dark:from-slate-800/40 dark:to-slate-900/60 hover:from-white hover:to-white dark:hover:from-slate-800/80 dark:hover:to-slate-800/95 border-slate-200 dark:border-slate-800 hover:border-orange-300 dark:hover:border-orange-500/40 transition-all duration-300 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shadow-2xs dark:shadow-black/20 card-3d-hover group"
                   >
                     <div
                       onClick={() => onViewMemo(b)}

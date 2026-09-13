@@ -575,12 +575,12 @@ export const DriverMissionView: React.FC<DriverMissionViewProps> = ({
                 return (
                   <div
                     key={b.id}
-                    className={`bg-white rounded-3xl border transition-all p-5 sm:p-6 shadow-xs hover:shadow-md ${
+                    className={`rounded-3xl border transition-all p-5 sm:p-6 card-3d-hover ${
                       isInProgress
-                        ? 'border-amber-400 ring-2 ring-amber-400/20 bg-amber-50/10'
+                        ? 'border-amber-400 dark:border-amber-500/40 ring-2 ring-amber-400/20 bg-gradient-to-br from-amber-50/10 to-amber-100/5 dark:from-amber-950/15 dark:to-amber-900/5 shadow-xs hover:shadow-md'
                         : isReadyToStart
-                        ? 'border-orange-200 hover:border-orange-300'
-                        : 'border-slate-200'
+                        ? 'border-orange-200 dark:border-orange-500/20 hover:border-orange-300 bg-gradient-to-br from-orange-50/50 to-amber-50/30 dark:from-orange-950/10 dark:to-amber-950/5 shadow-xs hover:shadow-md'
+                        : 'border-slate-200 dark:border-slate-800 bg-gradient-to-br from-white to-slate-50/50 dark:from-slate-800/40 dark:to-slate-900/60 shadow-xs hover:shadow-md'
                     }`}
                   >
                     <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">

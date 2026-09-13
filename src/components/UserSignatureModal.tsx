@@ -254,45 +254,123 @@ export const UserSignatureModal: React.FC<UserSignatureModalProps> = ({
       ctx.font = '13px "Sarabun", sans-serif';
       ctx.fillText(`(ลงนามอิเล็กทรอนิกส์ • ${user.position || 'เจ้าหน้าที่'})`, 250, 125);
     } else if (electronicStyle === 'formal') {
-      // Formal rectangular seal
+      // Formal rectangular seal - Beautifully redesigned and enlarged
       ctx.strokeStyle = '#1e3a8a';
-      ctx.lineWidth = 2;
-      ctx.strokeRect(30, 20, 440, 120);
+      ctx.lineWidth = 2.5;
+      ctx.strokeRect(15, 10, 470, 140);
+      
+      ctx.strokeStyle = '#3b82f6';
+      ctx.lineWidth = 0.75;
+      ctx.strokeRect(21, 16, 458, 128);
 
+      // Top Title Banner
       ctx.fillStyle = '#1e3a8a';
-      ctx.font = 'bold 22px "Sarabun", sans-serif';
+      ctx.font = 'bold 12px "Sarabun", sans-serif';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.fillText(customSignerText, 250, 55);
+      ctx.fillText('สำนักงานวัฒนธรรมจังหวัดพังงา • กระทรวงวัฒนธรรม', 250, 36);
 
-      ctx.font = '15px "Sarabun", sans-serif';
+      // Decorative divider line
+      ctx.strokeStyle = 'rgba(30, 58, 138, 0.15)';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(40, 48);
+      ctx.lineTo(460, 48);
+      ctx.stroke();
+
+      // Centered User Name
       ctx.fillStyle = '#0f172a';
-      ctx.fillText(user.position || 'เจ้าหน้าที่ผู้ขอใช้รถ', 250, 85);
+      ctx.font = 'bold 20px "Sarabun", sans-serif';
+      ctx.fillText(customSignerText, 250, 72);
 
-      ctx.font = '12px "Sarabun", sans-serif';
+      // Centered Position
+      ctx.font = '14px "Sarabun", sans-serif';
+      ctx.fillStyle = '#475569';
+      ctx.fillText(user.position || 'เจ้าหน้าที่ผู้ขอใช้รถ', 250, 102);
+
+      // Bottom Digital ID/Verification info
+      ctx.font = '9px monospace';
       ctx.fillStyle = '#059669';
-      ctx.fillText('✓ DIGITAL SIGNATURE VERIFIED', 250, 115);
+      ctx.fillText(`✓ DIGITAL CERTIFICATE • ID: PNA-${user.id || 'STAFF'}-${Date.now().toString(36).toUpperCase()}`, 250, 128);
     } else {
-      // Official Circular Seal
+      // Official Circular Seal - Beautifully redesigned and enlarged with curved text and centered name/position
       ctx.strokeStyle = '#1e3a8a';
       ctx.lineWidth = 3;
       ctx.beginPath();
-      ctx.arc(250, 80, 65, 0, Math.PI * 2);
+      ctx.arc(250, 80, 75, 0, Math.PI * 2);
       ctx.stroke();
 
       ctx.beginPath();
       ctx.lineWidth = 1;
-      ctx.arc(250, 80, 58, 0, Math.PI * 2);
+      ctx.arc(250, 80, 67, 0, Math.PI * 2);
       ctx.stroke();
 
+      // Helper for drawing curved text inside the stamp outer rings
+      const drawTextArc = (text: string, radius: number, centerAngle: number, isTop: boolean) => {
+        const chars = text.split('');
+        const len = chars.length;
+        const angleSpacing = isTop ? 0.09 : 0.12; 
+        const totalAngle = (len - 1) * angleSpacing;
+        
+        ctx.save();
+        ctx.font = 'bold 10px "Sarabun", sans-serif';
+        ctx.fillStyle = '#1e3a8a';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        
+        for (let i = 0; i < len; i++) {
+          let charAngle;
+          if (isTop) {
+            charAngle = (centerAngle - totalAngle / 2) + i * angleSpacing;
+          } else {
+            charAngle = (centerAngle + totalAngle / 2) - i * angleSpacing;
+          }
+          
+          const x = 250 + Math.cos(charAngle) * radius;
+          const y = 80 + Math.sin(charAngle) * radius;
+          
+          ctx.save();
+          ctx.translate(x, y);
+          if (isTop) {
+            ctx.rotate(charAngle + Math.PI / 2);
+          } else {
+            ctx.rotate(charAngle - Math.PI / 2);
+          }
+          ctx.fillText(chars[i], 0, 0);
+          ctx.restore();
+        }
+        ctx.restore();
+      };
+
+      // Draw top and bottom arched texts
+      drawTextArc('สำนักงานวัฒนธรรมจังหวัดพังงา', 56, -Math.PI / 2, true);
+      drawTextArc('ระบบยานพาหนะราชการ', 56, Math.PI / 2, false);
+
+      // Stars/Dots on the sides to split texts
       ctx.fillStyle = '#1e3a8a';
-      ctx.font = 'bold 15px "Sarabun", sans-serif';
+      ctx.font = '10px "Sarabun", sans-serif';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.fillText('สำนักงานวัฒนธรรม', 250, 55);
-      ctx.fillText(customSignerText, 250, 80);
-      ctx.font = '12px "Sarabun", sans-serif';
-      ctx.fillText('จ.พังงา', 250, 105);
+      ctx.fillText('★', 250 - 56, 80);
+      ctx.fillText('★', 250 + 56, 80);
+
+      // Centered Name inside the circular stamp
+      ctx.fillStyle = '#1e3a8a';
+      ctx.font = 'bold 13px "Sarabun", sans-serif';
+      ctx.fillText(customSignerText, 250, 70);
+
+      // Subtle horizontal divider in the middle
+      ctx.beginPath();
+      ctx.strokeStyle = 'rgba(30, 58, 138, 0.2)';
+      ctx.lineWidth = 0.5;
+      ctx.moveTo(205, 81);
+      ctx.lineTo(295, 81);
+      ctx.stroke();
+
+      // Centered Position inside the circular stamp
+      ctx.font = '9px "Sarabun", sans-serif';
+      ctx.fillStyle = '#475569';
+      ctx.fillText(user.position || 'เจ้าหน้าที่ผู้ขอใช้รถ', 250, 92);
     }
 
     return canvas.toDataURL('image/png');
