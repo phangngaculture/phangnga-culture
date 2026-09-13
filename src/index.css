@@ -624,3 +624,76 @@ html.text-sz-large .text-xl { font-size: 24px !important; }
 
 
 
+
+/* AI Minimal Lavender — full-system light dashboard theme */
+.theme-ai-minimal {
+  background: #f7f7fc !important;
+  color: #27243a !important;
+}
+
+.theme-ai-minimal .bg-slate-100\/70,
+.theme-ai-minimal .bg-slate-100\/80,
+.theme-ai-minimal .bg-slate-50 {
+  background-color: #f7f7fc !important;
+}
+
+.theme-ai-minimal .bg-white {
+  background-color: rgba(255, 255, 255, 0.88) !important;
+  border-color: rgba(226, 221, 250, 0.9) !important;
+  box-shadow: 0 12px 30px rgba(112, 93, 184, 0.07) !important;
+}
+
+.theme-ai-minimal .text-slate-900,
+.theme-ai-minimal .text-slate-800 {
+  color: #302c45 !important;
+}
+
+.theme-ai-minimal .text-slate-700,
+.theme-ai-minimal .text-slate-600 {
+  color: #625d78 !important;
+}
+
+.theme-ai-minimal .text-slate-500,
+.theme-ai-minimal .text-slate-400 {
+  color: #8b86a2 !important;
+}
+
+.theme-ai-minimal .border-slate-200,
+.theme-ai-minimal .border-slate-100 {
+  border-color: #e8e3f7 !important;
+}
+
+.theme-ai-minimal input:not([type="checkbox"]),
+.theme-ai-minimal select,
+.theme-ai-minimal textarea {
+  background-color: #ffffff !important;
+  border-color: #e6e0f5 !important;
+  color: #302c45 !important;
+}
+
+.theme-ai-minimal button.bg-orange-600,
+.theme-ai-minimal button.bg-emerald-600 {
+  background: linear-gradient(135deg, #7657ed, #a777f2) !important;
+}
+
+.theme-ai-minimal .shadow-2xl,
+.theme-ai-minimal .shadow-xl {
+  box-shadow: 0 16px 40px rgba(112, 93, 184, 0.1) !important;
+}
+
+.theme-ai-minimal aside {
+  background: rgba(255, 255, 255, 0.92) !important;
+  border-color: #ebe7f8 !important;
+  color: #302c45 !important;
+  box-shadow: 12px 0 36px rgba(112, 93, 184, 0.08) !important;
+}
+
+.theme-ai-minimal .bg-slate-900,
+.theme-ai-minimal .bg-slate-950,
+.theme-ai-minimal .bg-\[\#0c101b\] {
+  background-color: #ffffff !important;
+}
+
+.theme-ai-minimal ::-webkit-scrollbar-thumb {
+  background: rgba(139, 124, 205, 0.28);
+}

@@ -62,7 +62,7 @@ interface SidebarProps {
   googleUser?: any;
   isGoogleConnected?: boolean;
   soundEnabled?: boolean;
-  uiStyle?: 'modern' | 'ribbon' | 'classic' | 'slim_rail' | 'double_panel' | 'eevo_sleek' | 'aurora_glass' | 'minimal_clean' | 'neumorphism_soft' | 'midnight_navy' | 'obsidian_prism';
+  uiStyle?: 'modern' | 'ribbon' | 'classic' | 'slim_rail' | 'double_panel' | 'eevo_sleek' | 'aurora_glass' | 'minimal_clean' | 'neumorphism_soft' | 'midnight_navy' | 'obsidian_prism' | 'ai_minimal';
   menuButtonColor?: 'orange' | 'emerald' | 'indigo' | 'rose' | 'violet';
   iconStyle?: 'gradient' | 'neon' | 'flat';
   fontSize?: 'small' | 'medium' | 'large';
@@ -352,7 +352,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
   const getActiveButtonClass = (isActive: boolean) => {
     if (!isActive) {
-      if (uiStyle === 'minimal_clean') {
+      if (uiStyle === 'minimal_clean' || uiStyle === 'ai_minimal') {
         return darkMode ? 'text-slate-400 hover:bg-slate-800/70 hover:text-white border border-transparent' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900 border border-transparent';
       }
       if (uiStyle === 'neumorphism_soft') {
@@ -374,7 +374,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900 border border-transparent';
     }
 
-    if (uiStyle === 'minimal_clean') {
+    if (uiStyle === 'minimal_clean' || uiStyle === 'ai_minimal') {
       return darkMode ? 'bg-white text-slate-900 shadow-sm border border-white font-bold' : 'bg-slate-900 text-white shadow-sm border border-slate-900 font-bold';
     }
 
@@ -950,7 +950,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               ? darkMode
                 ? 'border-fuchsia-400/20 text-white'
                 : 'border-violet-300/40 text-slate-800'
-              : uiStyle === 'minimal_clean'
+              : uiStyle === 'minimal_clean' || uiStyle === 'ai_minimal'
                 ? darkMode ? 'bg-[#0f172a] border-slate-800 text-white' : 'bg-white border-slate-200 text-slate-800'
                 : uiStyle === 'neumorphism_soft'
                   ? darkMode ? 'bg-slate-900 border-slate-800 text-slate-100' : 'bg-[#e6ebf2] border-white/80 text-slate-700'

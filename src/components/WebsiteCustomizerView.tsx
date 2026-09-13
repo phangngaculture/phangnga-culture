@@ -24,7 +24,7 @@ import {
 import { playAppSound } from '../utils/thaiDate';
 
 // Supported style types
-export type UiStyleType = 'modern' | 'ribbon' | 'classic' | 'slim_rail' | 'double_panel' | 'eevo_sleek' | 'aurora_glass' | 'minimal_clean' | 'neumorphism_soft' | 'midnight_navy' | 'obsidian_prism';
+export type UiStyleType = 'modern' | 'ribbon' | 'classic' | 'slim_rail' | 'double_panel' | 'eevo_sleek' | 'aurora_glass' | 'minimal_clean' | 'neumorphism_soft' | 'midnight_navy' | 'obsidian_prism' | 'ai_minimal';
 export type MenuColorType = 'orange' | 'emerald' | 'indigo' | 'rose' | 'violet';
 export type FontSizeCodeType = 'small' | 'medium' | 'large';
 
@@ -84,6 +84,13 @@ export const WebsiteCustomizerView: React.FC<WebsiteCustomizerViewProps> = ({
   }, [uiStyle, menuButtonColor, sidebarOpacity, fontSize]);
 
   const styleOptions = [
+    {
+      id: 'ai_minimal' as const,
+      name: '11. AI Minimal Lavender',
+      desc: 'ดีไซน์ทั้งระบบแบบ AI Dashboard สีขาว-ลาเวนเดอร์ โปร่ง สะอาด และอ่านง่ายบน iPad',
+      badge: 'ทั้งระบบ',
+      badgeColor: 'bg-violet-500/10 text-violet-500 border-violet-500/30'
+    },
     {
       id: 'obsidian_prism' as const,
       name: '10. Obsidian Prism',

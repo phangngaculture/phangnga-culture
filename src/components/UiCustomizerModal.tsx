@@ -2,7 +2,7 @@ import React from 'react';
 import { X, Palette, Sliders, Type, Grid, Check, Sparkles, Wand2 } from 'lucide-react';
 import { playAppSound } from '../utils/thaiDate';
 
-export type UiStyleType = 'modern' | 'ribbon' | 'slim_rail' | 'double_panel' | 'classic' | 'eevo_sleek' | 'aurora_glass' | 'minimal_clean' | 'neumorphism_soft' | 'midnight_navy' | 'obsidian_prism';
+export type UiStyleType = 'modern' | 'ribbon' | 'slim_rail' | 'double_panel' | 'classic' | 'eevo_sleek' | 'aurora_glass' | 'minimal_clean' | 'neumorphism_soft' | 'midnight_navy' | 'obsidian_prism' | 'ai_minimal';
 
 interface UiCustomizerModalProps {
   isOpen: boolean;
@@ -34,6 +34,12 @@ export const UiCustomizerModal: React.FC<UiCustomizerModalProps> = ({
   if (!isOpen) return null;
 
   const styleOptions = [
+    {
+      id: 'ai_minimal' as const,
+      name: '11. AI Minimal Lavender',
+      desc: 'ธีมขาวสะอาดแบบ AI Dashboard ใช้ม่วงลาเวนเดอร์ การ์ดโปร่ง และปุ่ม Active ทรง Pill',
+      previewClass: 'bg-gradient-to-br from-white to-violet-50 border-violet-300'
+    },
     {
       id: 'obsidian_prism' as const,
       name: '10. Obsidian Prism',

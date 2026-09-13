@@ -260,8 +260,8 @@ export default function App() {
   );
 
   // UI Customizer State
-  const [uiStyle, setUiStyle] = useState<'modern' | 'ribbon' | 'classic' | 'slim_rail' | 'double_panel' | 'eevo_sleek' | 'aurora_glass' | 'minimal_clean' | 'neumorphism_soft' | 'midnight_navy' | 'obsidian_prism'>(() =>
-    loadSavedData<'modern' | 'ribbon' | 'classic' | 'slim_rail' | 'double_panel' | 'eevo_sleek' | 'aurora_glass' | 'minimal_clean' | 'neumorphism_soft' | 'midnight_navy' | 'obsidian_prism'>('mculture_ui_style', 'modern')
+  const [uiStyle, setUiStyle] = useState<'modern' | 'ribbon' | 'classic' | 'slim_rail' | 'double_panel' | 'eevo_sleek' | 'aurora_glass' | 'minimal_clean' | 'neumorphism_soft' | 'midnight_navy' | 'obsidian_prism' | 'ai_minimal'>(() =>
+    loadSavedData<'modern' | 'ribbon' | 'classic' | 'slim_rail' | 'double_panel' | 'eevo_sleek' | 'aurora_glass' | 'minimal_clean' | 'neumorphism_soft' | 'midnight_navy' | 'obsidian_prism' | 'ai_minimal'>('mculture_ui_style', 'modern')
   );
   const [menuButtonColor, setMenuButtonColor] = useState<'orange' | 'emerald' | 'indigo' | 'rose' | 'violet'>(() =>
     loadSavedData<'orange' | 'emerald' | 'indigo' | 'rose' | 'violet'>('mculture_menu_button_color', 'orange')
@@ -1642,7 +1642,7 @@ export default function App() {
   }
 
   return (
-    <div className="h-screen h-dvh 2xl:h-auto 2xl:min-h-screen overflow-hidden 2xl:overflow-visible bg-slate-100/70 dark:bg-slate-950 text-slate-800 dark:text-slate-100 flex flex-col justify-between selection:bg-orange-500 selection:text-white transition-colors duration-200">
+    <div className={`h-screen h-dvh 2xl:h-auto 2xl:min-h-screen overflow-hidden 2xl:overflow-visible bg-slate-100/70 dark:bg-slate-950 text-slate-800 dark:text-slate-100 flex flex-col justify-between selection:bg-orange-500 selection:text-white transition-colors duration-200 ${uiStyle === 'ai_minimal' ? 'theme-ai-minimal' : ''}`}>
 
       {/* Toast Banner */}
       <ToastBanner message={toast.message} type={toast.type} />
