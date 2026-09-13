@@ -260,8 +260,8 @@ export default function App() {
   );
 
   // UI Customizer State
-  const [uiStyle, setUiStyle] = useState<'modern' | 'ribbon' | 'classic' | 'slim_rail' | 'double_panel' | 'eevo_sleek'>(() =>
-    loadSavedData<'modern' | 'ribbon' | 'classic' | 'slim_rail' | 'double_panel' | 'eevo_sleek'>('mculture_ui_style', 'modern')
+  const [uiStyle, setUiStyle] = useState<'modern' | 'ribbon' | 'classic' | 'slim_rail' | 'double_panel' | 'eevo_sleek' | 'aurora_glass'>(() =>
+    loadSavedData<'modern' | 'ribbon' | 'classic' | 'slim_rail' | 'double_panel' | 'eevo_sleek' | 'aurora_glass'>('mculture_ui_style', 'modern')
   );
   const [menuButtonColor, setMenuButtonColor] = useState<'orange' | 'emerald' | 'indigo' | 'rose' | 'violet'>(() =>
     loadSavedData<'orange' | 'emerald' | 'indigo' | 'rose' | 'violet'>('mculture_menu_button_color', 'orange')

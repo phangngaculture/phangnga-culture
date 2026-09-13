@@ -2,7 +2,7 @@ import React from 'react';
 import { X, Palette, Sliders, Type, Grid, Check, Sparkles, Wand2 } from 'lucide-react';
 import { playAppSound } from '../utils/thaiDate';
 
-export type UiStyleType = 'modern' | 'ribbon' | 'slim_rail' | 'double_panel' | 'classic' | 'eevo_sleek';
+export type UiStyleType = 'modern' | 'ribbon' | 'slim_rail' | 'double_panel' | 'classic' | 'eevo_sleek' | 'aurora_glass';
 
 interface UiCustomizerModalProps {
   isOpen: boolean;
@@ -34,6 +34,12 @@ export const UiCustomizerModal: React.FC<UiCustomizerModalProps> = ({
   if (!isOpen) return null;
 
   const styleOptions = [
+    {
+      id: 'aurora_glass' as const,
+      name: '6. Aurora Glass (ดีไซน์ใหม่ล่าสุด)',
+      desc: 'Sidebar กระจกไล่เฉดน้ำเงิน-ม่วง พร้อมแสงเรืองขอบแบบพรีเมียม รองรับโหมดมืดและมือถือ',
+      previewClass: 'bg-gradient-to-br from-slate-900 via-slate-800 to-indigo-900 border-indigo-400/50'
+    },
     {
       id: 'modern' as const,
       name: '1. Standard Modern List',

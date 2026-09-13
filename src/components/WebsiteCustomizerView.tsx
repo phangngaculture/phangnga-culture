@@ -24,7 +24,7 @@ import {
 import { playAppSound } from '../utils/thaiDate';
 
 // Supported style types
-export type UiStyleType = 'modern' | 'ribbon' | 'classic' | 'slim_rail' | 'double_panel' | 'eevo_sleek';
+export type UiStyleType = 'modern' | 'ribbon' | 'classic' | 'slim_rail' | 'double_panel' | 'eevo_sleek' | 'aurora_glass';
 export type MenuColorType = 'orange' | 'emerald' | 'indigo' | 'rose' | 'violet';
 export type FontSizeCodeType = 'small' | 'medium' | 'large';
 
@@ -80,6 +80,13 @@ export const WebsiteCustomizerView: React.FC<WebsiteCustomizerViewProps> = ({
   }, [uiStyle, menuButtonColor, sidebarOpacity, fontSize]);
 
   const styleOptions = [
+    {
+      id: 'aurora_glass' as const,
+      name: '6. Aurora Glass (ดีไซน์ใหม่ล่าสุด)',
+      desc: 'แถบเมนูกระจกไล่เฉดน้ำเงิน-ม่วง มีแสงเรืองรอบขอบ ให้ความรู้สึกพรีเมียมและทันสมัย',
+      badge: 'พรีเมียมโมเดิร์น',
+      badgeColor: 'bg-indigo-500/10 text-indigo-400 border-indigo-500/30'
+    },
     {
       id: 'eevo_sleek' as const,
       name: '👑 EEVO Sleek Dark (สไตล์ใหม่ล่าสุด)',

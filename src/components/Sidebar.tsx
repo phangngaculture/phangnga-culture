@@ -62,7 +62,7 @@ interface SidebarProps {
   googleUser?: any;
   isGoogleConnected?: boolean;
   soundEnabled?: boolean;
-  uiStyle?: 'modern' | 'ribbon' | 'classic' | 'slim_rail' | 'double_panel' | 'eevo_sleek';
+  uiStyle?: 'modern' | 'ribbon' | 'classic' | 'slim_rail' | 'double_panel' | 'eevo_sleek' | 'aurora_glass';
   menuButtonColor?: 'orange' | 'emerald' | 'indigo' | 'rose' | 'violet';
   iconStyle?: 'gradient' | 'neon' | 'flat';
   fontSize?: 'small' | 'medium' | 'large';
@@ -899,23 +899,27 @@ export const Sidebar: React.FC<SidebarProps> = ({
       ) : (
         <aside
           style={
-            uiStyle === 'eevo_sleek'
+            uiStyle === 'eevo_sleek' || uiStyle === 'aurora_glass'
               ? {
-                  backgroundColor: darkMode
-                    ? 'rgba(12, 16, 27, 1.0)' // ทึบ 100% ในโหมด Dark
-                    : `rgba(255, 255, 255, ${sidebarOpacity})`, // สว่างขาวตามความโปร่งใสในโหมด Light
-                  backdropFilter: darkMode ? 'none' : 'blur(12px)',
-                  WebkitBackdropFilter: darkMode ? 'none' : 'blur(12px)',
+                  background: uiStyle === 'aurora_glass'
+                    ? `linear-gradient(155deg, rgba(15, 23, 42, ${Math.max(sidebarOpacity, 0.88)}) 0%, rgba(30, 41, 59, ${Math.max(sidebarOpacity * 0.92, 0.8)}) 48%, rgba(49, 46, 129, ${Math.max(sidebarOpacity * 0.9, 0.78)}) 100%)`
+                    : undefined,
+                  backgroundColor: uiStyle === 'aurora_glass'
+                    ? undefined
+                    : darkMode ? 'rgba(12, 16, 27, 1.0)' : `rgba(255, 255, 255, ${sidebarOpacity})`,
+                  backdropFilter: 'blur(18px)',
+                  WebkitBackdropFilter: 'blur(18px)',
+                  boxShadow: uiStyle === 'aurora_glass' ? '0 0 45px rgba(99, 102, 241, 0.18)' : undefined,
                 }
               : undefined
           }
           className={`fixed top-0 bottom-0 left-0 w-84 max-w-[85vw] z-50 transform transition-all duration-300 ease-out flex flex-col shadow-2xl border-r ${
             isOpen ? 'translate-x-0' : '-translate-x-full'
           } ${
-            uiStyle === 'eevo_sleek'
+            uiStyle === 'eevo_sleek' || uiStyle === 'aurora_glass'
               ? darkMode
-                ? 'border-slate-800/60 text-white'
-                : 'border-slate-200 text-slate-800'
+                ? 'border-indigo-400/20 text-white'
+                : 'border-indigo-300/40 text-slate-800'
               : uiStyle === 'ribbon'
                 ? 'bg-[#131326] border-slate-800/40 text-white'
                 : uiStyle === 'classic'
