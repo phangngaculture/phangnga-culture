@@ -143,7 +143,9 @@ export const LineSimulatorModal: React.FC<LineSimulatorModalProps> = ({
       carName: 'Toyota Camry (VIP เก๋ง)',
       driverType: 'driver',
       driverName: 'นายศราวุธ เกตุรักษ์',
-      status: 'pending'
+      passengerCount: 1,
+      status: 'pending',
+      createdAt: new Date().toISOString()
     };
 
     let title = '';
@@ -216,7 +218,9 @@ export const LineSimulatorModal: React.FC<LineSimulatorModalProps> = ({
       carName: 'Toyota Camry (VIP เก๋ง)',
       driverType: 'driver',
       driverName: 'นายศราวุธ เกตุรักษ์',
-      status: 'pending'
+      passengerCount: 1,
+      status: 'pending',
+      createdAt: new Date().toISOString()
     };
 
     const title = '🔔 ทดสอบส่งเข้า LINE จริง: ระบบยานพาหนะ สวจ.พังงา';

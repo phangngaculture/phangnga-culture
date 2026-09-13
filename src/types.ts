@@ -72,8 +72,24 @@ export interface User {
   lineNotificationEnabled?: boolean; // เปิด/ปิดการแจ้งเตือน LINE
 }
 
-export type BookingStatus = 'pending' | 'approved' | 'in_progress' | 'completed' | 'rejected' | 'cancelled';
+// 'pending_director' = submitted and awaiting director sign-off
+// 'pending_admin'    = approved, awaiting vehicle/driver assignment
+export type BookingStatus =
+  | 'pending'
+  | 'pending_director'
+  | 'pending_admin'
+  | 'approved'
+  | 'in_progress'
+  | 'completed'
+  | 'rejected'
+  | 'cancelled';
 export type MissionSubStatus = 'not_started' | 'in_progress' | 'returning' | 'completed' | 'cancelled';
+
+// Single source of truth for asset inspection results.
+// Previously types.ts, AssetInspectionModal.tsx and App.tsx each declared a different
+// set of literals, so the printed memo checked the wrong condition value.
+export type AssetInspectionStatus = 'pending' | 'accepted' | 'rejected';
+export type AssetInspectionCondition = 'normal' | 'needs_cleaning' | 'needs_maintenance';
 
 export interface BookingRequest {
   id: string;
@@ -153,11 +169,11 @@ export interface BookingRequest {
   assetInspectorName?: string;
   assetInspectorPosition?: string;
   assetInspectedAt?: string;
-  assetInspectionStatus?: 'pending' | 'accepted' | 'issue_found';
+  assetInspectionStatus?: AssetInspectionStatus;
   assetInspectionNote?: string;
   assetInspectionSignature?: string; // Digital signature data URL or electronic sign
   assetInspectionSignatureType?: 'draw' | 'electronic';
-  assetInspectionVehicleCondition?: 'normal' | 'needs_cleaning' | 'needs_repair';
+  assetInspectionVehicleCondition?: AssetInspectionCondition;
 }
 
 export interface Vehicle {

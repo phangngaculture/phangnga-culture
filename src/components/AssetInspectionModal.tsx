@@ -1,5 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { BookingRequest, User } from '../types';
+import {
+  BookingRequest,
+  User,
+  AssetInspectionStatus,
+  AssetInspectionCondition
+} from '../types';
 import { formatThaiDate } from '../utils/thaiDate';
 import {
   X,
@@ -28,9 +33,9 @@ interface AssetInspectionModalProps {
       assetInspectorName: string;
       assetInspectorPosition: string;
       assetInspectedAt: string;
-      assetInspectionStatus: 'accepted' | 'rejected' | 'pending';
+      assetInspectionStatus: AssetInspectionStatus;
       assetInspectionNote?: string;
-      assetInspectionVehicleCondition: 'normal' | 'needs_cleaning' | 'needs_maintenance';
+      assetInspectionVehicleCondition: AssetInspectionCondition;
       assetInspectionSignature: string;
       assetInspectionSignatureType: 'draw' | 'electronic';
     }
@@ -46,7 +51,7 @@ export const AssetInspectionModal: React.FC<AssetInspectionModalProps> = ({
 }) => {
   const [inspectorName, setInspectorName] = useState<string>('');
   const [inspectorPosition, setInspectorPosition] = useState<string>('เจ้าหน้าที่พัสดุ');
-  const [condition, setCondition] = useState<'normal' | 'needs_cleaning' | 'needs_maintenance'>('normal');
+  const [condition, setCondition] = useState<AssetInspectionCondition>('normal');
   const [inspectionNote, setInspectionNote] = useState<string>('ตรวจรับยานพาหนะและเลขไมล์ถูกต้องเรียบร้อย สภาพรถพร้อมใช้งาน');
   const [signatureMode, setSignatureMode] = useState<'draw' | 'electronic'>('draw');
 

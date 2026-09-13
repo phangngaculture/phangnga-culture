@@ -235,12 +235,13 @@ export const BookingFormView: React.FC<BookingFormViewProps> = ({
   const [gpsError, setGpsError] = useState<string | null>(null);
   const [gpsSuccessMsg, setGpsSuccessMsg] = useState<string | null>(null);
   const [isRoundTrip, setIsRoundTrip] = useState<boolean>(true);
+  // Must mirror the actual return type of calculateTripGpsDistance in utils/gpsDistance.ts,
+  // which returns no `oneWayKm` and includes durationText/straightLineKm in each leg.
   const [gpsCalculationResult, setGpsCalculationResult] = useState<{
-    oneWayKm: number;
     totalDistanceKm: number;
     straightLineKm: number;
     estimatedDurationText: string;
-    legs: Array<{ from: string; to: string; distanceKm: number }>;
+    legs: Array<{ from: string; to: string; distanceKm: number; durationText: string; straightLineKm: number }>;
   } | null>(null);
 
   // Real-time Collision Detection: Checks whenever carId, date, endDate, startTime, or endTime changes

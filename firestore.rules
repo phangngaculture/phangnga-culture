@@ -4,7 +4,7 @@ service cloud.firestore {
 
     // Helper functions for validating statuses, mileage, and mission integrity
     function isValidStatus(status) {
-      return status in ['pending', 'approved', 'in_progress', 'completed', 'rejected', 'cancelled'];
+      return status in ['pending', 'pending_director', 'pending_admin', 'approved', 'in_progress', 'completed', 'rejected', 'cancelled'];
     }
 
     function isValidMissionStatus(mStatus) {
@@ -40,7 +40,9 @@ service cloud.firestore {
           resource.data.status == 'approved' ||
           resource.data.status == 'in_progress'
         );
-      allow delete: if true;
+      // Deleting records must be authenticated — an open delete rule let anyone
+      // holding the public web config wipe the entire fleet history.
+      allow delete: if request.auth != null;
     }
 
     match /vehicles/{vehicleId} {
@@ -48,7 +50,7 @@ service cloud.firestore {
       allow create, update: if request.resource.data.name is string &&
                                request.resource.data.plate is string &&
                                request.resource.data.status in ['available', 'in_mission', 'maintenance'];
-      allow delete: if true;
+      allow delete: if request.auth != null;
     }
 
     match /fuelLogs/{logId} {
@@ -56,7 +58,7 @@ service cloud.firestore {
       allow create, update: if request.resource.data.carPlate is string &&
                                request.resource.data.cost is number &&
                                request.resource.data.cost >= 0;
-      allow delete: if true;
+      allow delete: if request.auth != null;
     }
 
     match /maintenanceRecords/{recordId} {
@@ -65,7 +67,7 @@ service cloud.firestore {
                                request.resource.data.title is string &&
                                request.resource.data.cost is number &&
                                request.resource.data.cost >= 0;
-      allow delete: if true;
+      allow delete: if request.auth != null;
     }
 
     match /users/{userId} {
@@ -73,19 +75,19 @@ service cloud.firestore {
       allow create, update: if request.resource.data.username is string &&
                                request.resource.data.name is string &&
                                request.resource.data.role is string;
-      allow delete: if true;
+      allow delete: if request.auth != null;
     }
 
     match /passengers/{passengerId} {
       allow read: if true;
       allow create, update: if request.resource.data.name is string;
-      allow delete: if true;
+      allow delete: if request.auth != null;
     }
 
     match /notifications/{notificationId} {
       allow read: if true;
       allow create, update: if request.resource.data.title is string;
-      allow delete: if true;
+      allow delete: if request.auth != null;
     }
 
     // Health check & connection validation collection

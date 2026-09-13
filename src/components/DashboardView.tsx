@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { BookingRequest, Vehicle, User, DashboardSubView } from '../types';
 import { formatThaiDate } from '../utils/thaiDate';
 import {
@@ -98,18 +98,18 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   const [vehicleFilterStatus, setVehicleFilterStatus] = useState<string>('all');
   const [vehicleSearchQuery, setVehicleSearchQuery] = useState<string>('');
 
-  // Calculate high-level counts and statistics
+  // Calculate high-level counts and statistics (memoized to avoid recalculation on every render)
   const totalCount = bookings.length;
-  const pendingCount = bookings.filter((b) => b.status === 'pending').length;
-  const pendingDirectorCount = bookings.filter((b) => b.status === 'pending_director').length;
-  const approvedCount = bookings.filter((b) => b.status === 'approved').length;
-  const inProgressCount = bookings.filter((b) => b.status === 'in_progress').length;
-  const completedCount = bookings.filter((b) => b.status === 'completed').length;
-  const rejectedCount = bookings.filter((b) => b.status === 'rejected').length;
+  const pendingCount = useMemo(() => bookings.filter((b) => b.status === 'pending').length, [bookings]);
+  const pendingDirectorCount = useMemo(() => bookings.filter((b) => b.status === 'pending_director').length, [bookings]);
+  const approvedCount = useMemo(() => bookings.filter((b) => b.status === 'approved').length, [bookings]);
+  const inProgressCount = useMemo(() => bookings.filter((b) => b.status === 'in_progress').length, [bookings]);
+  const completedCount = useMemo(() => bookings.filter((b) => b.status === 'completed').length, [bookings]);
+  const rejectedCount = useMemo(() => bookings.filter((b) => b.status === 'rejected').length, [bookings]);
 
-  const availableVehiclesCount = vehicles.filter((v) => v.status === 'available').length;
-  const inMissionVehiclesCount = vehicles.filter((v) => v.status === 'in_mission').length;
-  const maintenanceVehiclesCount = vehicles.filter((v) => v.status === 'maintenance').length;
+  const availableVehiclesCount = useMemo(() => vehicles.filter((v) => v.status === 'available').length, [vehicles]);
+  const inMissionVehiclesCount = useMemo(() => vehicles.filter((v) => v.status === 'in_mission').length, [vehicles]);
+  const maintenanceVehiclesCount = useMemo(() => vehicles.filter((v) => v.status === 'maintenance').length, [vehicles]);
 
   // Filter and safely sort bookings
   const filteredBookings = bookings.filter((b) => {

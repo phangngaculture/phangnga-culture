@@ -378,7 +378,9 @@ export const UserSignatureModal: React.FC<UserSignatureModalProps> = ({
 
   const handleSave = () => {
     let finalSignatureUrl = '';
-    let finalType: 'draw' | 'image' | 'electronic' = activeTab;
+    // The UI tab is named 'upload', but the persisted signatureType vocabulary is
+    // 'draw' | 'image' | 'electronic' — map the tab name to the stored value.
+    let finalType: 'draw' | 'image' | 'electronic' = activeTab === 'upload' ? 'image' : activeTab;
 
     if (activeTab === 'draw') {
       const canvas = canvasRef.current;
@@ -389,6 +391,7 @@ export const UserSignatureModal: React.FC<UserSignatureModalProps> = ({
       finalSignatureUrl = canvas.toDataURL('image/png');
       finalType = 'draw';
     } else if (activeTab === 'upload') {
+      finalType = 'image';
       if (!uploadedImage) {
         alert('กรุณาเลือกไฟล์ภาพลายเซ็นที่ต้องการอัปโหลด');
         return;

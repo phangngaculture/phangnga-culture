@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { BookingRequest, FuelLog, Vehicle } from '../types';
 import { printElementById } from '../utils/printHelper';
 import {
@@ -27,13 +27,13 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
   vehicles
 }) => {
   const totalBookings = bookings.length;
-  const approvedBookings = bookings.filter((b) => b.status === 'approved' || b.status === 'completed').length;
-  const totalDistance = fuelLogs.reduce((sum, f) => sum + f.distance, 0);
-  const totalFuelCost = fuelLogs.reduce((sum, f) => sum + f.cost, 0);
-  const totalLitres = fuelLogs.reduce((sum, f) => sum + f.litres, 0);
+  const approvedBookings = useMemo(() => bookings.filter((b) => b.status === 'approved' || b.status === 'completed').length, [bookings]);
+  const totalDistance = useMemo(() => fuelLogs.reduce((sum, f) => sum + f.distance, 0), [fuelLogs]);
+  const totalFuelCost = useMemo(() => fuelLogs.reduce((sum, f) => sum + f.cost, 0), [fuelLogs]);
+  const totalLitres = useMemo(() => fuelLogs.reduce((sum, f) => sum + f.litres, 0), [fuelLogs]);
 
   // Group by vehicle
-  const vehicleStats = vehicles.map((v) => {
+  const vehicleStats = useMemo(() => vehicles.map((v) => {
     const vBookings = bookings.filter((b) => b.carId === v.id || b.carName.includes(v.plate.split(' ')[0]));
     const vFuel = fuelLogs.filter((f) => f.carPlate.includes(v.plate.split(' ')[0]));
     const dist = vFuel.reduce((sum, f) => sum + f.distance, 0);
@@ -46,13 +46,16 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
       distance: dist || (vBookings.length * 110),
       cost: cost || (vBookings.length * 480)
     };
-  });
+  }), [vehicles, bookings, fuelLogs]);
 
   // Group by department
-  const deptStats: Record<string, number> = {};
-  bookings.forEach((b) => {
-    deptStats[b.department] = (deptStats[b.department] || 0) + 1;
-  });
+  const deptStats: Record<string, number> = useMemo(() => {
+    const stats: Record<string, number> = {};
+    bookings.forEach((b) => {
+      stats[b.department] = (stats[b.department] || 0) + 1;
+    });
+    return stats;
+  }, [bookings]);
 
   // Export CSV with UTF-8 BOM, sorted by travel date (oldest to newest: asc), then time, then id
   const exportCsv = () => {

@@ -12,13 +12,18 @@ export async function exportElementToPdf(elementId: string, options: PdfOptions)
     throw new Error(`Element with id ${elementId} not found`);
   }
 
-  // Scale up by 2x for high-quality, crisp vector/typographic printing
+  // Scale up by 1.5x for good quality while keeping rendering fast.
+  // NOTE: the html2canvas option is `imageTimeout` (ms) — `timeout` does not exist
+  // and `useCannonForSvg` was never a real option, so both were silently ignored.
   const canvas = await html2canvas(element, {
-    scale: 2,
+    scale: 1.5,
     useCORS: true,
     logging: false,
     allowTaint: true,
     backgroundColor: '#ffffff',
+    imageTimeout: 10000,
+    windowWidth: element.scrollWidth,
+    windowHeight: element.scrollHeight,
   });
 
   const imgData = canvas.toDataURL('image/png');

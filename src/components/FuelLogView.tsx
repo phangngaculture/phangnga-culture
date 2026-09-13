@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { FuelLog, BookingRequest, Vehicle, User } from '../types';
 import { formatThaiDate } from '../utils/thaiDate';
 import {
@@ -30,7 +30,7 @@ export const FuelLogView: React.FC<FuelLogViewProps> = ({
   currentUser,
   onAddFuelLog
 }) => {
-  const approvedBookings = bookings.filter((b) => b.status === 'approved');
+  const approvedBookings = useMemo(() => bookings.filter((b) => b.status === 'approved'), [bookings]);
 
   const [bookingId, setBookingId] = useState<string>(approvedBookings[0]?.id || '');
   const [startMileage, setStartMileage] = useState<number>(89430);

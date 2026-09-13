@@ -1030,7 +1030,7 @@ export const OfficialMemoModal: React.FC<OfficialMemoModalProps> = ({
                               {booking.assetInspectionVehicleCondition === 'needs_cleaning' ? '☑' : '☐'} ควรทำความสะอาด
                             </span>
                             <span>
-                              {booking.assetInspectionVehicleCondition === 'needs_repair' ? '☑' : '☐'} ส่งซ่อม
+                              {booking.assetInspectionVehicleCondition === 'needs_maintenance' ? '☑' : '☐'} ส่งซ่อม
                             </span>
                           </div>
                         </div>

@@ -181,11 +181,11 @@ export const DriverMissionView: React.FC<DriverMissionViewProps> = ({
     });
   }, [bookings, selectedDriverFilter, statusFilter, searchQuery, currentUser, allUsers]);
 
-  // KPIs
-  const readyCount = bookings.filter((b) => b.status === 'approved').length;
-  const inProgressCount = bookings.filter((b) => b.status === 'in_progress').length;
-  const completedCount = bookings.filter((b) => b.status === 'completed').length;
-  const totalKmSum = bookings.reduce((sum, b) => sum + (b.totalDistance || 0), 0);
+  // KPIs (memoized to avoid recalculation on each render)
+  const readyCount = useMemo(() => bookings.filter((b) => b.status === 'approved').length, [bookings]);
+  const inProgressCount = useMemo(() => bookings.filter((b) => b.status === 'in_progress').length, [bookings]);
+  const completedCount = useMemo(() => bookings.filter((b) => b.status === 'completed').length, [bookings]);
+  const totalKmSum = useMemo(() => bookings.reduce((sum, b) => sum + (b.totalDistance || 0), 0), [bookings]);
 
   // Safe opening handlers with validation
   const handleOpenStartModal = (b: BookingRequest) => {

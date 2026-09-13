@@ -116,8 +116,8 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
         const matchDest = b.destination?.toLowerCase().includes(q);
         const matchUser = b.name?.toLowerCase().includes(q);
         const matchCar = b.carName?.toLowerCase().includes(q);
-        const matchPlate = b.carPlate?.toLowerCase().includes(q);
-        if (!matchPurpose && !matchDest && !matchUser && !matchCar && !matchPlate) {
+        // BookingRequest stores the vehicle label in carName; there is no carPlate field.
+        if (!matchPurpose && !matchDest && !matchUser && !matchCar) {
           return false;
         }
       }
@@ -159,7 +159,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
 
   return (
     <div className="space-y-6 animate-fadeIn pb-12">
-      
+
       {/* 1. Header Banner & Quick Controls */}
       <div className="bg-white rounded-3xl p-6 border border-slate-200/90 shadow-sm relative overflow-hidden">
         {/* Background Decorative Gradient Orbs */}
@@ -389,14 +389,14 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
       </div>
 
       {/* 3. MAIN CONTENT: Switch between View Modes */}
-      
+
       {/* MODE A: MONTH GRID VIEW */}
       {viewMode === 'month' && (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-          
+
           {/* Calendar Month Matrix (8 Cols) */}
           <div className="lg:col-span-8 bg-white rounded-3xl p-5 md:p-6 border border-slate-200/90 shadow-sm space-y-4">
-            
+
             {/* Weekday Headers */}
             <div className="grid grid-cols-7 gap-2 text-center">
               {WEEKDAY_NAMES.map((wd, i) => (
@@ -564,7 +564,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
           {/* Right: Selected Day Inspector & Mission Hub (4 Cols) */}
           <div className="lg:col-span-4 space-y-4">
             <div className="bg-white rounded-3xl p-5 md:p-6 border border-slate-200/90 shadow-sm space-y-4 sticky top-20">
-              
+
               {/* Header with Thai Date */}
               <div className="flex justify-between items-start border-b border-slate-100 pb-4">
                 <div>
@@ -678,7 +678,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                             <span className="text-slate-400 block text-[10px]">ยานพาหนะ:</span>
                             <div className="mt-0.5">
                               <span className="thai-license-badge text-[10px]">
-                                {b.carPlate || vObj?.plate || b.carName}
+                                {vObj?.plate || b.carName}
                               </span>
                             </div>
                           </div>
@@ -696,7 +696,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                           <div className="flex items-center space-x-3 text-slate-500 text-[11px]">
                             <span className="flex items-center space-x-1">
                               <Users className="w-3 h-3 text-slate-400" />
-                              <span>{b.passengers?.length || 1} คน</span>
+                              <span>{b.passengerCount || 1} คน</span>
                             </span>
                             <span className="flex items-center space-x-1 truncate max-w-[120px]">
                               <UserIcon className="w-3 h-3 text-slate-400" />
@@ -742,7 +742,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
           {/* Timeline Table with Horizontal Scroll */}
           <div className="overflow-x-auto pb-4">
             <div className="min-w-[1000px]">
-              
+
               {/* Day Header Row */}
               <div className="grid grid-cols-[220px_repeat(31,_minmax(28px,_1fr))] gap-1 pb-2 border-b border-slate-200 text-center font-bold text-[11px]">
                 <div className="text-left pl-3 text-slate-500 font-semibold">ยานพาหนะ</div>
@@ -918,7 +918,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                             {b.id}
                           </span>
                           <span className="thai-license-badge text-[10px]">
-                            {b.carPlate || vObj?.plate || b.carName}
+                            {vObj?.plate || b.carName}
                           </span>
                           <span
                             className={`text-[10px] px-2.5 py-0.5 rounded-full font-bold border ${

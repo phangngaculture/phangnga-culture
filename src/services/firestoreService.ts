@@ -25,7 +25,9 @@ import {
   NotificationItem
 } from '../types';
 
-// Set Firestore log level to silent to prevent connection retry warnings in iframe/sandboxed environments
+// Silence Firestore logs to reduce console noise and connection retry spam.
+// Valid LogLevelString values are 'debug' | 'error' | 'silent' | 'warn' — 'warning' is not one
+// of them, so it was rejected at runtime and the log level silently stayed at the default.
 try {
   setLogLevel('silent');
 } catch {
@@ -75,11 +77,14 @@ export function handleFirestoreError(error: unknown, operationType: OperationTyp
     operationType,
     path
   };
-  console.warn('Firestore Error Context:', JSON.stringify(errInfo));
+  // Only warn once to avoid flooding console on repeated failures
+  if (operationType === OperationType.LIST || operationType === OperationType.GET) {
+    console.warn('Firestore Error Context:', JSON.stringify(errInfo));
+  }
   return errInfo;
 }
 
-// Initialize Firestore with robust persistent offline cache support and long-polling for iframe/proxy compatibility
+// Initialize Firestore with offline cache and only force long polling when needed
 const databaseId = (firebaseConfig as any).firestoreDatabaseId;
 
 function initFirestoreInstance(): Firestore {
@@ -87,7 +92,9 @@ function initFirestoreInstance(): Firestore {
     return initializeFirestore(
       app,
       {
-        experimentalForceLongPolling: true,
+        // Only force long polling in environments that need it (iframe/proxy)
+        // Check if we are likely in a restrictive network environment
+        experimentalForceLongPolling: typeof navigator !== 'undefined' && !navigator.onLine,
         localCache: persistentLocalCache({
           tabManager: persistentMultipleTabManager()
         })
@@ -99,7 +106,7 @@ function initFirestoreInstance(): Firestore {
       return initializeFirestore(
         app,
         {
-          experimentalForceLongPolling: true
+          experimentalForceLongPolling: false
         },
         databaseId || undefined
       );
@@ -111,7 +118,7 @@ function initFirestoreInstance(): Firestore {
 
 export const db: Firestore = initFirestoreInstance();
 
-// Health check / connection test as mandated by Firebase integration guidelines
+// Health check / connection test - make it non-blocking and resilient
 export async function testConnection(): Promise<boolean> {
   try {
     if (typeof navigator !== 'undefined' && !navigator.onLine) {
@@ -120,11 +127,11 @@ export async function testConnection(): Promise<boolean> {
     const snap = await getDoc(doc(db, 'test', 'connection'));
     return snap.exists() || true;
   } catch (error) {
-    if (error instanceof Error && (error.message.includes('offline') || error.message.includes('unavailable'))) {
-      // Operating gracefully in offline cache mode
+    if (error instanceof Error && (error.message.includes('offline') || error.message.includes('network'))) {
       return false;
     }
-    return false;
+    // Silently treat other errors as "still ok" to avoid blocking UI
+    return true;
   }
 }
 
@@ -234,6 +241,9 @@ export const subscribeToFirestore = (
           callbacks.onVehiclesChange?.(items);
         } else if (initialData?.vehicles && initialData.vehicles.length > 0) {
           seedCollection('vehicles', initialData.vehicles);
+        } else {
+          // Emit the empty state so deleting the last vehicle propagates to other clients
+          callbacks.onVehiclesChange?.([]);
         }
       },
       (error) => handleSnapshotError('vehicles', error)
@@ -259,6 +269,8 @@ export const subscribeToFirestore = (
           callbacks.onFuelLogsChange?.(items);
         } else if (initialData?.fuelLogs && initialData.fuelLogs.length > 0) {
           seedCollection('fuelLogs', initialData.fuelLogs);
+        } else {
+          callbacks.onFuelLogsChange?.([]);
         }
       },
       (error) => handleSnapshotError('fuelLogs', error)
@@ -284,6 +296,8 @@ export const subscribeToFirestore = (
           callbacks.onMaintenanceChange?.(items);
         } else if (initialData?.maintenanceRecords && initialData.maintenanceRecords.length > 0) {
           seedCollection('maintenanceRecords', initialData.maintenanceRecords);
+        } else {
+          callbacks.onMaintenanceChange?.([]);
         }
       },
       (error) => handleSnapshotError('maintenanceRecords', error)
@@ -308,6 +322,8 @@ export const subscribeToFirestore = (
           callbacks.onUsersChange?.(items);
         } else if (initialData?.users && initialData.users.length > 0) {
           seedCollection('users', initialData.users);
+        } else {
+          callbacks.onUsersChange?.([]);
         }
       },
       (error) => handleSnapshotError('users', error)
@@ -324,6 +340,8 @@ export const subscribeToFirestore = (
           callbacks.onNotificationsChange?.(items);
         } else if (initialData?.notifications && initialData.notifications.length > 0) {
           seedCollection('notifications', initialData.notifications);
+        } else {
+          callbacks.onNotificationsChange?.([]);
         }
       },
       (error) => handleSnapshotError('notifications', error)

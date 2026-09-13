@@ -6,7 +6,10 @@ import {
   User,
   Vehicle,
   MaintenanceRecord,
-  DashboardSubView
+  DashboardSubView,
+  MenuKey,
+  AssetInspectionStatus,
+  AssetInspectionCondition
 } from './types';
 import {
   SYSTEM_USERS,
@@ -79,6 +82,7 @@ import { MobileBottomNav } from './components/MobileBottomNav';
 import { MobileAppInstallBanner } from './components/MobileAppInstallBanner';
 import { ToastBanner } from './components/ToastBanner';
 import { LoginScreen } from './components/LoginScreen';
+import { ErrorBoundary } from './components/ErrorBoundary';
 import { LineSimulatorModal } from './components/LineSimulatorModal';
 import { VoiceAlertSettingsModal } from './components/VoiceAlertSettingsModal';
 import { ShieldAlert } from 'lucide-react';
@@ -141,12 +145,14 @@ export default function App() {
       }
     });
 
-    // Ensure admin has standard permissions and active status
+    // Ensure admin has standard permissions and active status.
+    // NOTE: never overwrite the stored password here — doing so silently reverted any
+    // password the admin had changed as soon as the page was refreshed.
     const admin = usersMap.get('admin');
     if (admin) {
       usersMap.set('admin', {
         ...admin,
-        password: 'dekcom2537',
+        password: admin.password || 'dekcom2537',
         role: 'admin',
         status: 'active',
         allowedMenus: ['dashboard', 'calendar', 'booking', 'director', 'driver_mission', 'fuel', 'fleet', 'analytics', 'tracking', 'backup', 'users']
@@ -167,7 +173,8 @@ export default function App() {
     }
     const adminUser: User = {
       ...loaded,
-      password: 'dekcom2537',
+      // Preserve the password the admin actually set; only fall back when unset.
+      password: loaded.password || 'dekcom2537',
       role: 'admin',
       allowedMenus: ['dashboard', 'calendar', 'booking', 'director', 'driver_mission', 'fuel', 'fleet', 'analytics', 'tracking', 'backup', 'users']
     };
@@ -186,7 +193,7 @@ export default function App() {
     }
 
     let loaded = loadSavedData<BookingRequest[]>(STORAGE_KEYS.BOOKINGS, INITIAL_BOOKINGS);
-    
+
     // If user has existing localStorage with fewer than 10 items, complement with the 10 mock missions
     if (loaded && loaded.length < INITIAL_BOOKINGS.length) {
       const existingIds = new Set(loaded.map((b) => b.id));
@@ -395,11 +402,10 @@ export default function App() {
 
       if (bookingIdParam) {
         const found = bookings.find((b) => b.id.toLowerCase() === bookingIdParam.toLowerCase());
+        // Only pass a real booking. Passing a partial object cast as BookingRequest
+        // leaves required fields undefined and crashes the downstream view (white screen).
         if (found) {
           setTargetMissionBooking(found);
-        } else {
-          // If bookings not loaded yet or ID is placeholder, pass minimal object
-          setTargetMissionBooking({ id: bookingIdParam } as BookingRequest);
         }
       }
     } catch (e) {
@@ -878,7 +884,14 @@ export default function App() {
       playAppSound('success', soundEnabled);
       showToast(`บันทึกการแก้ไขใบเบิก ${editingBooking.id} สำเร็จ`, 'success');
     } else {
-      const seq = bookings.length + 1;
+      // Derive the next sequence from the highest existing CAR-690NN suffix rather than
+      // bookings.length, so deleting a booking cannot make the next one reuse its ID
+      // and silently overwrite that Firestore document.
+      const maxExistingSeq = bookings.reduce((max, b) => {
+        const match = /^CAR-690(\d+)$/.exec(b.id);
+        return match ? Math.max(max, parseInt(match[1], 10)) : max;
+      }, 0);
+      const seq = maxExistingSeq + 1;
       const newId = `CAR-690${seq < 10 ? '0' + seq : seq}`;
       const memoSeq = seq < 10 ? `๐๑${seq}` : `๐${seq + 10}`;
       const newMemoNo = `พง ๐๐๓๒(พิเศษ)/ว ${memoSeq}`;
@@ -1180,9 +1193,9 @@ export default function App() {
       assetInspectorName: string;
       assetInspectorPosition: string;
       assetInspectedAt: string;
-      assetInspectionStatus: 'accepted' | 'rejected' | 'pending';
+      assetInspectionStatus: AssetInspectionStatus;
       assetInspectionNote?: string;
-      assetInspectionVehicleCondition: 'normal' | 'needs_cleaning' | 'needs_maintenance';
+      assetInspectionVehicleCondition: AssetInspectionCondition;
       assetInspectionSignature: string;
       assetInspectionSignatureType: 'draw' | 'electronic';
     }
@@ -1581,7 +1594,7 @@ export default function App() {
 
   return (
     <div className="h-screen h-dvh 2xl:h-auto 2xl:min-h-screen overflow-hidden 2xl:overflow-visible bg-slate-100/70 dark:bg-slate-950 text-slate-800 dark:text-slate-100 flex flex-col justify-between selection:bg-orange-500 selection:text-white transition-colors duration-200">
-      
+
       {/* Toast Banner */}
       <ToastBanner message={toast.message} type={toast.type} />
 
@@ -1636,6 +1649,7 @@ export default function App() {
 
       {/* Main Content Area */}
       <main className="flex-grow flex-shrink min-h-0 overflow-y-auto 2xl:overflow-visible max-w-7xl w-full mx-auto px-3 sm:px-4 md:px-8 py-4 sm:py-6 pb-36 2xl:pb-8">
+        <ErrorBoundary>
         {activeTab === 'dashboard' && (
           <DashboardView
             bookings={bookings}
@@ -1694,8 +1708,8 @@ export default function App() {
           <AssetRegisterView
             bookings={bookings}
             vehicles={vehicles}
+            currentUser={currentUser}
             onViewMemo={(b) => setSelectedBookingForMemo(b)}
-            onNavigateToMissions={() => setActiveTab('driver_mission')}
           />
         )}
 
@@ -1852,6 +1866,7 @@ export default function App() {
             </div>
           </div>
         </footer>
+        </ErrorBoundary>
       </main>
 
       {/* Official Memorandum Modal (Full A4 Print & View) */}
@@ -1932,7 +1947,7 @@ export default function App() {
 
       {/* Mobile Native-Style Bottom Navigation Bar */}
       <MobileBottomNav
-        activeTab={activeTab}
+        activeTab={activeTab as MenuKey}
         onSelectTab={handleTabChange}
         onOpenBookingForm={handleOpenBookingForm}
         onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
@@ -1955,12 +1970,13 @@ export default function App() {
         onShowToast={showToast}
         onOpenMission={(bookingId) => {
           const target = bookings.find((b) => b.id.toLowerCase() === bookingId.toLowerCase());
+          // Only pass a complete booking object — a partial cast crashes DriverMissionView.
           if (target) {
             setTargetMissionBooking(target);
+            setActiveTab('driver_mission');
           } else {
-            setTargetMissionBooking({ id: bookingId } as BookingRequest);
+            showToast(`ไม่พบใบคำขอหมายเลข ${bookingId} ในระบบ`, 'error');
           }
-          setActiveTab('driver_mission');
         }}
         onViewMemo={(b) => setSelectedBookingForMemo(b)}
       />
