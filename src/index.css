@@ -709,3 +709,108 @@ html.text-sz-large .text-xl { font-size: 24px !important; }
 .theme-ai-minimal ::-webkit-scrollbar-thumb {
   background: rgba(139, 124, 205, 0.28);
 }
+
+/* AI Minimal Lavender — explicit light/dark palettes */
+html:not(.dark) .theme-ai-minimal {
+  background: #f7f7fc !important;
+  color: #302c45 !important;
+}
+
+html:not(.dark) .theme-ai-minimal .bg-slate-100\/70,
+html:not(.dark) .theme-ai-minimal .bg-slate-100\/80,
+html:not(.dark) .theme-ai-minimal .bg-slate-50 {
+  background-color: #f7f7fc !important;
+}
+
+html:not(.dark) .theme-ai-minimal .bg-white {
+  background-color: rgba(255, 255, 255, 0.92) !important;
+  border-color: #e8e3f7 !important;
+  box-shadow: 0 12px 30px rgba(112, 93, 184, 0.08) !important;
+}
+
+html:not(.dark) .theme-ai-minimal .text-slate-900,
+html:not(.dark) .theme-ai-minimal .text-slate-800 {
+  color: #302c45 !important;
+}
+
+html:not(.dark) .theme-ai-minimal .text-slate-700,
+html:not(.dark) .theme-ai-minimal .text-slate-600 {
+  color: #625d78 !important;
+}
+
+html:not(.dark) .theme-ai-minimal .text-slate-500,
+html:not(.dark) .theme-ai-minimal .text-slate-400 {
+  color: #8b86a2 !important;
+}
+
+html:not(.dark) .theme-ai-minimal .border-slate-200,
+html:not(.dark) .theme-ai-minimal .border-slate-100 {
+  border-color: #e8e3f7 !important;
+}
+
+html:not(.dark) .theme-ai-minimal input:not([type="checkbox"]),
+html:not(.dark) .theme-ai-minimal select,
+html:not(.dark) .theme-ai-minimal textarea {
+  background-color: #ffffff !important;
+  border-color: #e6e0f5 !important;
+  color: #302c45 !important;
+}
+
+html:not(.dark) .theme-ai-minimal aside {
+  background: rgba(255, 255, 255, 0.96) !important;
+  border-color: #ebe7f8 !important;
+  color: #302c45 !important;
+  box-shadow: 12px 0 36px rgba(112, 93, 184, 0.08) !important;
+}
+
+html.dark .theme-ai-minimal {
+  background: #070b1d !important;
+  color: #e9e7f5 !important;
+}
+
+html.dark .theme-ai-minimal .bg-slate-100\/70,
+html.dark .theme-ai-minimal .bg-slate-100\/80,
+html.dark .theme-ai-minimal .bg-slate-50 {
+  background-color: #070b1d !important;
+}
+
+html.dark .theme-ai-minimal .bg-white {
+  background-color: rgba(17, 25, 48, 0.88) !important;
+  border-color: rgba(83, 101, 143, 0.35) !important;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.25) !important;
+}
+
+html.dark .theme-ai-minimal .text-slate-900,
+html.dark .theme-ai-minimal .text-slate-800 {
+  color: #f1efff !important;
+}
+
+html.dark .theme-ai-minimal .text-slate-700,
+html.dark .theme-ai-minimal .text-slate-600 {
+  color: #b9b6cc !important;
+}
+
+html.dark .theme-ai-minimal .text-slate-500,
+html.dark .theme-ai-minimal .text-slate-400 {
+  color: #858aa4 !important;
+}
+
+html.dark .theme-ai-minimal .border-slate-200,
+html.dark .theme-ai-minimal .border-slate-100 {
+  border-color: rgba(83, 101, 143, 0.35) !important;
+}
+
+html.dark .theme-ai-minimal input:not([type="checkbox"]),
+html.dark .theme-ai-minimal select,
+html.dark .theme-ai-minimal textarea {
+  background-color: #111a31 !important;
+  border-color: rgba(83, 101, 143, 0.55) !important;
+  color: #f1efff !important;
+}
+
+html.dark .theme-ai-minimal aside {
+  background: #10182d !important;
+  border-color: rgba(83, 101, 143, 0.38) !important;
+  color: #f1efff !important;
+  box-shadow: 12px 0 36px rgba(0, 0, 0, 0.28) !important;
+}
