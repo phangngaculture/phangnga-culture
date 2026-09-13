@@ -409,6 +409,19 @@ export const Sidebar: React.FC<SidebarProps> = ({
   };
 
   const getIconContainerClass = (isActive: boolean, gradientStr: string) => {
+    if (uiStyle === 'ai_minimal') {
+      if (isActive) return 'bg-gradient-to-br from-violet-500 via-purple-500 to-indigo-500 text-white shadow-[0_7px_16px_rgba(112,84,238,0.35)] ring-1 ring-white/30';
+      const isEmerald = gradientStr.includes('emerald') || gradientStr.includes('teal');
+      const isBlue = gradientStr.includes('blue') || gradientStr.includes('sky') || gradientStr.includes('cyan');
+      const isRose = gradientStr.includes('rose') || gradientStr.includes('pink');
+      return isEmerald
+        ? 'bg-gradient-to-br from-emerald-400 to-teal-600 text-white shadow-[0_5px_12px_rgba(16,185,129,0.25)]'
+        : isBlue
+          ? 'bg-gradient-to-br from-sky-400 to-blue-600 text-white shadow-[0_5px_12px_rgba(59,130,246,0.25)]'
+          : isRose
+            ? 'bg-gradient-to-br from-pink-400 to-rose-600 text-white shadow-[0_5px_12px_rgba(244,63,94,0.25)]'
+            : 'bg-gradient-to-br from-violet-400 to-purple-600 text-white shadow-[0_5px_12px_rgba(139,92,246,0.25)]';
+    }
     if (isActive) {
       if (iconStyle === 'flat') return 'bg-white/20 text-white shadow-inner';
       if (iconStyle === 'neon') return 'bg-transparent text-white drop-shadow-[0_0_8px_currentColor] border border-current';
@@ -464,7 +477,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             >
               <div className="flex items-center space-x-3 min-w-0 pl-1">
                 <div
-                  className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-105 ${
+                  className={`${uiStyle === 'ai_minimal' ? 'w-11 h-11 rounded-[1rem]' : 'w-9 h-9 rounded-full'} flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-105 ${
                     getIconContainerClass(isActive, item.gradient)
                   }`}
                 >
@@ -615,7 +628,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         >
           <div className="flex items-center space-x-3 min-w-0 pl-1">
             <div
-              className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-105 ${
+              className={`${uiStyle === 'ai_minimal' ? 'w-11 h-11 rounded-[1rem]' : 'w-9 h-9 rounded-full'} flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-105 ${
                 getIconContainerClass(isActive, item.gradient)
               }`}
             >
