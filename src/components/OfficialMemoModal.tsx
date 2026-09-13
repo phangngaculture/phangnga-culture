@@ -83,20 +83,18 @@ export const OfficialMemoModal: React.FC<OfficialMemoModalProps> = ({
     }
   }, []);
 
-  if (!booking) return null;
-
-  const isOutOfProvince = booking.destProvince && booking.destProvince !== 'พังงา';
+  const isOutOfProvince = booking?.destProvince && booking.destProvince !== 'พังงา';
 
   const num = (val: string | number) => (useThaiNumerals ? toThaiNumerals(val) : val);
 
-  const formattedDate = formatThaiDate(booking.date, 'official');
+  const formattedDate = booking ? formatThaiDate(booking.date, 'official') : '';
   const memoDateDisplay = useThaiNumerals ? toThaiNumerals(formattedDate) : formattedDate;
 
   // Phone number: ส่วนราชการ: สำนักงานวัฒนธรรมจังหวัดพังงา โทร. 0 7648 1596
   const phoneDisplay = useThaiNumerals ? '๐ ๗๖๔๘ ๑๕๙๖' : '0 7648 1596';
 
   // Memo reference: ที่: พง0032(พิเศษ)/...
-  const rawMemoSeq = (booking.memoNo || booking.id)
+  const rawMemoSeq = (booking?.memoNo || booking?.id || '')
     .replace(/^พง\s*0030\.1\//, '')
     .replace(/^พง\s*0032\(พิเศษ\)\//, '')
     .replace(/^พง\s*๐๐๓๐\.๑\//, '')
@@ -134,6 +132,8 @@ export const OfficialMemoModal: React.FC<OfficialMemoModalProps> = ({
   const totalFuelCostAll = React.useMemo(() => {
     return vehicleBookings.reduce((sum, b) => sum + (b.fuelRefilledCost || 0), 0);
   }, [vehicleBookings]);
+
+  if (!booking) return null;
 
   const activeDocId = activeDocType === 'memo'
     ? 'printMemoArea'
