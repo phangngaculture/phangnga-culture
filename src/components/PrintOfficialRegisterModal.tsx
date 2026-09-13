@@ -194,31 +194,31 @@ export const PrintOfficialRegisterModal: React.FC<PrintOfficialRegisterModalProp
       <div className="bg-white rounded-3xl shadow-2xl border border-slate-200 w-full max-w-5xl overflow-hidden print:border-none print:shadow-none print:rounded-none max-h-[94vh] flex flex-col">
         
         {/* Modal Header Controls (Hidden in Print) */}
-        <div className="bg-slate-950 text-white p-4 flex items-center justify-between no-print print:hidden shrink-0 border-b border-slate-800">
+        <div className="bg-slate-950 text-white p-4 flex flex-col md:flex-row gap-4 md:items-center justify-between no-print print:hidden shrink-0 border-b border-slate-800">
           <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 rounded-xl bg-orange-600/20 text-orange-400 border border-orange-500/30 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-xl bg-orange-600/20 text-orange-400 border border-orange-500/30 flex items-center justify-center shrink-0">
               <Printer className="w-5 h-5 shrink-0" />
             </div>
             <div>
-              <h3 className="text-xs sm:text-sm font-bold text-white">
+              <h3 className="text-xs sm:text-sm font-bold text-white leading-tight">
                 พิมพ์ฟอร์มขอใช้รถและทะเบียนคุมรถยนต์ (สำหรับเจ้าหน้าที่พัสดุ)
               </h3>
-              <p className="text-[10px] text-slate-400">
+              <p className="text-[10px] text-slate-400 mt-0.5">
                 สำนักงานวัฒนธรรมจังหวัดพังงา — จัดทำเอกสารตามรอบเวลา รายวัน รายเดือน และรายปีงบประมาณ
               </p>
             </div>
           </div>
 
-          <div className="flex items-center space-x-2">
+          <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
             <button
               onClick={handleSavePdf}
               disabled={isGeneratingPdf}
-              className="no-print print-hide px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white rounded-xl text-xs font-bold transition flex items-center space-x-1.5 shadow-md cursor-pointer shrink-0"
+              className="flex-1 md:flex-none px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white rounded-xl text-xs font-bold transition flex items-center justify-center space-x-1.5 shadow-md cursor-pointer shrink-0"
             >
               {isGeneratingPdf ? (
                 <>
                   <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                  <span>กำลังสร้าง PDF...</span>
+                  <span>สร้าง PDF...</span>
                 </>
               ) : (
                 <>
@@ -230,15 +230,15 @@ export const PrintOfficialRegisterModal: React.FC<PrintOfficialRegisterModalProp
 
             <button
               onClick={handlePrint}
-              className="no-print print-hide px-3.5 py-1.5 bg-orange-600 hover:bg-orange-700 text-white rounded-xl text-xs font-bold transition flex items-center space-x-1.5 shadow-md shadow-orange-600/30 cursor-pointer shrink-0"
+              className="flex-1 md:flex-none px-3.5 py-1.5 bg-orange-600 hover:bg-orange-700 text-white rounded-xl text-xs font-bold transition flex items-center justify-center space-x-1.5 shadow-md shadow-orange-600/30 cursor-pointer shrink-0"
             >
               <Printer className="w-3.5 h-3.5" />
-              <span>สั่งพิมพ์เอกสาร (A4)</span>
+              <span>สั่งพิมพ์ A4</span>
             </button>
 
             <button
               onClick={onClose}
-              className="w-8 h-8 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center justify-center transition shrink-0"
+              className="w-8 h-8 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center justify-center transition shrink-0 ml-auto md:ml-0"
             >
               <X className="w-4 h-4" />
             </button>
@@ -420,10 +420,10 @@ export const PrintOfficialRegisterModal: React.FC<PrintOfficialRegisterModalProp
           <div
             id="printRegisterArea"
             ref={printContentRef}
-            className={`bg-white shadow-md print:shadow-none p-8 sm:p-12 print:p-0 select-text ${
+            className={`bg-white shadow-md print:shadow-none p-4 sm:p-12 print:p-0 select-text ${
               docType === 'register' 
                 ? 'w-full max-w-[297mm] print:w-full min-h-[210mm] text-[10px]' 
-                : 'w-[210mm] min-w-[210mm] max-w-[210mm] min-h-[297mm] h-auto text-[13pt] font-sarabun leading-[1.45] text-black'
+                : 'w-full max-w-[210mm] print:w-full min-h-[297mm] h-auto text-[13pt] font-sarabun leading-[1.45] text-black'
             }`}
             style={{
               fontFamily: docType === 'register' ? 'inherit' : "'TH Sarabun PSK', 'TH Sarabun New', 'Sarabun', sans-serif"

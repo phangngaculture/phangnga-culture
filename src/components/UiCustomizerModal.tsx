@@ -2,7 +2,7 @@ import React from 'react';
 import { X, Palette, Sliders, Type, Grid, Check, Sparkles, Wand2 } from 'lucide-react';
 import { playAppSound } from '../utils/thaiDate';
 
-export type UiStyleType = 'modern' | 'ribbon' | 'slim_rail' | 'double_panel' | 'classic';
+export type UiStyleType = 'modern' | 'ribbon' | 'slim_rail' | 'double_panel' | 'classic' | 'eevo_sleek';
 
 interface UiCustomizerModalProps {
   isOpen: boolean;

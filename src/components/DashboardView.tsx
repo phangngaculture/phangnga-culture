@@ -34,6 +34,7 @@ import {
 } from 'lucide-react';
 import { getUserAllowedMenus } from '../data/mockData';
 import { canUserExecuteMission } from '../utils/driverPermissions';
+import { SwipeableBookingCard } from './SwipeableBookingCard';
 
 interface DashboardViewProps {
   bookings: BookingRequest[];
@@ -1005,156 +1006,20 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             </div>
           ) : (
             <div className="space-y-3 pt-2">
-              {sortedBookings.map((b) => {
-                let statusBadge = {
-                  text: 'รออนุมัติ',
-                  class: 'bg-amber-100 text-amber-800 border-amber-300'
-                };
-                if (b.status === 'approved') {
-                  statusBadge = {
-                    text: 'อนุมัติแล้ว',
-                    class: 'bg-emerald-100 text-emerald-800 border-emerald-300'
-                  };
-                } else if (b.status === 'in_progress') {
-                  statusBadge = {
-                    text: 'กำลังเดินทาง',
-                    class: 'bg-orange-100 text-orange-800 border-orange-300'
-                  };
-                } else if (b.status === 'completed') {
-                  statusBadge = {
-                    text: 'เสร็จสิ้นภารกิจ',
-                    class: 'bg-teal-100 text-teal-800 border-teal-300'
-                  };
-                } else if (b.status === 'rejected') {
-                  statusBadge = {
-                    text: 'ไม่อนุมัติ/ส่งกลับ',
-                    class: 'bg-rose-100 text-rose-800 border-rose-300'
-                  };
-                }
-
-                const isOwner = currentUser.username === b.username;
-                const isAdmin = currentUser.role === 'admin';
-                const isDirector = currentUser.role === 'director' || isAdmin;
-                const isPending = b.status === 'pending' || b.status === 'pending_director';
-
-                return (
-                  <div
-                    key={b.id}
-                    className="p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-gradient-to-br from-slate-50/60 to-slate-100/40 dark:from-slate-800/40 dark:to-slate-900/60 hover:from-white hover:to-white dark:hover:from-slate-800/80 dark:hover:to-slate-800/95 border-slate-200 dark:border-slate-800 hover:border-orange-300 dark:hover:border-orange-500/40 transition-all duration-300 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shadow-2xs dark:shadow-black/20 card-3d-hover group"
-                  >
-                    <div
-                      onClick={() => onViewMemo(b)}
-                      className="space-y-1.5 max-w-2xl cursor-pointer w-full"
-                      title="แตะเพื่อดูใบคำขอใช้รถยนต์"
-                    >
-                      <div className="flex flex-wrap items-center gap-2">
-                        <span className="font-mono text-xs font-bold text-orange-600 bg-orange-50 px-2 py-0.5 rounded-md border border-orange-200">
-                          {b.id}
-                        </span>
-                        {b.memoNo && (
-                          <span className="text-[11px] font-medium text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md border border-slate-200">
-                            เลขที่บันทึก: {b.memoNo}
-                          </span>
-                        )}
-                        <span className={`text-[10px] px-2.5 py-0.5 rounded-full font-bold border ${statusBadge.class}`}>
-                          {statusBadge.text}
-                        </span>
-                      </div>
-
-                      <h4 className="font-bold text-sm text-slate-900 group-hover:text-orange-600 transition leading-snug">
-                        {b.purpose}
-                      </h4>
-
-                      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-600">
-                        <span className="flex items-center space-x-1">
-                          <UserIcon className="w-3.5 h-3.5 text-slate-400" />
-                          <span>{b.name} ({b.department})</span>
-                        </span>
-                        <span className="flex items-center space-x-1">
-                          <MapPin className="w-3.5 h-3.5 text-rose-500" />
-                          <span>{b.destination}</span>
-                        </span>
-                        <span className="flex items-center space-x-1">
-                          <Car className="w-3.5 h-3.5 text-slate-400" />
-                          <span>{b.carName}</span>
-                        </span>
-                        <span className="flex items-center space-x-1 text-orange-700 font-medium">
-                          <Calendar className="w-3.5 h-3.5 text-orange-500" />
-                          <span>เดินทาง: {formatThaiDate(b.date)} ({b.startTime} - {b.endTime} น.)</span>
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Actions */}
-                    <div className="w-full sm:w-auto flex flex-wrap items-center gap-2 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-200/60 shrink-0">
-                      <button
-                        type="button"
-                        onClick={() => onViewMemo(b)}
-                        className="flex-1 sm:flex-none px-3.5 py-2.5 bg-orange-50 hover:bg-orange-100 active:scale-95 text-orange-700 border border-orange-200 rounded-xl text-xs font-semibold transition shadow-2xs flex items-center justify-center space-x-1.5 cursor-pointer"
-                        title="ดูและพิมพ์ใบคำขอขอใช้รถยนต์ส่วนกลาง"
-                      >
-                        <Eye className="w-3.5 h-3.5 text-orange-600" />
-                        <span>ดูใบคำขอ</span>
-                      </button>
-
-                      {onOpenDriverMissions &&
-                        (b.status === 'approved' || b.status === 'in_progress') &&
-                        canUserExecuteMission(b, currentUser, allUsers) && (
-                          <button
-                            type="button"
-                            onClick={() => onOpenDriverMissions(b)}
-                            className={`flex-1 sm:flex-none px-3.5 py-2.5 text-white rounded-xl text-xs font-semibold transition shadow-xs flex items-center justify-center space-x-1.5 cursor-pointer active:scale-95 ${
-                              b.status === 'in_progress'
-                                ? 'bg-amber-600 hover:bg-amber-700 animate-pulse'
-                                : 'bg-orange-600 hover:bg-orange-700'
-                            }`}
-                          >
-                            <Gauge className="w-3.5 h-3.5" />
-                            <span>{b.status === 'in_progress' ? 'กรอกไมล์กลับ' : 'เริ่มงาน (ไมล์ไป)'}</span>
-                          </button>
-                      )}
-
-                      {isDirector && isPending && (
-                        <button
-                          type="button"
-                          onClick={() => {
-                            if (onOpenSignatureModal) {
-                              onOpenSignatureModal(b);
-                            } else {
-                              onOpenDirectorApproval();
-                            }
-                          }}
-                          className="flex-1 sm:flex-none px-3.5 py-2.5 bg-gradient-to-r from-teal-700 to-emerald-600 hover:from-teal-800 hover:to-emerald-700 active:scale-95 text-white rounded-xl text-xs font-semibold transition shadow-xs flex items-center justify-center space-x-1.5 cursor-pointer"
-                        >
-                          <FileCheck2 className="w-3.5 h-3.5" />
-                          <span>ลงนามอนุมัติ</span>
-                        </button>
-                      )}
-
-                      {(isOwner || isAdmin) && isPending && (
-                        <div className="flex items-center space-x-1.5">
-                          <button
-                            type="button"
-                            onClick={() => onEditBooking(b)}
-                            className="px-2.5 py-2 bg-amber-50 hover:bg-amber-100 active:scale-95 text-amber-700 rounded-xl text-xs font-medium transition cursor-pointer"
-                            title="แก้ไขใบเบิก"
-                          >
-                            <Edit className="w-3.5 h-3.5" />
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => onDeleteBooking(b.id)}
-                            className="px-2.5 py-2 bg-rose-50 hover:bg-rose-100 active:scale-95 text-rose-600 rounded-xl text-xs font-medium transition cursor-pointer"
-                            title="ลบคำขอ"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
+              {sortedBookings.map((b) => (
+                <SwipeableBookingCard
+                  key={b.id}
+                  booking={b}
+                  currentUser={currentUser}
+                  allUsers={allUsers}
+                  onViewMemo={onViewMemo}
+                  onDeleteBooking={onDeleteBooking}
+                  onEditBooking={onEditBooking}
+                  onOpenDriverMissions={onOpenDriverMissions}
+                  onOpenSignatureModal={onOpenSignatureModal}
+                  onOpenDirectorApproval={onOpenDirectorApproval}
+                />
+              ))}
             </div>
           )}
         </div>

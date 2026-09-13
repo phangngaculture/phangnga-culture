@@ -211,8 +211,8 @@ export const AssetRegisterView: React.FC<AssetRegisterViewProps> = ({
 
         <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 relative z-10">
           <div className="space-y-2">
-            <div className="inline-flex items-center space-x-2 bg-teal-500/20 text-teal-300 border border-teal-500/30 px-3 py-1 rounded-full text-xs font-semibold">
-              <ShieldCheck className="w-3.5 h-3.5" />
+            <div className="flex flex-wrap items-center gap-1.5 bg-teal-500/20 text-teal-300 border border-teal-500/30 px-3 py-1 rounded-2xl text-xs font-semibold">
+              <ShieldCheck className="w-3.5 h-3.5 shrink-0" />
               <span>สมุดทะเบียนคุมงานพัสดุและยานพาหนะ</span>
               <span className="text-teal-400">|</span>
               <span>สำนักงานวัฒนธรรมจังหวัดพังงา</span>
@@ -421,120 +421,244 @@ export const AssetRegisterView: React.FC<AssetRegisterViewProps> = ({
             </button>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs border-collapse">
-              <thead className="bg-slate-100 text-slate-800 font-bold border-b border-slate-200 text-[11px]">
-                <tr>
-                  <th className="p-3 text-center w-12">ลำดับ</th>
-                  <th className="p-3">วัน เดือน ปี</th>
-                  <th className="p-3">เลขที่ใบเบิก</th>
-                  <th className="p-3">รถยนต์ / ทะเบียน</th>
-                  <th className="p-3">ผู้ขอใช้รถ / สังกัด</th>
-                  <th className="p-3">สถานที่ไปราชการ & ภารกิจ</th>
-                  <th className="p-3 text-center">เวลาไป-กลับ</th>
-                  <th className="p-3 text-right">ไมล์ไป</th>
-                  <th className="p-3 text-right">ไมล์กลับ</th>
-                  <th className="p-3 text-right">ระยะทาง (กม.)</th>
-                  <th className="p-3 text-center">น้ำมันที่เติม</th>
-                  <th className="p-3">พนักงานขับรถ</th>
-                  <th className="p-3 text-center">สถานะตรวจรับ</th>
-                  <th className="p-3 text-center">เอกสาร</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-200 bg-white">
-                {filteredBookings.map((b, idx) => {
-                  const kmDriven = b.totalDistance || (b.endMileage && b.startMileage ? b.endMileage - b.startMileage : 0);
-                  const isFinished = b.status === 'completed' || b.registeredInAssetControl;
+          <>
+            {/* Desktop Table View */}
+            <div className="hidden md:block overflow-x-auto">
+              <table className="w-full text-left text-xs border-collapse">
+                <thead className="bg-slate-100 text-slate-800 font-bold border-b border-slate-200 text-[11px]">
+                  <tr>
+                    <th className="p-3 text-center w-12">ลำดับ</th>
+                    <th className="p-3">วัน เดือน ปี</th>
+                    <th className="p-3">เลขที่ใบเบิก</th>
+                    <th className="p-3">รถยนต์ / ทะเบียน</th>
+                    <th className="p-3">ผู้ขอใช้รถ / สังกัด</th>
+                    <th className="p-3">สถานที่ไปราชการ & ภารกิจ</th>
+                    <th className="p-3 text-center">เวลาไป-กลับ</th>
+                    <th className="p-3 text-right">ไมล์ไป</th>
+                    <th className="p-3 text-right">ไมล์กลับ</th>
+                    <th className="p-3 text-right">ระยะทาง (กม.)</th>
+                    <th className="p-3 text-center">น้ำมันที่เติม</th>
+                    <th className="p-3">พนักงานขับรถ</th>
+                    <th className="p-3 text-center">สถานะตรวจรับ</th>
+                    <th className="p-3 text-center">เอกสาร</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-200 bg-white">
+                  {filteredBookings.map((b, idx) => {
+                    const kmDriven = b.totalDistance || (b.endMileage && b.startMileage ? b.endMileage - b.startMileage : 0);
+                    const isFinished = b.status === 'completed' || b.registeredInAssetControl;
 
-                  return (
-                    <tr key={b.id} className="hover:bg-teal-50/25 transition">
-                      <td className="p-3 text-center font-mono font-medium text-slate-500">
-                        {idx + 1}
-                      </td>
-                      <td className="p-3 font-medium text-slate-900 whitespace-nowrap">
-                        {formatThaiDate(b.date, 'short')}
-                      </td>
-                      <td className="p-3 font-mono text-slate-700 whitespace-nowrap">
-                        {b.memoNo || b.id}
-                      </td>
-                      <td className="p-3 font-semibold text-teal-900 whitespace-nowrap">
-                        {b.carName}
-                      </td>
-                      <td className="p-3">
-                        <span className="font-semibold text-slate-800 block whitespace-nowrap">{b.name}</span>
-                        <span className="text-[10px] text-slate-500 block truncate max-w-[140px]">{b.department}</span>
-                      </td>
-                      <td className="p-3 max-w-xs">
-                        <div className="font-medium text-slate-800 truncate" title={b.destination}>
-                          {b.destination}
-                        </div>
-                        <div className="text-[10px] text-slate-500 truncate" title={b.purpose}>
-                          {b.purpose}
-                        </div>
-                      </td>
-                      <td className="p-3 text-center font-mono text-[11px] whitespace-nowrap">
-                        <span className="text-slate-700">{b.actualDepartureTime || b.startTime || '-'}</span>
-                        <span className="text-slate-400 mx-1">&rarr;</span>
-                        <span className="text-slate-700">{b.actualReturnTime || b.endTime || '-'}</span>
-                      </td>
-                      <td className="p-3 text-right font-mono font-medium text-slate-800 whitespace-nowrap">
-                        {b.startMileage ? b.startMileage.toLocaleString() : '-'}
-                      </td>
-                      <td className="p-3 text-right font-mono font-medium text-slate-800 whitespace-nowrap">
-                        {b.endMileage ? (
-                          b.endMileage.toLocaleString()
-                        ) : b.status === 'in_progress' ? (
-                          <span className="text-amber-600 font-semibold animate-pulse">กำลังวิ่ง</span>
-                        ) : (
-                          '-'
-                        )}
-                      </td>
-                      <td className="p-3 text-right font-mono font-bold text-emerald-700 bg-emerald-50/40 whitespace-nowrap">
-                        {kmDriven > 0 ? `+${kmDriven.toLocaleString()}` : '-'}
-                      </td>
-                      <td className="p-3 text-center whitespace-nowrap">
-                        {b.fuelRefilledLiters ? (
-                          <span className="inline-block bg-amber-50 text-amber-900 px-2 py-0.5 rounded text-[10px] font-medium border border-amber-200">
-                            {b.fuelRefilledLiters} ล. ({b.fuelRefilledCost} บ.)
+                    return (
+                      <tr key={b.id} className="hover:bg-teal-50/25 transition">
+                        <td className="p-3 text-center font-mono font-medium text-slate-500">
+                          {idx + 1}
+                        </td>
+                        <td className="p-3 font-medium text-slate-900 whitespace-nowrap">
+                          {formatThaiDate(b.date, 'short')}
+                        </td>
+                        <td className="p-3 font-mono text-slate-700 whitespace-nowrap">
+                          {b.memoNo || b.id}
+                        </td>
+                        <td className="p-3 font-semibold text-teal-900 whitespace-nowrap">
+                          {b.carName}
+                        </td>
+                        <td className="p-3">
+                          <span className="font-semibold text-slate-800 block whitespace-nowrap">{b.name}</span>
+                          <span className="text-[10px] text-slate-500 block truncate max-w-[140px]">{b.department}</span>
+                        </td>
+                        <td className="p-3 max-w-xs">
+                          <div className="font-medium text-slate-800 truncate" title={b.destination}>
+                            {b.destination}
+                          </div>
+                          <div className="text-[10px] text-slate-500 truncate" title={b.purpose}>
+                            {b.purpose}
+                          </div>
+                        </td>
+                        <td className="p-3 text-center font-mono text-[11px] whitespace-nowrap">
+                          <span className="text-slate-700">{b.actualDepartureTime || b.startTime || '-'}</span>
+                          <span className="text-slate-400 mx-1">&rarr;</span>
+                          <span className="text-slate-700">{b.actualReturnTime || b.endTime || '-'}</span>
+                        </td>
+                        <td className="p-3 text-right font-mono font-medium text-slate-800 whitespace-nowrap">
+                          {b.startMileage ? b.startMileage.toLocaleString() : '-'}
+                        </td>
+                        <td className="p-3 text-right font-mono font-medium text-slate-800 whitespace-nowrap">
+                          {b.endMileage ? (
+                            b.endMileage.toLocaleString()
+                          ) : b.status === 'in_progress' ? (
+                            <span className="text-amber-600 font-semibold animate-pulse">กำลังวิ่ง</span>
+                          ) : (
+                            '-'
+                          )}
+                        </td>
+                        <td className="p-3 text-right font-mono font-bold text-emerald-700 bg-emerald-50/40 whitespace-nowrap">
+                          {kmDriven > 0 ? `+${kmDriven.toLocaleString()}` : '-'}
+                        </td>
+                        <td className="p-3 text-center whitespace-nowrap">
+                          {b.fuelRefilledLiters ? (
+                            <span className="inline-block bg-amber-50 text-amber-900 px-2 py-0.5 rounded text-[10px] font-medium border border-amber-200">
+                              {b.fuelRefilledLiters} ล. ({b.fuelRefilledCost} บ.)
+                            </span>
+                          ) : (
+                            <span className="text-slate-400 text-[11px]">-</span>
+                          )}
+                        </td>
+                        <td className="p-3 font-medium text-slate-700 whitespace-nowrap">
+                          {b.driverName || '-'}
+                        </td>
+                        <td className="p-3 text-center whitespace-nowrap">
+                          {isFinished ? (
+                            <span className="inline-flex items-center space-x-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">
+                              <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                              <span>ลงคุมเรียบร้อย</span>
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center space-x-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800">
+                              <Clock className="w-3 h-3 text-amber-600" />
+                              <span>อยู่ระหว่างภารกิจ</span>
+                            </span>
+                          )}
+                        </td>
+                        <td className="p-3 text-center whitespace-nowrap">
+                          {onViewMemo && (
+                            <button
+                              type="button"
+                              onClick={() => onViewMemo(b)}
+                              className="p-1.5 hover:bg-slate-100 text-slate-600 hover:text-orange-600 rounded-lg transition cursor-pointer"
+                              title="ดูใบคำขอขอใช้รถยนต์ส่วนกลาง"
+                            >
+                              <Eye className="w-4 h-4" />
+                            </button>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Mobile Card View */}
+            <div className="block md:hidden divide-y divide-slate-100 bg-white">
+              {filteredBookings.map((b, idx) => {
+                const kmDriven = b.totalDistance || (b.endMileage && b.startMileage ? b.endMileage - b.startMileage : 0);
+                const isFinished = b.status === 'completed' || b.registeredInAssetControl;
+
+                return (
+                  <div key={b.id} className="p-4 space-y-3 hover:bg-slate-50/25 transition">
+                    <div className="flex justify-between items-start gap-2">
+                      <div className="space-y-1">
+                        <div className="flex items-center space-x-1.5">
+                          <span className="text-[10px] font-mono font-bold text-teal-800 bg-teal-50 px-1.5 py-0.5 rounded">
+                            #{idx + 1}
                           </span>
-                        ) : (
-                          <span className="text-slate-400 text-[11px]">-</span>
-                        )}
-                      </td>
-                      <td className="p-3 font-medium text-slate-700 whitespace-nowrap">
-                        {b.driverName || '-'}
-                      </td>
-                      <td className="p-3 text-center whitespace-nowrap">
+                          <span className="text-xs font-bold text-slate-800">
+                            {formatThaiDate(b.date, 'short')}
+                          </span>
+                        </div>
+                        <div className="text-[10px] font-mono text-slate-500">
+                          เลขใบเบิก: {b.memoNo || b.id}
+                        </div>
+                      </div>
+                      
+                      <div>
                         {isFinished ? (
-                          <span className="inline-flex items-center space-x-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">
-                            <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                          <span className="inline-flex items-center space-x-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200/55">
+                            <CheckCircle2 className="w-3 h-3 text-emerald-600 shrink-0" />
                             <span>ลงคุมเรียบร้อย</span>
                           </span>
                         ) : (
-                          <span className="inline-flex items-center space-x-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800">
-                            <Clock className="w-3 h-3 text-amber-600" />
+                          <span className="inline-flex items-center space-x-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-200/55">
+                            <Clock className="w-3 h-3 text-amber-600 shrink-0 animate-pulse" />
                             <span>อยู่ระหว่างภารกิจ</span>
                           </span>
                         )}
-                      </td>
-                      <td className="p-3 text-center whitespace-nowrap">
-                        {onViewMemo && (
-                          <button
-                            type="button"
-                            onClick={() => onViewMemo(b)}
-                            className="p-1.5 hover:bg-slate-100 text-slate-600 hover:text-orange-600 rounded-lg transition"
-                            title="ดูใบคำขอขอใช้รถยนต์ส่วนกลาง"
-                          >
-                            <Eye className="w-4 h-4" />
-                          </button>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3 text-xs border-y border-slate-100 py-2">
+                      <div className="space-y-0.5">
+                        <div className="text-[10px] font-medium text-slate-400">ยานพาหนะ</div>
+                        <div className="font-semibold text-teal-900 flex items-center gap-1">
+                          <Car className="w-3.5 h-3.5 text-teal-600 shrink-0" />
+                          <span className="truncate">{b.carName}</span>
+                        </div>
+                      </div>
+                      
+                      <div className="space-y-0.5">
+                        <div className="text-[10px] font-medium text-slate-400">พนักงานขับรถ</div>
+                        <div className="font-semibold text-slate-700 truncate">{b.driverName || '-'}</div>
+                      </div>
+
+                      <div className="space-y-0.5 col-span-2">
+                        <div className="text-[10px] font-medium text-slate-400">ผู้ขอใช้รถ / สังกัดกลุ่มงาน</div>
+                        <div className="font-medium text-slate-800">
+                          {b.name} <span className="text-[10px] text-slate-500">({b.department})</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="space-y-1 text-xs">
+                      <div className="space-y-0.5">
+                        <div className="text-[10px] font-medium text-slate-400">สถานที่ไปราชการ & ภารกิจ</div>
+                        <div className="font-semibold text-slate-800 leading-snug">{b.destination}</div>
+                        <div className="text-[10px] text-slate-500 leading-relaxed">{b.purpose}</div>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-3 gap-2 bg-slate-50 p-2.5 rounded-xl border border-slate-100 text-center">
+                      <div>
+                        <div className="text-[9px] text-slate-400 font-medium">เลขไมล์ไป</div>
+                        <div className="text-xs font-bold text-slate-700 font-mono">{b.startMileage ? b.startMileage.toLocaleString() : '-'}</div>
+                      </div>
+                      <div>
+                        <div className="text-[9px] text-slate-400 font-medium">เลขไมล์กลับ</div>
+                        <div className="text-xs font-bold text-slate-700 font-mono">
+                          {b.endMileage ? (
+                            b.endMileage.toLocaleString()
+                          ) : b.status === 'in_progress' ? (
+                            <span className="text-amber-600 font-semibold text-[10px] animate-pulse">วิ่งอยู่</span>
+                          ) : (
+                            '-'
+                          )}
+                        </div>
+                      </div>
+                      <div>
+                        <div className="text-[9px] text-slate-400 font-medium">ระยะทาง</div>
+                        <div className="text-xs font-extrabold text-emerald-700 font-mono">
+                          {kmDriven > 0 ? `${kmDriven.toLocaleString()} กม.` : '-'}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between gap-2 pt-1">
+                      <div className="text-xs">
+                        {b.fuelRefilledLiters ? (
+                          <span className="inline-flex items-center space-x-1 bg-amber-50 text-amber-950 px-2 py-0.5 rounded text-[10px] font-bold border border-amber-200">
+                            <Fuel className="w-3 h-3 text-amber-600 shrink-0" />
+                            <span>{b.fuelRefilledLiters} ล. ({b.fuelRefilledCost} บ.)</span>
+                          </span>
+                        ) : (
+                          <span className="text-[10px] text-slate-400">ไม่มีเติมน้ำมัน</span>
                         )}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+                      </div>
+
+                      {onViewMemo && (
+                        <button
+                          type="button"
+                          onClick={() => onViewMemo(b)}
+                          className="px-2.5 py-1 bg-teal-50 hover:bg-teal-100 text-teal-700 rounded-lg text-[11px] font-bold transition flex items-center space-x-1 cursor-pointer"
+                        >
+                          <Eye className="w-3.5 h-3.5" />
+                          <span>ดูใบขอรถ</span>
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </>
         )}
 
         {/* Registry Footer Summary */}
