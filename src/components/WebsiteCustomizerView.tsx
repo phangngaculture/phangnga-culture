@@ -184,6 +184,22 @@ export const WebsiteCustomizerView: React.FC<WebsiteCustomizerViewProps> = ({
     return 'โปร่งใสพิเศษ (High Transparency) — แสดงผลโปร่งใสเห็นพื้นหลังชัดเจน สไตล์ Futuristic ล้ำอนาคต';
   };
 
+  const simulatorSidebarStyle = localStyle === 'minimal_clean'
+    ? 'bg-white border-slate-200 text-slate-800'
+    : localStyle === 'neumorphism_soft'
+      ? 'bg-[#e6ebf2] border-white/80 text-slate-700 shadow-[8px_0_20px_rgba(148,163,184,0.18)]'
+      : localStyle === 'midnight_navy'
+        ? 'bg-[#0b1730] border-blue-900/70 text-white'
+        : 'border-slate-800/60 text-white';
+
+  const simulatorActiveItemStyle = localStyle === 'minimal_clean'
+    ? 'bg-slate-900 text-white shadow-sm'
+    : localStyle === 'neumorphism_soft'
+      ? 'bg-[#e6ebf2] text-slate-800 shadow-[inset_3px_3px_7px_rgba(148,163,184,0.3),inset_-3px_-3px_7px_rgba(255,255,255,0.9)]'
+      : localStyle === 'midnight_navy'
+        ? 'bg-blue-600/30 text-white border border-blue-400/25'
+        : 'bg-slate-800/80 text-white';
+
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
       {/* View Title */}
@@ -235,11 +251,14 @@ export const WebsiteCustomizerView: React.FC<WebsiteCustomizerViewProps> = ({
               {/* Dynamic Simulated Sidebar (Matching the eevo.team screenshot style) */}
               <div 
                 style={{
-                  backgroundColor: `rgba(12, 16, 27, ${localOpacity})`,
-                  backdropFilter: 'blur(10px)',
-                  WebkitBackdropFilter: 'blur(10px)',
+                  background: localStyle === 'aurora_glass'
+                    ? `linear-gradient(155deg, rgba(15, 23, 42, ${Math.max(localOpacity, 0.88)}) 0%, rgba(30, 41, 59, ${Math.max(localOpacity * 0.92, 0.8)}) 48%, rgba(49, 46, 129, ${Math.max(localOpacity * 0.9, 0.78)}) 100%)`
+                    : undefined,
+                  backgroundColor: localStyle === 'aurora_glass' || localStyle === 'minimal_clean' || localStyle === 'neumorphism_soft' || localStyle === 'midnight_navy' ? undefined : `rgba(12, 16, 27, ${localOpacity})`,
+                  backdropFilter: 'blur(14px)',
+                  WebkitBackdropFilter: 'blur(14px)',
                 }}
-                className={`w-52 h-full border-r border-slate-800/60 flex flex-col justify-between p-3.5 z-10 transition-all duration-300 relative ${
+                className={`w-52 h-full border-r flex flex-col justify-between p-3.5 z-10 transition-all duration-300 relative ${simulatorSidebarStyle} ${
                   localStyle === 'slim_rail' ? 'w-16' : ''
                 }`}
               >
@@ -291,7 +310,7 @@ export const WebsiteCustomizerView: React.FC<WebsiteCustomizerViewProps> = ({
                             }}
                             className={`w-full flex items-center justify-between px-2 py-1.5 rounded-lg text-xs font-medium cursor-pointer border-none transition ${
                               selectedSimTab === 'overview'
-                                ? 'bg-slate-800/80 text-white'
+                                ? simulatorActiveItemStyle
                                 : 'hover:bg-slate-900/40 text-slate-400 hover:text-slate-200'
                             }`}
                           >
@@ -310,7 +329,7 @@ export const WebsiteCustomizerView: React.FC<WebsiteCustomizerViewProps> = ({
                             }}
                             className={`w-full flex items-center justify-between px-2 py-1.5 rounded-lg text-xs font-medium cursor-pointer border-none transition ${
                               selectedSimTab === 'analytics'
-                                ? 'bg-slate-800/80 text-white'
+                                ? simulatorActiveItemStyle
                                 : 'hover:bg-slate-900/40 text-slate-400 hover:text-slate-200'
                             }`}
                           >
@@ -329,7 +348,7 @@ export const WebsiteCustomizerView: React.FC<WebsiteCustomizerViewProps> = ({
                             }}
                             className={`w-full flex items-center justify-between px-2 py-1.5 rounded-lg text-xs font-medium cursor-pointer border-none transition ${
                               selectedSimTab === 'projects'
-                                ? 'bg-slate-800/80 text-white'
+                                ? simulatorActiveItemStyle
                                 : 'hover:bg-slate-900/40 text-slate-400 hover:text-slate-200'
                             }`}
                           >
