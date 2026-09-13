@@ -457,11 +457,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
             >
               <div className="flex items-center space-x-3 min-w-0 pl-1">
                 <div
-                  className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-105 ${
+                  className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-105 ${
                     getIconContainerClass(isActive, item.gradient)
                   }`}
                 >
-                  <Icon className="w-4 h-4" />
+                  <Icon className="w-5 h-5" />
                 </div>
                 <div className="truncate">
                   <span className="text-xs font-bold leading-none truncate">{item.label}</span>
@@ -608,11 +608,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
         >
           <div className="flex items-center space-x-3 min-w-0 pl-1">
             <div
-              className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-105 ${
+              className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-105 ${
                 getIconContainerClass(isActive, item.gradient)
               }`}
             >
-              <Icon className="w-4 h-4" />
+              <Icon className="w-5 h-5" />
             </div>
             <div className="truncate">
               <span className="text-xs font-bold leading-none truncate">{item.label}</span>

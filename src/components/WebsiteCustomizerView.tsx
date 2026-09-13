@@ -278,10 +278,10 @@ export const WebsiteCustomizerView: React.FC<WebsiteCustomizerViewProps> = ({
                 {localStyle === 'slim_rail' ? (
                   /* Slim icon rail simulation */
                   <div className="flex-1 flex flex-col items-center space-y-4 pt-4">
-                    <div className="w-9 h-9 rounded-xl bg-orange-500 text-white flex items-center justify-center cursor-pointer shadow-md"><LayoutDashboard className="w-4 h-4" /></div>
-                    <div className="w-9 h-9 rounded-xl bg-slate-800 text-slate-400 flex items-center justify-center cursor-pointer hover:bg-slate-700"><Settings className="w-4 h-4" /></div>
-                    <div className="w-9 h-9 rounded-xl bg-slate-800 text-slate-400 flex items-center justify-center cursor-pointer hover:bg-slate-700"><User className="w-4 h-4" /></div>
-                    <div className="w-9 h-9 rounded-xl bg-slate-800 text-slate-400 flex items-center justify-center cursor-pointer hover:bg-slate-700"><Volume2 className="w-4 h-4" /></div>
+                    <div className="w-11 h-11 rounded-xl bg-orange-500 text-white flex items-center justify-center cursor-pointer shadow-md"><LayoutDashboard className="w-5 h-5" /></div>
+                    <div className="w-11 h-11 rounded-xl bg-slate-800 text-slate-400 flex items-center justify-center cursor-pointer hover:bg-slate-700"><Settings className="w-5 h-5" /></div>
+                    <div className="w-11 h-11 rounded-xl bg-slate-800 text-slate-400 flex items-center justify-center cursor-pointer hover:bg-slate-700"><User className="w-5 h-5" /></div>
+                    <div className="w-11 h-11 rounded-xl bg-slate-800 text-slate-400 flex items-center justify-center cursor-pointer hover:bg-slate-700"><Volume2 className="w-5 h-5" /></div>
                   </div>
                 ) : (
                   /* Standard / eevo_sleek simulation */
@@ -315,7 +315,7 @@ export const WebsiteCustomizerView: React.FC<WebsiteCustomizerViewProps> = ({
                             }`}
                           >
                             <div className="flex items-center space-x-2">
-                              <span className={`w-2 h-2 rounded-full ${overviewDot} animate-pulse`} />
+                              <span className={`w-2.5 h-2.5 rounded-full ${overviewDot} animate-pulse`} />
                               <span>Overview</span>
                             </div>
                             <span className="text-[9px] px-1.5 py-0.2 bg-violet-500/15 text-violet-400 rounded-full font-bold border border-violet-500/20">ใหม่</span>
@@ -334,7 +334,7 @@ export const WebsiteCustomizerView: React.FC<WebsiteCustomizerViewProps> = ({
                             }`}
                           >
                             <div className="flex items-center space-x-2">
-                              <span className={`w-2 h-2 rounded-full ${analyticsDot}`} />
+                              <span className={`w-2.5 h-2.5 rounded-full ${analyticsDot}`} />
                               <span>Analytics</span>
                             </div>
                             <span className="text-[9px] px-1.5 py-0.2 bg-pink-500/15 text-pink-400 rounded-full font-bold border border-pink-500/20">สถิติ</span>
@@ -353,7 +353,7 @@ export const WebsiteCustomizerView: React.FC<WebsiteCustomizerViewProps> = ({
                             }`}
                           >
                             <div className="flex items-center space-x-2">
-                              <span className={`w-2 h-2 rounded-full ${projectsDot}`} />
+                              <span className={`w-2.5 h-2.5 rounded-full ${projectsDot}`} />
                               <span>Projects</span>
                             </div>
                           </button>
