@@ -222,6 +222,8 @@ export const GpsTrackingView: React.FC<GpsTrackingViewProps> = ({ vehicles = [] 
   const [mapStyle, setMapStyle] = useState<keyof typeof MAP_STYLES>('voyager');
   const [lastUpdatedTime, setLastUpdatedTime] = useState<string>('');
   const [is3DMode, setIs3DMode] = useState<boolean>(true);
+  const [pitch, setPitch] = useState<number>(52);
+  const [bearing, setBearing] = useState<number>(0);
   const [showLabels, setShowLabels] = useState<boolean>(true);
   const [showTrafficArrows, setShowTrafficArrows] = useState<boolean>(true);
 
@@ -894,18 +896,18 @@ export const GpsTrackingView: React.FC<GpsTrackingViewProps> = ({ vehicles = [] 
                 transition: all 0.5s ease-in-out;
               }
               .map-3d-active .leaflet-map-pane {
-                transform: rotateX(52deg) rotateZ(0deg) translateZ(0px) scale(1.15) translateY(-25px);
+                transform: rotateX(${pitch}deg) rotateZ(${bearing}deg) translateZ(0px) scale(${1 + (pitch / 350)}) translateY(-${pitch * 0.5}px);
                 transform-origin: 50% 100%;
-                transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+                transition: transform 0.2s cubic-bezier(0.1, 0.8, 0.3, 1);
               }
-              /* Counter-tilt markers to stand upright */
+              /* Counter-tilt markers to stand upright and adjust to user's bearing rotation */
               .map-3d-active .custom-waypoint-icon,
               .map-3d-active .custom-car-icon,
               .map-3d-active .other-car-icon,
               .map-3d-active .leaflet-popup-pane {
-                transform: rotateX(-52deg) translateZ(12px) !important;
+                transform: rotateZ(${-bearing}deg) rotateX(${-pitch}deg) translateZ(12px) !important;
                 transform-origin: bottom center;
-                transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+                transition: transform 0.2s cubic-bezier(0.1, 0.8, 0.3, 1);
                 filter: drop-shadow(0 8px 16px rgba(0,0,0,0.3));
               }
               @keyframes spin-slow {
@@ -918,6 +920,59 @@ export const GpsTrackingView: React.FC<GpsTrackingViewProps> = ({ vehicles = [] 
             `}</style>
 
             <div ref={mapContainerRef} className="w-full h-full" />
+
+            {/* Interactive 3D Perspective Pitch & Bearing HUD Widget */}
+            {is3DMode && (
+              <div className="absolute bottom-3 left-3 z-40 bg-slate-950/95 backdrop-blur-md text-white p-3 rounded-2xl border border-slate-800 shadow-2xl w-[220px] pointer-events-auto flex flex-col space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-black uppercase tracking-wider text-orange-400 flex items-center gap-1.5">
+                    <Compass className="w-3.5 h-3.5 animate-spin-slow" />
+                    กล้องควบคุม 3D HUD
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setPitch(52);
+                      setBearing(0);
+                    }}
+                    className="text-[9px] bg-slate-850 hover:bg-slate-700 text-slate-300 font-bold px-2 py-0.5 rounded-md transition cursor-pointer"
+                    title="รีเซ็ตกล้องนำทาง 3D ไปค่าเริ่มต้น"
+                  >
+                    รีเซ็ต
+                  </button>
+                </div>
+
+                <div className="space-y-1">
+                  <div className="flex justify-between text-[10px] text-slate-300 font-bold font-mono">
+                    <span>ความเอียง (Pitch):</span>
+                    <span className="text-orange-400">{pitch}°</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="0"
+                    max="65"
+                    value={pitch}
+                    onChange={(e) => setPitch(Number(e.target.value))}
+                    className="w-full h-1 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-orange-500"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <div className="flex justify-between text-[10px] text-slate-300 font-bold font-mono">
+                    <span>การหมุน (Bearing):</span>
+                    <span className="text-orange-400">{bearing}°</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="-180"
+                    max="180"
+                    value={bearing}
+                    onChange={(e) => setBearing(Number(e.target.value))}
+                    className="w-full h-1 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-orange-500"
+                  />
+                </div>
+              </div>
+            )}
 
             {/* Smart 3D GPS HUD Navigation Panel */}
             {activeNavigationStep && viewMode === 'focus' && (
@@ -1040,8 +1095,8 @@ export const GpsTrackingView: React.FC<GpsTrackingViewProps> = ({ vehicles = [] 
               </button>
             </div>
 
-            {/* Coordinates Floating Pill at Bottom Left */}
-            <div className="absolute bottom-4 left-4 z-40 bg-slate-900/90 backdrop-blur-md text-white px-3.5 py-2 rounded-2xl border border-slate-700/80 shadow-lg flex items-center space-x-3 text-xs">
+            {/* Coordinates Floating Pill - shifted when 3D mode is active to prevent overlapping */}
+            <div className={`absolute bottom-4 z-40 bg-slate-900/90 backdrop-blur-md text-white px-3.5 py-2 rounded-2xl border border-slate-700/80 shadow-lg flex items-center space-x-3 text-xs transition-all duration-300 ${is3DMode ? 'hidden sm:flex sm:left-[240px]' : 'left-4'}`}>
               <div className="flex items-center space-x-1.5 font-mono text-[11px]">
                 <MapPin className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
                 <span>{currentCoords.lat.toFixed(5)}° N, {currentCoords.lng.toFixed(5)}° E</span>
