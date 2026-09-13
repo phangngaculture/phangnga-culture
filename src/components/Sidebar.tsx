@@ -62,7 +62,7 @@ interface SidebarProps {
   googleUser?: any;
   isGoogleConnected?: boolean;
   soundEnabled?: boolean;
-  uiStyle?: 'modern' | 'ribbon' | 'classic' | 'slim_rail' | 'double_panel' | 'eevo_sleek' | 'aurora_glass' | 'minimal_clean' | 'neumorphism_soft' | 'midnight_navy';
+  uiStyle?: 'modern' | 'ribbon' | 'classic' | 'slim_rail' | 'double_panel' | 'eevo_sleek' | 'aurora_glass' | 'minimal_clean' | 'neumorphism_soft' | 'midnight_navy' | 'obsidian_prism';
   menuButtonColor?: 'orange' | 'emerald' | 'indigo' | 'rose' | 'violet';
   iconStyle?: 'gradient' | 'neon' | 'flat';
   fontSize?: 'small' | 'medium' | 'large';
@@ -361,6 +361,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
       if (uiStyle === 'midnight_navy') {
         return 'text-blue-100/65 hover:bg-blue-900/40 hover:text-white border border-transparent';
       }
+      if (uiStyle === 'obsidian_prism') {
+        return 'text-slate-400 hover:bg-white/10 hover:text-white border border-transparent';
+      }
       if (uiStyle === 'classic') {
         return darkMode
           ? 'text-amber-100 hover:bg-amber-900/10 hover:text-amber-300 font-serif border border-transparent'
@@ -381,6 +384,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
     if (uiStyle === 'midnight_navy') {
       return 'bg-blue-600/25 text-white shadow-[0_8px_24px_rgba(37,99,235,0.18)] border border-blue-400/25 font-bold';
+    }
+
+    if (uiStyle === 'obsidian_prism') {
+      return 'bg-gradient-to-r from-violet-500/80 via-fuchsia-500/70 to-cyan-400/70 text-white shadow-[0_8px_28px_rgba(139,92,246,0.28)] border border-white/20 font-bold';
     }
 
     if (uiStyle === 'classic') {
@@ -920,27 +927,29 @@ export const Sidebar: React.FC<SidebarProps> = ({
       ) : (
         <aside
           style={
-            uiStyle === 'eevo_sleek' || uiStyle === 'aurora_glass'
+            uiStyle === 'eevo_sleek' || uiStyle === 'aurora_glass' || uiStyle === 'obsidian_prism'
               ? {
-                  background: uiStyle === 'aurora_glass'
-                    ? `linear-gradient(155deg, rgba(15, 23, 42, ${Math.max(sidebarOpacity, 0.88)}) 0%, rgba(30, 41, 59, ${Math.max(sidebarOpacity * 0.92, 0.8)}) 48%, rgba(49, 46, 129, ${Math.max(sidebarOpacity * 0.9, 0.78)}) 100%)`
-                    : undefined,
-                  backgroundColor: uiStyle === 'aurora_glass'
+                  background: uiStyle === 'obsidian_prism'
+                    ? `linear-gradient(155deg, rgba(8, 10, 22, ${Math.max(sidebarOpacity, 0.92)}) 0%, rgba(30, 20, 62, ${Math.max(sidebarOpacity * 0.92, 0.84)}) 52%, rgba(8, 47, 73, ${Math.max(sidebarOpacity * 0.9, 0.82)}) 100%)`
+                    : uiStyle === 'aurora_glass'
+                      ? `linear-gradient(155deg, rgba(15, 23, 42, ${Math.max(sidebarOpacity, 0.88)}) 0%, rgba(30, 41, 59, ${Math.max(sidebarOpacity * 0.92, 0.8)}) 48%, rgba(49, 46, 129, ${Math.max(sidebarOpacity * 0.9, 0.78)}) 100%)`
+                      : undefined,
+                  backgroundColor: uiStyle === 'obsidian_prism' || uiStyle === 'aurora_glass'
                     ? undefined
-                    : darkMode ? 'rgba(12, 16, 27, 1.0)' : `rgba(255, 255, 255, ${sidebarOpacity})`,
-                  backdropFilter: 'blur(18px)',
-                  WebkitBackdropFilter: 'blur(18px)',
-                  boxShadow: uiStyle === 'aurora_glass' ? '0 0 45px rgba(99, 102, 241, 0.18)' : undefined,
+                    : undefined,
+                  backdropFilter: 'blur(20px)',
+                  WebkitBackdropFilter: 'blur(20px)',
+                  boxShadow: uiStyle === 'obsidian_prism' ? '0 0 55px rgba(168, 85, 247, 0.24)' : uiStyle === 'aurora_glass' ? '0 0 45px rgba(99, 102, 241, 0.18)' : undefined,
                 }
               : undefined
           }
           className={`fixed top-0 bottom-0 left-0 w-84 max-w-[85vw] z-50 transform transition-all duration-300 ease-out flex flex-col shadow-2xl border-r ${
             isOpen ? 'translate-x-0' : '-translate-x-full'
           } ${
-            uiStyle === 'eevo_sleek' || uiStyle === 'aurora_glass'
+            uiStyle === 'eevo_sleek' || uiStyle === 'aurora_glass' || uiStyle === 'obsidian_prism'
               ? darkMode
-                ? 'border-indigo-400/20 text-white'
-                : 'border-indigo-300/40 text-slate-800'
+                ? 'border-fuchsia-400/20 text-white'
+                : 'border-violet-300/40 text-slate-800'
               : uiStyle === 'minimal_clean'
                 ? darkMode ? 'bg-[#0f172a] border-slate-800 text-white' : 'bg-white border-slate-200 text-slate-800'
                 : uiStyle === 'neumorphism_soft'

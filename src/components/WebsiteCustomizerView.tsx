@@ -24,7 +24,7 @@ import {
 import { playAppSound } from '../utils/thaiDate';
 
 // Supported style types
-export type UiStyleType = 'modern' | 'ribbon' | 'classic' | 'slim_rail' | 'double_panel' | 'eevo_sleek' | 'aurora_glass' | 'minimal_clean' | 'neumorphism_soft' | 'midnight_navy';
+export type UiStyleType = 'modern' | 'ribbon' | 'classic' | 'slim_rail' | 'double_panel' | 'eevo_sleek' | 'aurora_glass' | 'minimal_clean' | 'neumorphism_soft' | 'midnight_navy' | 'obsidian_prism';
 export type MenuColorType = 'orange' | 'emerald' | 'indigo' | 'rose' | 'violet';
 export type FontSizeCodeType = 'small' | 'medium' | 'large';
 
@@ -80,6 +80,13 @@ export const WebsiteCustomizerView: React.FC<WebsiteCustomizerViewProps> = ({
   }, [uiStyle, menuButtonColor, sidebarOpacity, fontSize]);
 
   const styleOptions = [
+    {
+      id: 'obsidian_prism' as const,
+      name: '10. Obsidian Prism',
+      desc: 'แถบเมนูเข้มแบบพรีเมียม ไล่เฉดม่วง-ฟ้า มีเอฟเฟกต์กระจกและแสงเรืองรอบขอบ',
+      badge: 'Premium UI',
+      badgeColor: 'bg-fuchsia-500/10 text-fuchsia-400 border-fuchsia-500/30'
+    },
     {
       id: 'minimal_clean' as const,
       name: '7. Minimal Clean',
@@ -190,6 +197,8 @@ export const WebsiteCustomizerView: React.FC<WebsiteCustomizerViewProps> = ({
       ? 'bg-[#e6ebf2] border-white/80 text-slate-700 shadow-[8px_0_20px_rgba(148,163,184,0.18)]'
       : localStyle === 'midnight_navy'
         ? 'bg-[#0b1730] border-blue-900/70 text-white'
+        : localStyle === 'obsidian_prism'
+          ? 'border-fuchsia-400/25 text-white shadow-[0_0_35px_rgba(168,85,247,0.2)]'
         : 'border-slate-800/60 text-white';
 
   const simulatorActiveItemStyle = localStyle === 'minimal_clean'
@@ -198,6 +207,8 @@ export const WebsiteCustomizerView: React.FC<WebsiteCustomizerViewProps> = ({
       ? 'bg-[#e6ebf2] text-slate-800 shadow-[inset_3px_3px_7px_rgba(148,163,184,0.3),inset_-3px_-3px_7px_rgba(255,255,255,0.9)]'
       : localStyle === 'midnight_navy'
         ? 'bg-blue-600/30 text-white border border-blue-400/25'
+        : localStyle === 'obsidian_prism'
+          ? 'bg-gradient-to-r from-violet-500/80 via-fuchsia-500/70 to-cyan-400/70 text-white border border-white/20 shadow-[0_6px_18px_rgba(139,92,246,0.25)]'
         : 'bg-slate-800/80 text-white';
 
   return (
@@ -251,10 +262,12 @@ export const WebsiteCustomizerView: React.FC<WebsiteCustomizerViewProps> = ({
               {/* Dynamic Simulated Sidebar (Matching the eevo.team screenshot style) */}
               <div 
                 style={{
-                  background: localStyle === 'aurora_glass'
+                  background: localStyle === 'obsidian_prism'
+                    ? `linear-gradient(155deg, rgba(8, 10, 22, ${Math.max(localOpacity, 0.92)}) 0%, rgba(30, 20, 62, ${Math.max(localOpacity * 0.92, 0.84)}) 52%, rgba(8, 47, 73, ${Math.max(localOpacity * 0.9, 0.82)}) 100%)`
+                    : localStyle === 'aurora_glass'
                     ? `linear-gradient(155deg, rgba(15, 23, 42, ${Math.max(localOpacity, 0.88)}) 0%, rgba(30, 41, 59, ${Math.max(localOpacity * 0.92, 0.8)}) 48%, rgba(49, 46, 129, ${Math.max(localOpacity * 0.9, 0.78)}) 100%)`
                     : undefined,
-                  backgroundColor: localStyle === 'aurora_glass' || localStyle === 'minimal_clean' || localStyle === 'neumorphism_soft' || localStyle === 'midnight_navy' ? undefined : `rgba(12, 16, 27, ${localOpacity})`,
+                  backgroundColor: localStyle === 'obsidian_prism' || localStyle === 'aurora_glass' || localStyle === 'minimal_clean' || localStyle === 'neumorphism_soft' || localStyle === 'midnight_navy' ? undefined : `rgba(12, 16, 27, ${localOpacity})`,
                   backdropFilter: 'blur(14px)',
                   WebkitBackdropFilter: 'blur(14px)',
                 }}
