@@ -29,8 +29,14 @@ import {
   Building2,
   Users,
   Paperclip,
-  Share2
+  Share2,
+  ChevronDown,
+  Table,
+  FileSpreadsheet,
+  Layers
 } from 'lucide-react';
+
+export type OfficialDocType = 'memo' | 'register' | 'out_province';
 
 interface OfficialMemoModalProps {
   booking: BookingRequest | null;
@@ -38,6 +44,8 @@ interface OfficialMemoModalProps {
   justApproved?: boolean;
   onOpenSignatureModal?: (booking: BookingRequest) => void;
   onOpenInspectionModal?: (booking: BookingRequest) => void;
+  allBookings?: BookingRequest[];
+  initialDocType?: OfficialDocType;
 }
 
 export const OfficialMemoModal: React.FC<OfficialMemoModalProps> = ({
@@ -45,11 +53,13 @@ export const OfficialMemoModal: React.FC<OfficialMemoModalProps> = ({
   onClose,
   justApproved = false,
   onOpenSignatureModal,
-  onOpenInspectionModal
+  onOpenInspectionModal,
+  allBookings = [],
+  initialDocType
 }) => {
   const [useThaiNumerals, setUseThaiNumerals] = useState(false);
-  const [activeDocType, setActiveDocType] = useState<'memo' | 'out_province'>(
-    booking && booking.destProvince && booking.destProvince !== 'พังงา' ? 'out_province' : 'memo'
+  const [activeDocType, setActiveDocType] = useState<OfficialDocType>(
+    initialDocType || (booking && booking.destProvince && booking.destProvince !== 'พังงา' ? 'out_province' : 'memo')
   );
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
   const [pdfSuccessMessage, setPdfSuccessMessage] = useState<string | null>(null);
@@ -97,15 +107,60 @@ export const OfficialMemoModal: React.FC<OfficialMemoModalProps> = ({
     ? `พง ๐๐๓๒(พิเศษ)/${toThaiNumerals(rawMemoSeq)}`
     : `พง0032(พิเศษ)/${rawMemoSeq.replace(/[๐-๙]/g, (d) => ['0','1','2','3','4','5','6','7','8','9'][['๐','๑','๒','๓','๔','๕','๖','๗','๘','๙'].indexOf(d)])}`;
 
-  const activeDocId = activeDocType === 'memo' ? 'printMemoArea' : 'printPermitArea';
+  const isLandscape = activeDocType === 'register';
+
+  // Find all mission records for this vehicle if allBookings is available
+  const vehicleBookings = React.useMemo(() => {
+    if (!booking) return [];
+    if (!allBookings || allBookings.length === 0) return [booking];
+    const list = allBookings.filter(
+      (b) => b.carName && b.carName.trim() === booking.carName?.trim()
+    );
+    if (list.length === 0) return [booking];
+    return [...list].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  }, [allBookings, booking]);
+
+  const totalDistanceAll = React.useMemo(() => {
+    return vehicleBookings.reduce((sum, b) => {
+      const dist = b.totalDistance || (b.endMileage && b.startMileage ? b.endMileage - b.startMileage : 0);
+      return sum + (dist > 0 ? dist : 0);
+    }, 0);
+  }, [vehicleBookings]);
+
+  const totalFuelLitersAll = React.useMemo(() => {
+    return vehicleBookings.reduce((sum, b) => sum + (b.fuelRefilledLiters || 0), 0);
+  }, [vehicleBookings]);
+
+  const totalFuelCostAll = React.useMemo(() => {
+    return vehicleBookings.reduce((sum, b) => sum + (b.fuelRefilledCost || 0), 0);
+  }, [vehicleBookings]);
+
+  const activeDocId = activeDocType === 'memo'
+    ? 'printMemoArea'
+    : activeDocType === 'register'
+    ? 'printRegisterSingleArea'
+    : 'printPermitArea';
+
   const docTitle = activeDocType === 'memo'
     ? `ใบคำขอใช้รถยนต์ส่วนกลาง_${memoRefDisplay.replace(/[\/\\()]/g, '_')}`
+    : activeDocType === 'register'
+    ? `ทะเบียนคุมการใช้รถยนต์_${(booking.carName || 'ราชการ').replace(/[\/\\()\s]/g, '_')}_${memoRefDisplay.replace(/[\/\\()]/g, '_')}`
     : `ใบอนุญาตออกนอกเขตจังหวัด_${memoRefDisplay.replace(/[\/\\()]/g, '_')}`;
+
+  const resetZoomToFit = () => {
+    if (typeof window !== 'undefined') {
+      const isLand = activeDocType === 'register';
+      if (window.innerWidth < 450) setA4Zoom(isLand ? 0.35 : 0.46);
+      else if (window.innerWidth < 768) setA4Zoom(isLand ? 0.48 : 0.60);
+      else if (window.innerWidth < 1200) setA4Zoom(isLand ? 0.72 : 0.85);
+      else setA4Zoom(isLand ? 0.85 : 1.0);
+    }
+  };
 
   const handlePrint = () => {
     printElementById(activeDocId, {
       documentTitle: docTitle,
-      orientation: 'portrait'
+      orientation: isLandscape ? 'landscape' : 'portrait'
     });
   };
 
@@ -115,7 +170,7 @@ export const OfficialMemoModal: React.FC<OfficialMemoModalProps> = ({
       const safeName = `${docTitle}_${booking.id}.pdf`;
       await exportElementToPdf(activeDocId, {
         fileName: safeName,
-        orientation: 'portrait'
+        orientation: isLandscape ? 'landscape' : 'portrait'
       });
       setPdfSuccessMessage(`บันทึกไฟล์ PDF สำเร็จ: ${safeName}`);
       setTimeout(() => setPdfSuccessMessage(null), 4000);
@@ -179,8 +234,8 @@ export const OfficialMemoModal: React.FC<OfficialMemoModalProps> = ({
   const StatusIcon = statusInfo.icon;
 
   return (
-    <div className="fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-sm flex items-center justify-center p-0 sm:p-3 md:p-4 overflow-hidden">
-      <div className="bg-slate-100 dark:bg-slate-900 w-full max-w-4xl h-full sm:h-[95vh] flex flex-col rounded-none sm:rounded-2xl shadow-2xl overflow-hidden border border-slate-700/80">
+    <div className="fixed inset-0 z-[70] bg-slate-900/80 backdrop-blur-sm flex items-center justify-center p-0 sm:p-3 md:p-4 overflow-hidden">
+      <div className={`bg-slate-100 dark:bg-slate-900 w-full ${activeDocType === 'register' ? 'max-w-6xl' : 'max-w-4xl'} h-full sm:h-[95vh] flex flex-col rounded-none sm:rounded-2xl shadow-2xl overflow-hidden border border-slate-700/80 transition-all duration-200`}>
         
         {/* ========================================================================= */}
         {/* Modal Top Bar - Highly Optimized for Mobile & Desktop                     */}
@@ -189,20 +244,40 @@ export const OfficialMemoModal: React.FC<OfficialMemoModalProps> = ({
           {/* Top Row: Title + Close Button */}
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2.5 min-w-0">
-              <div className="w-8 h-8 rounded-xl bg-orange-500/20 text-orange-400 flex items-center justify-center shrink-0">
-                <FileText className="w-4 h-4" />
+              <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${
+                activeDocType === 'register'
+                  ? 'bg-teal-500/20 text-teal-400'
+                  : activeDocType === 'out_province'
+                  ? 'bg-amber-500/20 text-amber-400'
+                  : 'bg-orange-500/20 text-orange-400'
+              }`}>
+                {activeDocType === 'register' ? (
+                  <Car className="w-4 h-4" />
+                ) : activeDocType === 'out_province' ? (
+                  <Compass className="w-4 h-4" />
+                ) : (
+                  <FileText className="w-4 h-4" />
+                )}
               </div>
               <div className="min-w-0">
                 <div className="flex items-center space-x-2">
                   <h3 className="font-bold text-sm text-white truncate">
-                    ใบคำขอใช้รถยนต์ส่วนกลาง
+                    {activeDocType === 'memo'
+                      ? 'ใบคำขอใช้รถยนต์ส่วนกลาง'
+                      : activeDocType === 'register'
+                      ? 'ทะเบียนคุมการใช้รถยนต์ราชการ'
+                      : 'ใบอนุญาตออกนอกเขตจังหวัด'}
                   </h3>
                   <span className="font-mono text-[10px] bg-orange-600/30 text-orange-300 border border-orange-500/30 px-1.5 py-0.2 rounded shrink-0">
-                    {booking.id}
+                    {activeDocType === 'register' ? (booking.carName || booking.id) : booking.id}
                   </span>
                 </div>
                 <p className="text-[11px] text-slate-400 truncate">
-                  {booking.memoNo ? `บันทึกข้อความที่ ${booking.memoNo}` : 'สำนักงานวัฒนธรรมจังหวัดพังงา'}
+                  {activeDocType === 'register'
+                    ? `งานพัสดุและยานพาหนะ ฝ่ายบริหารทั่วไป (เลขที่คำขอ: ${booking.memoNo || booking.id})`
+                    : booking.memoNo
+                    ? `บันทึกข้อความที่ ${booking.memoNo}`
+                    : 'สำนักงานวัฒนธรรมจังหวัดพังงา'}
                 </p>
               </div>
             </div>
@@ -219,15 +294,38 @@ export const OfficialMemoModal: React.FC<OfficialMemoModalProps> = ({
             </div>
           </div>
 
-          {/* Controls Bar: Switch View Mode + Switch Document Type + Close */}
-          <div className="flex items-center justify-between sm:justify-end space-x-1.5 sm:space-x-2">
+          {/* Controls Bar: Document Type Dropdown + Switch View Mode + Thai Numerals + Close */}
+          <div className="flex flex-wrap items-center justify-between sm:justify-end gap-1.5 sm:gap-2">
             
+            {/* Document Type Dropdown Selector */}
+            <div className="flex items-center space-x-1">
+              <label htmlFor="officialDocTypeSelect" className="text-[11px] font-bold text-slate-300 shrink-0 hidden md:inline">
+                รูปแบบเอกสาร:
+              </label>
+              <div className="relative">
+                <select
+                  id="officialDocTypeSelect"
+                  value={activeDocType}
+                  onChange={(e) => setActiveDocType(e.target.value as OfficialDocType)}
+                  className="bg-slate-800 hover:bg-slate-750 text-white text-xs font-semibold rounded-xl pl-2.5 pr-7 py-1.5 border border-slate-700 hover:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/50 cursor-pointer appearance-none shadow-xs"
+                  title="เลือกรูปแบบเอกสารที่ต้องการดูหรือพิมพ์"
+                >
+                  <option value="memo">📄 ใบคำขอใช้รถยนต์ (แนวตั้ง A4)</option>
+                  <option value="register">📋 ทะเบียนคุมรถยนต์ (แนวนอน A4)</option>
+                  {isOutOfProvince && (
+                    <option value="out_province">🧭 ใบอนุญาตออกนอกเขตจังหวัด (แนวตั้ง A4)</option>
+                  )}
+                </select>
+                <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" />
+              </div>
+            </div>
+
             {/* View Mode Switcher: Mobile Card vs A4 Print Paper */}
             <div className="flex bg-slate-800/90 p-0.5 rounded-xl border border-slate-700/80 text-xs">
               <button
                 type="button"
                 onClick={() => setViewMode('mobile')}
-                className={`px-2.5 py-1.5 rounded-lg font-semibold flex items-center space-x-1.5 transition cursor-pointer active:scale-95 ${
+                className={`px-2 py-1.5 sm:px-2.5 rounded-lg font-semibold flex items-center space-x-1 sm:space-x-1.5 transition cursor-pointer active:scale-95 ${
                   viewMode === 'mobile'
                     ? 'bg-orange-600 text-white shadow-xs'
                     : 'text-slate-400 hover:text-white'
@@ -235,12 +333,12 @@ export const OfficialMemoModal: React.FC<OfficialMemoModalProps> = ({
                 title="มุมมองการอ่านบนมือถือ สบายตา อ่านง่าย ไม่ต้องซูม"
               >
                 <Smartphone className="w-3.5 h-3.5" />
-                <span>มุมมองมือถือ</span>
+                <span>มือถือ</span>
               </button>
               <button
                 type="button"
                 onClick={() => setViewMode('a4')}
-                className={`px-2.5 py-1.5 rounded-lg font-semibold flex items-center space-x-1.5 transition cursor-pointer active:scale-95 ${
+                className={`px-2 py-1.5 sm:px-2.5 rounded-lg font-semibold flex items-center space-x-1 sm:space-x-1.5 transition cursor-pointer active:scale-95 ${
                   viewMode === 'a4'
                     ? 'bg-orange-600 text-white shadow-xs'
                     : 'text-slate-400 hover:text-white'
@@ -248,40 +346,9 @@ export const OfficialMemoModal: React.FC<OfficialMemoModalProps> = ({
                 title="มุมมองแบบร่างเอกสารราชการ A4"
               >
                 <Maximize2 className="w-3.5 h-3.5" />
-                <span>กระดาษ A4</span>
+                <span>พิมพ์ A4</span>
               </button>
             </div>
-
-            {/* Out-of-Province Permit Switcher (if applicable) */}
-            {isOutOfProvince && (
-              <div className="flex bg-slate-800 p-0.5 rounded-xl border border-slate-700 text-xs">
-                <button
-                  type="button"
-                  onClick={() => setActiveDocType('memo')}
-                  className={`px-2 py-1.5 rounded-lg font-medium transition cursor-pointer ${
-                    activeDocType === 'memo'
-                      ? 'bg-teal-700 text-white shadow-xs'
-                      : 'text-slate-400 hover:text-white'
-                  }`}
-                  title="ใบคำขอใช้รถยนต์ส่วนกลาง"
-                >
-                  <span>คำขอ</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setActiveDocType('out_province')}
-                  className={`px-2 py-1.5 rounded-lg font-medium transition cursor-pointer flex items-center space-x-1 ${
-                    activeDocType === 'out_province'
-                      ? 'bg-teal-600 text-white shadow-xs'
-                      : 'text-slate-400 hover:text-white'
-                  }`}
-                  title="ใบอนุญาตออกนอกเขตจังหวัด"
-                >
-                  <Compass className="w-3 h-3 text-amber-400" />
-                  <span>ออกนอกเขต</span>
-                </button>
-              </div>
-            )}
 
             {/* Thai Numerals Toggle (desktop/tablet) */}
             <label className="hidden lg:flex items-center space-x-1.5 bg-slate-800 px-2.5 py-1 rounded-xl cursor-pointer hover:bg-slate-700 text-slate-300 text-xs">
@@ -345,11 +412,228 @@ export const OfficialMemoModal: React.FC<OfficialMemoModalProps> = ({
           {/* VIEW MODE 1: MOBILE APP DIGITAL PASSPORT / CARD VIEW                 */}
           {/* ===================================================================== */}
           {viewMode === 'mobile' && (
-            <div className="w-full max-w-xl space-y-4 pb-4 animate-fadeIn">
-              
-              {/* Card 1: Official Header & Status Card */}
-              <div className="bg-white dark:bg-slate-800 rounded-2xl p-4 sm:p-5 border border-slate-200 dark:border-slate-700 shadow-xs space-y-3.5 relative overflow-hidden">
-                <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-orange-500 via-amber-500 to-teal-500" />
+            activeDocType === 'register' ? (
+              <div className="w-full max-w-xl space-y-4 pb-4 animate-fadeIn">
+                {/* Register Header Card */}
+                <div className="bg-white dark:bg-slate-800 rounded-2xl p-4 sm:p-5 border border-slate-200 dark:border-slate-700 shadow-xs space-y-3 relative overflow-hidden">
+                  <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-teal-500 via-emerald-500 to-cyan-500" />
+                  <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-700/60 pt-1">
+                    <div className="flex items-center space-x-2.5">
+                      <div className="w-10 h-10 rounded-xl bg-teal-500/10 text-teal-600 dark:text-teal-400 flex items-center justify-center font-bold">
+                        <Car className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">
+                          ทะเบียนคุมการใช้ยานพาหนะราชการ
+                        </span>
+                        <h4 className="font-bold text-base text-slate-900 dark:text-white leading-tight">
+                          {booking.carName}
+                        </h4>
+                      </div>
+                    </div>
+                    <span className="text-[10px] px-2.5 py-1 rounded-full bg-teal-50 text-teal-700 dark:bg-teal-950/50 dark:text-teal-300 font-bold border border-teal-200 dark:border-teal-800">
+                      งานพัสดุและยานพาหนะ
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2 text-xs">
+                    <div className="p-2.5 bg-slate-50 dark:bg-slate-900/60 rounded-xl">
+                      <span className="text-[10px] text-slate-400 block">เลขที่คำขอ</span>
+                      <span className="font-bold font-mono text-slate-800 dark:text-slate-200">{booking.memoNo || booking.id}</span>
+                    </div>
+                    <div className="p-2.5 bg-slate-50 dark:bg-slate-900/60 rounded-xl">
+                      <span className="text-[10px] text-slate-400 block">วันที่ปฏิบัติภารกิจ</span>
+                      <span className="font-bold text-slate-800 dark:text-slate-200">{formattedDate}</span>
+                    </div>
+                    <div className="p-2.5 bg-slate-50 dark:bg-slate-900/60 rounded-xl">
+                      <span className="text-[10px] text-slate-400 block">ผู้ขอใช้รถ</span>
+                      <span className="font-bold text-slate-800 dark:text-slate-200 truncate block">{booking.name}</span>
+                    </div>
+                    <div className="p-2.5 bg-slate-50 dark:bg-slate-900/60 rounded-xl">
+                      <span className="text-[10px] text-slate-400 block">พนักงานขับรถ</span>
+                      <span className="font-bold text-slate-800 dark:text-slate-200 truncate block">
+                        {booking.driverType === 'self' ? `${booking.name} (ขับเอง)` : booking.driverName || '-'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Mileage & Odometer Card */}
+                <div className="bg-white dark:bg-slate-800 rounded-2xl p-4 sm:p-5 border border-slate-200 dark:border-slate-700 shadow-xs space-y-3">
+                  <div className="flex items-center space-x-2 pb-2 border-b border-slate-100 dark:border-slate-700/60">
+                    <Gauge className="w-4 h-4 text-teal-600 dark:text-teal-400" />
+                    <h5 className="font-bold text-sm text-slate-900 dark:text-white">
+                      บันทึกเลขไมล์และระยะทาง
+                    </h5>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2 text-xs">
+                    <div className="p-2.5 bg-slate-50 dark:bg-slate-900/60 rounded-xl">
+                      <span className="text-[10px] text-slate-400 block">เลขไมล์ก่อนเดินทาง</span>
+                      <span className="font-bold font-mono text-slate-800 dark:text-slate-200 text-sm">
+                        {booking.startMileage ? `${booking.startMileage.toLocaleString()} กม.` : 'ยังไม่บันทึก'}
+                      </span>
+                      {booking.startMileageTime && (
+                        <span className="text-[10px] text-slate-400 block mt-0.5">เวลา {booking.startMileageTime} น.</span>
+                      )}
+                    </div>
+                    <div className="p-2.5 bg-slate-50 dark:bg-slate-900/60 rounded-xl">
+                      <span className="text-[10px] text-slate-400 block">เลขไมล์หลังเดินทาง</span>
+                      <span className="font-bold font-mono text-slate-800 dark:text-slate-200 text-sm">
+                        {booking.endMileage ? `${booking.endMileage.toLocaleString()} กม.` : 'ยังไม่บันทึก'}
+                      </span>
+                      {booking.endMileageTime && (
+                        <span className="text-[10px] text-slate-400 block mt-0.5">เวลา {booking.endMileageTime} น.</span>
+                      )}
+                    </div>
+                    <div className="col-span-2 p-3 bg-teal-50 dark:bg-teal-950/40 rounded-xl flex justify-between items-center text-teal-900 dark:text-teal-200 border border-teal-200/50 dark:border-teal-800/50">
+                      <span className="font-medium text-xs">ระยะทางสุทธิของภารกิจนี้:</span>
+                      <span className="font-bold text-base font-mono">
+                        {booking.totalDistance
+                          ? `${booking.totalDistance.toLocaleString()} กม.`
+                          : booking.endMileage && booking.startMileage
+                          ? `${(booking.endMileage - booking.startMileage).toLocaleString()} กม.`
+                          : '-'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Fuel & Inspection Details */}
+                <div className="bg-white dark:bg-slate-800 rounded-2xl p-4 sm:p-5 border border-slate-200 dark:border-slate-700 shadow-xs space-y-3">
+                  <div className="flex items-center space-x-2 pb-2 border-b border-slate-100 dark:border-slate-700/60">
+                    <ShieldCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                    <h5 className="font-bold text-sm text-slate-900 dark:text-white">
+                      น้ำมันเชื้อเพลิงและการตรวจรับพัสดุ
+                    </h5>
+                  </div>
+
+                  <div className="space-y-2 text-xs">
+                    <div className="flex justify-between items-center p-2.5 bg-slate-50 dark:bg-slate-900/60 rounded-xl">
+                      <span className="text-slate-600 dark:text-slate-400">การเติมน้ำมัน:</span>
+                      <span className="font-bold text-slate-800 dark:text-slate-200">
+                        {booking.fuelRefilledLiters
+                          ? `${booking.fuelRefilledLiters} ลิตร (${booking.fuelRefilledCost?.toLocaleString() || 0} บาท)`
+                          : 'ไม่มีการเติมระหว่างทาง'}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center p-2.5 bg-slate-50 dark:bg-slate-900/60 rounded-xl">
+                      <span className="text-slate-600 dark:text-slate-400">ผลตรวจรับสภาพยานพาหนะ:</span>
+                      <span className="font-bold text-emerald-700 dark:text-emerald-400">
+                        {booking.assetInspectionVehicleCondition === 'normal' || !booking.assetInspectionVehicleCondition
+                          ? '✓ สภาพปกติ เรียบร้อย'
+                          : booking.assetInspectionVehicleCondition === 'needs_cleaning'
+                          ? 'ควรทำความสะอาด'
+                          : 'ต้องส่งซ่อมบำรุง'}
+                      </span>
+                    </div>
+                    {booking.assetInspectionSignature && (
+                      <div className="pt-2 flex flex-col items-center p-3 bg-slate-50 dark:bg-slate-900/60 rounded-xl">
+                        <span className="text-[10px] text-slate-400 mb-1">ลายเซ็นเจ้าหน้าที่พัสดุผู้ตรวจรับ:</span>
+                        <img
+                          src={booking.assetInspectionSignature}
+                          alt="ลายเซ็นเจ้าหน้าที่พัสดุ"
+                          className="h-10 max-w-[160px] object-contain mb-1"
+                        />
+                        <p className="text-xs font-semibold text-slate-800 dark:text-slate-200">
+                          ({booking.assetInspectorName || 'เจ้าหน้าที่พัสดุ'})
+                        </p>
+                        <p className="text-[10px] text-slate-400">
+                          {booking.assetInspectorPosition || 'เจ้าพนักงานพัสดุปฏิบัติงาน'}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Vehicle History List (Other missions for this car) */}
+                {vehicleBookings.length > 1 && (
+                  <div className="bg-white dark:bg-slate-800 rounded-2xl p-4 sm:p-5 border border-slate-200 dark:border-slate-700 shadow-xs space-y-3">
+                    <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-700/60">
+                      <div className="flex items-center space-x-2">
+                        <Table className="w-4 h-4 text-teal-600 dark:text-teal-400" />
+                        <h5 className="font-bold text-sm text-slate-900 dark:text-white">
+                          รายการบันทึกในทะเบียนคุม ({vehicleBookings.length} เที่ยว)
+                        </h5>
+                      </div>
+                      <span className="text-[10px] text-slate-400 font-mono">รถ {booking.carName}</span>
+                    </div>
+
+                    <div className="space-y-2 max-h-64 overflow-y-auto pr-1 text-xs">
+                      {vehicleBookings.map((b, idx) => (
+                        <div
+                          key={b.id}
+                          className={`p-2.5 rounded-xl border transition ${
+                            b.id === booking.id
+                              ? 'bg-amber-50 dark:bg-amber-950/30 border-amber-300 dark:border-amber-700 text-amber-950 dark:text-amber-100'
+                              : 'bg-slate-50 dark:bg-slate-900/50 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300'
+                          }`}
+                        >
+                          <div className="flex justify-between items-start mb-1">
+                            <span className="font-bold flex items-center space-x-1">
+                              <span>{idx + 1}. {formatThaiDate(b.date, 'short')}</span>
+                              {b.id === booking.id && (
+                                <span className="text-[9px] px-1.5 py-0.2 rounded-full bg-amber-500 text-white font-bold">
+                                  คำขอนี้
+                                </span>
+                              )}
+                            </span>
+                            <span className="font-mono text-[10px] px-1.5 py-0.5 rounded bg-black/5 dark:bg-white/5">
+                              {b.memoNo || b.id}
+                            </span>
+                          </div>
+                          <p className="text-[11px] truncate">
+                            <span className="text-slate-400">ภารกิจ: </span>{b.destination} ({b.purpose})
+                          </p>
+                          <div className="flex justify-between text-[10px] text-slate-500 mt-1 pt-1 border-t border-black/5 dark:border-white/5">
+                            <span>ผู้ขอ: {b.name}</span>
+                            <span>ระยะทาง: {b.totalDistance ? `${b.totalDistance} กม.` : '-'}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Signatures Card */}
+                <div className="bg-white dark:bg-slate-800 rounded-2xl p-4 sm:p-5 border border-slate-200 dark:border-slate-700 shadow-xs space-y-3">
+                  <h5 className="font-bold text-sm text-slate-900 dark:text-white pb-2 border-b border-slate-100 dark:border-slate-700/60">
+                    การลงลายมือชื่อกำกับ 3 ฝ่าย
+                  </h5>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-center text-xs">
+                    <div className="p-3 bg-slate-50 dark:bg-slate-900/60 rounded-xl flex flex-col justify-between">
+                      <span className="text-[10px] text-slate-400 block mb-1">ผู้ส่งมอบ (พนักงานขับรถ)</span>
+                      <p className="font-semibold text-slate-800 dark:text-slate-200 mt-2">({booking.driverName || booking.name})</p>
+                      <span className="text-[10px] text-slate-400 mt-0.5">
+                        {booking.driverType === 'self' ? 'ผู้ขอขับขี่เอง' : 'พนักงานขับรถ'}
+                      </span>
+                    </div>
+                    <div className="p-3 bg-slate-50 dark:bg-slate-900/60 rounded-xl flex flex-col justify-between">
+                      <span className="text-[10px] text-slate-400 block mb-1">ผู้ตรวจรับ (เจ้าหน้าที่พัสดุ)</span>
+                      {booking.assetInspectionSignature ? (
+                        <img src={booking.assetInspectionSignature} alt="ลายเซ็น" className="h-8 max-w-[120px] object-contain mx-auto my-1" />
+                      ) : (
+                        <div className="h-8 flex items-center justify-center text-[10px] text-slate-400">-</div>
+                      )}
+                      <p className="font-semibold text-slate-800 dark:text-slate-200">({booking.assetInspectorName || 'เจ้าหน้าที่พัสดุ'})</p>
+                    </div>
+                    <div className="p-3 bg-slate-50 dark:bg-slate-900/60 rounded-xl flex flex-col justify-between">
+                      <span className="text-[10px] text-slate-400 block mb-1">ผู้อนุมัติ (วัฒนธรรมจังหวัด)</span>
+                      {booking.signatureData ? (
+                        <img src={booking.signatureData} alt="ลายเซ็น" className="h-8 max-w-[120px] object-contain mx-auto my-1" />
+                      ) : (
+                        <div className="h-8 flex items-center justify-center text-[10px] text-slate-400">-</div>
+                      )}
+                      <p className="font-semibold text-slate-800 dark:text-slate-200">({booking.approvedBy || 'นางสาวอุไรวรรณ แดงงาม'})</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="w-full max-w-xl space-y-4 pb-4 animate-fadeIn">
+                {/* Card 1: Official Header & Status Card */}
+                <div className="bg-white dark:bg-slate-800 rounded-2xl p-4 sm:p-5 border border-slate-200 dark:border-slate-700 shadow-xs space-y-3.5 relative overflow-hidden">
+                  <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-orange-500 via-amber-500 to-teal-500" />
                 
                 {/* Ministry & Document Title Header */}
                 <div className="flex items-start justify-between gap-2 pt-1">
@@ -704,6 +988,7 @@ export const OfficialMemoModal: React.FC<OfficialMemoModalProps> = ({
               )}
 
             </div>
+            )
           )}
 
           {/* ===================================================================== */}
@@ -719,11 +1004,16 @@ export const OfficialMemoModal: React.FC<OfficialMemoModalProps> = ({
                   <span className="font-mono font-bold text-slate-800 dark:text-white">
                     {Math.round(a4Zoom * 100)}%
                   </span>
+                  {isLandscape && (
+                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-teal-100 dark:bg-teal-900/60 text-teal-800 dark:text-teal-300">
+                      แนวนอน (Landscape)
+                    </span>
+                  )}
                 </div>
                 <div className="flex items-center space-x-1.5">
                   <button
                     type="button"
-                    onClick={() => setA4Zoom((prev) => Math.max(0.4, Number((prev - 0.1).toFixed(2))))}
+                    onClick={() => setA4Zoom((prev) => Math.max(0.35, Number((prev - 0.1).toFixed(2))))}
                     className="p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 cursor-pointer"
                     title="ย่อขนาด"
                   >
@@ -731,13 +1021,7 @@ export const OfficialMemoModal: React.FC<OfficialMemoModalProps> = ({
                   </button>
                   <button
                     type="button"
-                    onClick={() => {
-                      if (typeof window !== 'undefined') {
-                        if (window.innerWidth < 450) setA4Zoom(0.46);
-                        else if (window.innerWidth < 768) setA4Zoom(0.60);
-                        else setA4Zoom(1.0);
-                      }
-                    }}
+                    onClick={() => resetZoomToFit()}
                     className="px-2.5 py-1 rounded-lg bg-orange-50 hover:bg-orange-100 text-orange-700 font-semibold cursor-pointer text-[11px]"
                     title="ปรับให้พอดีความกว้างหน้าจอ"
                   >
@@ -761,7 +1045,7 @@ export const OfficialMemoModal: React.FC<OfficialMemoModalProps> = ({
               style={{
                 transform: `scale(${a4Zoom})`,
                 transformOrigin: 'top center',
-                marginBottom: `${(1 - a4Zoom) * -1122}px` // Compensate height collapse when scaled
+                marginBottom: `${(1 - a4Zoom) * (isLandscape ? -794 : -1122)}px` // Compensate height collapse when scaled
               }}
             >
               
@@ -1065,7 +1349,257 @@ export const OfficialMemoModal: React.FC<OfficialMemoModalProps> = ({
                 </div>
               )}
 
-              {/* Document 2: ใบอนุญาตนำรถยนต์ราชการออกนอกเขตจังหวัด */}
+              {/* Document 2: ทะเบียนคุมการใช้รถยนต์ส่วนกลางและรถประจำตำแหน่ง (A4 แนวนอน) */}
+              {activeDocType === 'register' && (
+                <div
+                  id="printRegisterSingleArea"
+                  className="bg-white text-black font-sarabun shadow-2xl rounded-sm border border-slate-300 box-border flex flex-col justify-between shrink-0 select-text"
+                  style={{
+                    width: '297mm',
+                    minWidth: '297mm',
+                    maxWidth: '297mm',
+                    height: '210mm',
+                    minHeight: '210mm',
+                    maxHeight: '210mm',
+                    boxSizing: 'border-box',
+                    paddingTop: '1.2cm',
+                    paddingRight: '1.5cm',
+                    paddingBottom: '1.2cm',
+                    paddingLeft: '1.5cm',
+                    overflow: 'hidden',
+                    fontSize: '11pt',
+                    lineHeight: 1.35,
+                    fontFamily: "'TH Sarabun PSK', 'TH Sarabun New', 'Sarabun', Tahoma, sans-serif",
+                    color: '#000000',
+                    backgroundColor: '#ffffff'
+                  }}
+                >
+                  <div className="flex flex-col flex-grow">
+                    {/* Official Document Header */}
+                    <div className="text-center pb-2 mb-2 border-b-2 border-black">
+                      <div className="text-[10pt] tracking-wider uppercase text-black font-bold">
+                        แบบฟอร์มฝ่ายบริหารทั่วไป งานพัสดุและยานพาหนะ
+                      </div>
+                      <h1 className="text-[15pt] font-bold text-black tracking-tight leading-snug">
+                        ทะเบียนคุมการใช้รถยนต์ส่วนกลางและรถประจำตำแหน่ง
+                      </h1>
+                      <h2 className="text-[12pt] font-semibold text-black leading-snug">
+                        สำนักงานวัฒนธรรมจังหวัดพังงา กระทรวงวัฒนธรรม
+                      </h2>
+                      <div className="flex justify-center items-center gap-6 text-[10pt] text-black pt-1">
+                        <span>
+                          ยานพาหนะ: <strong>{booking.carName}</strong>
+                        </span>
+                        <span>
+                          เลขที่คำขออ้างอิง: <strong>{memoRefDisplay}</strong>
+                        </span>
+                        <span>
+                          ประจำปีงบประมาณ พ.ศ. <strong>{num(new Date(booking.date).getFullYear() + 543)}</strong>
+                        </span>
+                        <span>
+                          วันที่ออกเอกสาร: <strong>{memoDateDisplay}</strong>
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Registry Table */}
+                    <div className="flex-grow overflow-hidden">
+                      <table className="w-full table-fixed border-collapse border border-black text-[9pt] leading-tight">
+                        <colgroup>
+                          <col style={{ width: '4%' }} />
+                          <col style={{ width: '8.5%' }} />
+                          <col style={{ width: '9%' }} />
+                          <col style={{ width: '11%' }} />
+                          <col style={{ width: '13%' }} />
+                          <col style={{ width: '14%' }} />
+                          <col style={{ width: '7.5%' }} />
+                          <col style={{ width: '6.5%' }} />
+                          <col style={{ width: '6.5%' }} />
+                          <col style={{ width: '6%' }} />
+                          <col style={{ width: '7%' }} />
+                          <col style={{ width: '7%' }} />
+                        </colgroup>
+                        <thead>
+                          <tr className="bg-slate-100 border-b border-black text-black">
+                            <th className="border border-black p-1 text-center font-bold">ลำดับ</th>
+                            <th className="border border-black p-1 text-center font-bold">วัน เดือน ปี</th>
+                            <th className="border border-black p-1 text-center font-bold">เลขที่ใบขอรถ</th>
+                            <th className="border border-black p-1 text-left font-bold pl-1.5">ผู้ขอใช้รถ / สังกัด</th>
+                            <th className="border border-black p-1 text-left font-bold pl-1.5">สถานที่ไปราชการ</th>
+                            <th className="border border-black p-1 text-left font-bold pl-1.5">วัตถุประสงค์ / ภารกิจ</th>
+                            <th className="border border-black p-1 text-center font-bold">เวลาไป-กลับ</th>
+                            <th className="border border-black p-1 text-right font-bold pr-1">ไมล์ไป</th>
+                            <th className="border border-black p-1 text-right font-bold pr-1">ไมล์กลับ</th>
+                            <th className="border border-black p-1 text-right font-bold pr-1">รวม (กม.)</th>
+                            <th className="border border-black p-1 text-center font-bold">น้ำมัน (ลิตร/บาท)</th>
+                            <th className="border border-black p-1 text-center font-bold">พนักงานขับรถ</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {vehicleBookings.slice(0, 8).map((b, idx) => {
+                            const isCurrent = b.id === booking.id;
+                            const distance = b.totalDistance 
+                              ? b.totalDistance 
+                              : (b.endMileage && b.startMileage) 
+                              ? (b.endMileage - b.startMileage) 
+                              : null;
+                            return (
+                              <tr
+                                key={b.id}
+                                className={`border-b border-black ${isCurrent ? 'bg-amber-50/80 font-medium' : ''}`}
+                              >
+                                <td className="border border-black p-1 text-center font-mono">
+                                  {num(idx + 1)}
+                                </td>
+                                <td className="border border-black p-1 text-center">
+                                  {formatThaiDate(b.date, 'short')}
+                                </td>
+                                <td className="border border-black p-1 text-center font-mono text-[8pt]">
+                                  {b.memoNo || b.id}
+                                  {isCurrent && (
+                                    <span className="block text-[7.5pt] text-amber-700 font-bold">
+                                      (คำขอนี้)
+                                    </span>
+                                  )}
+                                </td>
+                                <td className="border border-black p-1 text-left pl-1.5 truncate">
+                                  {b.name}
+                                </td>
+                                <td className="border border-black p-1 text-left pl-1.5 truncate">
+                                  {b.destination}
+                                </td>
+                                <td className="border border-black p-1 text-left pl-1.5 truncate">
+                                  {b.purpose}
+                                </td>
+                                <td className="border border-black p-1 text-center text-[8pt]">
+                                  {b.startTime || '08:30'} - {b.endTime || '16:30'}
+                                </td>
+                                <td className="border border-black p-1 text-right pr-1 font-mono text-[8.5pt]">
+                                  {b.startMileage ? num(b.startMileage.toLocaleString()) : '-'}
+                                </td>
+                                <td className="border border-black p-1 text-right pr-1 font-mono text-[8.5pt]">
+                                  {b.endMileage ? num(b.endMileage.toLocaleString()) : '-'}
+                                </td>
+                                <td className="border border-black p-1 text-right pr-1 font-mono font-bold text-[8.5pt]">
+                                  {distance ? num(distance.toLocaleString()) : '-'}
+                                </td>
+                                <td className="border border-black p-1 text-center text-[8pt]">
+                                  {b.fuelRefilledLiters
+                                    ? `${num(b.fuelRefilledLiters)} ล. (${num(b.fuelRefilledCost || 0)} บ.)`
+                                    : '-'}
+                                </td>
+                                <td className="border border-black p-1 text-center text-[8pt] truncate">
+                                  {b.driverType === 'self' ? 'ขับเอง' : b.driverName || '-'}
+                                </td>
+                              </tr>
+                            );
+                          })}
+
+                          {/* If less than 6 rows, fill with blank rows for standard government ledger formatting */}
+                          {vehicleBookings.length < 6 &&
+                            Array.from({ length: 6 - vehicleBookings.length }).map((_, fIdx) => (
+                              <tr key={`blank-${fIdx}`} className="border-b border-black text-transparent select-none h-6">
+                                <td className="border border-black p-1 text-center">-</td>
+                                <td className="border border-black p-1">-</td>
+                                <td className="border border-black p-1">-</td>
+                                <td className="border border-black p-1">-</td>
+                                <td className="border border-black p-1">-</td>
+                                <td className="border border-black p-1">-</td>
+                                <td className="border border-black p-1">-</td>
+                                <td className="border border-black p-1">-</td>
+                                <td className="border border-black p-1">-</td>
+                                <td className="border border-black p-1">-</td>
+                                <td className="border border-black p-1">-</td>
+                                <td className="border border-black p-1">-</td>
+                              </tr>
+                            ))}
+                        </tbody>
+                        <tfoot>
+                          <tr className="bg-slate-100 font-bold border-t-2 border-black text-[9pt]">
+                            <td colSpan={7} className="border border-black p-1.5 text-center">
+                              รวมผลการใช้ยานพาหนะตามทะเบียนคุม (จำนวน {num(vehicleBookings.length)} เที่ยวภารกิจ)
+                            </td>
+                            <td colSpan={2} className="border border-black p-1.5 text-right pr-2">
+                              ระยะทางรวม:
+                            </td>
+                            <td className="border border-black p-1.5 text-right pr-1 font-mono text-[9pt]">
+                              {num(vehicleBookings.reduce((acc, cur) => acc + (cur.totalDistance || (cur.endMileage && cur.startMileage ? cur.endMileage - cur.startMileage : 0)), 0).toLocaleString())} กม.
+                            </td>
+                            <td className="border border-black p-1.5 text-center text-[8pt]">
+                              {num(vehicleBookings.reduce((acc, cur) => acc + (cur.fuelRefilledLiters || 0), 0))} ลิตร
+                            </td>
+                            <td className="border border-black p-1.5 text-center text-[8pt]">
+                              ตรวจรับเรียบร้อย
+                            </td>
+                          </tr>
+                        </tfoot>
+                      </table>
+                    </div>
+                  </div>
+
+                  {/* 3-Party Signatures Footer for Official Registry */}
+                  <div className="grid grid-cols-3 gap-6 pt-3 mt-1 border-t border-black text-center text-[10.5pt] leading-tight">
+                    {/* Signature 1: Driver */}
+                    <div className="space-y-1">
+                      <p className="font-semibold text-black">ผู้รายงาน / พนักงานขับรถยนต์</p>
+                      <div className="h-10 flex items-end justify-center">
+                        <span className="border-b border-dotted border-black w-48 block" />
+                      </div>
+                      <div>
+                        <p>({booking.driverName || booking.name || '..........................................................'})</p>
+                        <p className="text-[9pt] text-black/70">
+                          {booking.driverType === 'self' ? 'ผู้ขออนุญาตขับขี่เอง' : 'พนักงานขับรถยนต์ราชการ'}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Signature 2: Asset Inspector */}
+                    <div className="space-y-1">
+                      <p className="font-semibold text-black">ผู้ตรวจรับพัสดุ / เจ้าหน้าที่ยานพาหนะ</p>
+                      <div className="h-10 flex items-end justify-center">
+                        {booking.assetInspectionSignature ? (
+                          <img
+                            src={booking.assetInspectionSignature}
+                            alt="ลายเซ็นผู้ตรวจรับพัสดุ"
+                            className="h-9 max-w-[130px] object-contain -mb-1"
+                          />
+                        ) : (
+                          <span className="border-b border-dotted border-black w-48 block" />
+                        )}
+                      </div>
+                      <div>
+                        <p>({booking.assetInspectorName || '..........................................................'})</p>
+                        <p className="text-[9pt] text-black/70">
+                          {booking.assetInspectorPosition || 'เจ้าหน้าที่บริหารงานพัสดุ'}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Signature 3: Provincial Culture Director */}
+                    <div className="space-y-1">
+                      <p className="font-semibold text-black">ผู้อนุมัติผลรายงาน / วัฒนธรรมจังหวัด</p>
+                      <div className="h-10 flex items-end justify-center">
+                        {booking.signatureData ? (
+                          <img
+                            src={booking.signatureData}
+                            alt="ลายเซ็นผู้อนุมัติ"
+                            className="h-9 max-w-[130px] object-contain -mb-1"
+                          />
+                        ) : (
+                          <p className="font-bold text-black text-[9.5pt] -mb-1">(ลงนามอนุมัติในระบบ)</p>
+                        )}
+                      </div>
+                      <div>
+                        <p>({booking.approvedBy || 'นางสาวอุไรวรรณ แดงงาม'})</p>
+                        <p className="text-[9pt] text-black/70">วัฒนธรรมจังหวัดพังงา</p>
+                      </div>
+                    </div>
+                  </div>
+
+                </div>
+              )}
+
+              {/* Document 3: ใบอนุญาตนำรถยนต์ราชการออกนอกเขตจังหวัด */}
               {activeDocType === 'out_province' && (
                 <div
                   id="printPermitArea"
@@ -1193,13 +1727,19 @@ export const OfficialMemoModal: React.FC<OfficialMemoModalProps> = ({
         {/* ========================================================================= */}
         <div className="px-3 sm:px-6 py-3 bg-white dark:bg-slate-800 border-t border-slate-200 dark:border-slate-700 flex flex-wrap justify-between items-center no-print gap-2 shrink-0 pb-safe">
           <div className="text-xs text-slate-500 dark:text-slate-400 flex items-center space-x-2">
-            <span>คำขอ:</span>
-            <span className="font-mono font-bold text-slate-800 dark:text-slate-200">{booking.id}</span>
-            {isOutOfProvince && (
+            <span>{activeDocType === 'register' ? 'ทะเบียนคุมรถ:' : 'คำขอ:'}</span>
+            <span className="font-mono font-bold text-slate-800 dark:text-slate-200">
+              {activeDocType === 'register' ? (booking.carName || booking.id) : booking.id}
+            </span>
+            {activeDocType === 'register' ? (
+              <span className="hidden sm:inline-block bg-teal-100 dark:bg-teal-900/60 text-teal-800 dark:text-teal-300 text-[10px] font-bold px-2 py-0.5 rounded-full">
+                {vehicleBookings.length} รายการภารกิจ
+              </span>
+            ) : isOutOfProvince ? (
               <span className="hidden sm:inline-block bg-teal-100 dark:bg-teal-900/60 text-teal-800 dark:text-teal-300 text-[10px] font-bold px-2 py-0.5 rounded-full">
                 ภารกิจข้ามเขตจังหวัด ({booking.destProvince})
               </span>
-            )}
+            ) : null}
           </div>
 
           <div className="flex items-center space-x-2 w-full sm:w-auto justify-end">
@@ -1256,10 +1796,22 @@ export const OfficialMemoModal: React.FC<OfficialMemoModalProps> = ({
               data-print-hide="true"
               onClick={handlePrint}
               className="flex-1 sm:flex-none no-print print-hide px-4 py-2.5 bg-orange-600 hover:bg-orange-700 active:scale-95 text-white rounded-xl text-xs font-semibold transition shadow-xs flex items-center justify-center space-x-1.5 cursor-pointer"
-              title="พิมพ์ใบคำขอขอใช้รถยนต์ส่วนกลาง / เอกสารราชการ (A4)"
+              title={
+                activeDocType === 'memo'
+                  ? 'พิมพ์ใบคำขอขอใช้รถยนต์ส่วนกลาง (A4 แนวตั้ง)'
+                  : activeDocType === 'register'
+                  ? 'พิมพ์ทะเบียนคุมการใช้รถยนต์ (A4 แนวนอน)'
+                  : 'พิมพ์ใบอนุญาตนำรถออกนอกเขตจังหวัด (A4 แนวตั้ง)'
+              }
             >
               <Printer className="w-3.5 h-3.5" />
-              <span>พิมพ์ใบคำขอ</span>
+              <span>
+                {activeDocType === 'memo'
+                  ? 'พิมพ์ใบคำขอ'
+                  : activeDocType === 'register'
+                  ? 'พิมพ์ทะเบียนคุม'
+                  : 'พิมพ์ใบอนุญาต'}
+              </span>
             </button>
 
             {/* Close Button */}
