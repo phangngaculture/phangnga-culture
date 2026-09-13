@@ -24,7 +24,7 @@ import {
 import { playAppSound } from '../utils/thaiDate';
 
 // Supported style types
-export type UiStyleType = 'modern' | 'ribbon' | 'classic' | 'slim_rail' | 'double_panel' | 'eevo_sleek' | 'aurora_glass';
+export type UiStyleType = 'modern' | 'ribbon' | 'classic' | 'slim_rail' | 'double_panel' | 'eevo_sleek' | 'aurora_glass' | 'minimal_clean' | 'neumorphism_soft' | 'midnight_navy';
 export type MenuColorType = 'orange' | 'emerald' | 'indigo' | 'rose' | 'violet';
 export type FontSizeCodeType = 'small' | 'medium' | 'large';
 
@@ -80,6 +80,27 @@ export const WebsiteCustomizerView: React.FC<WebsiteCustomizerViewProps> = ({
   }, [uiStyle, menuButtonColor, sidebarOpacity, fontSize]);
 
   const styleOptions = [
+    {
+      id: 'minimal_clean' as const,
+      name: '7. Minimal Clean',
+      desc: 'Sidebar ขาวสะอาด เน้นพื้นที่ว่าง เส้นแบ่งบาง และความอ่านง่ายแบบมืออาชีพ',
+      badge: 'เรียบหรู',
+      badgeColor: 'bg-slate-500/10 text-slate-500 border-slate-500/30'
+    },
+    {
+      id: 'neumorphism_soft' as const,
+      name: '8. Neumorphism Soft',
+      desc: 'ดีไซน์นูนเว้าด้วยเงานุ่ม ให้แผงเมนูมีมิติและความรู้สึกสัมผัสแบบพรีเมียม',
+      badge: 'นุ่มมีมิติ',
+      badgeColor: 'bg-cyan-500/10 text-cyan-500 border-cyan-500/30'
+    },
+    {
+      id: 'midnight_navy' as const,
+      name: '9. Midnight Navy',
+      desc: 'กรมท่าเข้มแบบทางการ ผสมน้ำเงินสว่าง สื่อความน่าเชื่อถือและความปลอดภัย',
+      badge: 'ทางการโมเดิร์น',
+      badgeColor: 'bg-blue-500/10 text-blue-500 border-blue-500/30'
+    },
     {
       id: 'aurora_glass' as const,
       name: '6. Aurora Glass (ดีไซน์ใหม่ล่าสุด)',

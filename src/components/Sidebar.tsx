@@ -62,7 +62,7 @@ interface SidebarProps {
   googleUser?: any;
   isGoogleConnected?: boolean;
   soundEnabled?: boolean;
-  uiStyle?: 'modern' | 'ribbon' | 'classic' | 'slim_rail' | 'double_panel' | 'eevo_sleek' | 'aurora_glass';
+  uiStyle?: 'modern' | 'ribbon' | 'classic' | 'slim_rail' | 'double_panel' | 'eevo_sleek' | 'aurora_glass' | 'minimal_clean' | 'neumorphism_soft' | 'midnight_navy';
   menuButtonColor?: 'orange' | 'emerald' | 'indigo' | 'rose' | 'violet';
   iconStyle?: 'gradient' | 'neon' | 'flat';
   fontSize?: 'small' | 'medium' | 'large';
@@ -352,6 +352,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
   const getActiveButtonClass = (isActive: boolean) => {
     if (!isActive) {
+      if (uiStyle === 'minimal_clean') {
+        return darkMode ? 'text-slate-400 hover:bg-slate-800/70 hover:text-white border border-transparent' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900 border border-transparent';
+      }
+      if (uiStyle === 'neumorphism_soft') {
+        return darkMode ? 'text-slate-400 hover:bg-slate-800/80 hover:text-slate-100 border border-transparent' : 'text-slate-600 hover:text-slate-800 border border-transparent hover:shadow-[inset_3px_3px_7px_rgba(148,163,184,0.28),inset_-3px_-3px_7px_rgba(255,255,255,0.9)]';
+      }
+      if (uiStyle === 'midnight_navy') {
+        return 'text-blue-100/65 hover:bg-blue-900/40 hover:text-white border border-transparent';
+      }
       if (uiStyle === 'classic') {
         return darkMode
           ? 'text-amber-100 hover:bg-amber-900/10 hover:text-amber-300 font-serif border border-transparent'
@@ -360,6 +369,18 @@ export const Sidebar: React.FC<SidebarProps> = ({
       return darkMode
         ? 'text-slate-400 hover:bg-[#151c2c] hover:text-white border border-transparent'
         : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900 border border-transparent';
+    }
+
+    if (uiStyle === 'minimal_clean') {
+      return darkMode ? 'bg-white text-slate-900 shadow-sm border border-white font-bold' : 'bg-slate-900 text-white shadow-sm border border-slate-900 font-bold';
+    }
+
+    if (uiStyle === 'neumorphism_soft') {
+      return darkMode ? 'bg-slate-800 text-white border border-slate-700 shadow-[5px_5px_10px_rgba(2,6,23,0.45),-5px_-5px_10px_rgba(71,85,105,0.12)] font-bold' : 'bg-[#e6ebf2] text-slate-800 border border-white/70 shadow-[6px_6px_12px_rgba(148,163,184,0.35),-6px_-6px_12px_rgba(255,255,255,0.95)] font-bold';
+    }
+
+    if (uiStyle === 'midnight_navy') {
+      return 'bg-blue-600/25 text-white shadow-[0_8px_24px_rgba(37,99,235,0.18)] border border-blue-400/25 font-bold';
     }
 
     if (uiStyle === 'classic') {
@@ -920,6 +941,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
               ? darkMode
                 ? 'border-indigo-400/20 text-white'
                 : 'border-indigo-300/40 text-slate-800'
+              : uiStyle === 'minimal_clean'
+                ? darkMode ? 'bg-[#0f172a] border-slate-800 text-white' : 'bg-white border-slate-200 text-slate-800'
+                : uiStyle === 'neumorphism_soft'
+                  ? darkMode ? 'bg-slate-900 border-slate-800 text-slate-100' : 'bg-[#e6ebf2] border-white/80 text-slate-700'
+                  : uiStyle === 'midnight_navy'
+                    ? 'bg-[#0b1730] border-blue-900/60 text-white'
               : uiStyle === 'ribbon'
                 ? 'bg-[#131326] border-slate-800/40 text-white'
                 : uiStyle === 'classic'

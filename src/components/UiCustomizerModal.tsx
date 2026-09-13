@@ -2,7 +2,7 @@ import React from 'react';
 import { X, Palette, Sliders, Type, Grid, Check, Sparkles, Wand2 } from 'lucide-react';
 import { playAppSound } from '../utils/thaiDate';
 
-export type UiStyleType = 'modern' | 'ribbon' | 'slim_rail' | 'double_panel' | 'classic' | 'eevo_sleek' | 'aurora_glass';
+export type UiStyleType = 'modern' | 'ribbon' | 'slim_rail' | 'double_panel' | 'classic' | 'eevo_sleek' | 'aurora_glass' | 'minimal_clean' | 'neumorphism_soft' | 'midnight_navy';
 
 interface UiCustomizerModalProps {
   isOpen: boolean;
@@ -34,6 +34,24 @@ export const UiCustomizerModal: React.FC<UiCustomizerModalProps> = ({
   if (!isOpen) return null;
 
   const styleOptions = [
+    {
+      id: 'minimal_clean' as const,
+      name: '7. Minimal Clean',
+      desc: 'เรียบสะอาด ใช้พื้นที่ว่างและเส้นแบ่งบาง ๆ อ่านเมนูง่าย เหมาะสำหรับงานประจำวัน',
+      previewClass: 'bg-white border-slate-300'
+    },
+    {
+      id: 'neumorphism_soft' as const,
+      name: '8. Neumorphism Soft',
+      desc: 'พื้นผิวนุ่มแบบนูนและเว้า พร้อมเงาอ่อน ให้ Sidebar มีมิติและสัมผัสพรีเมียม',
+      previewClass: 'bg-[#e6ebf2] border-white shadow-[5px_5px_10px_rgba(148,163,184,0.4)]'
+    },
+    {
+      id: 'midnight_navy' as const,
+      name: '9. Midnight Navy',
+      desc: 'กรมท่าเข้มแบบทางการ ผสมน้ำเงินสว่างและเส้นขอบบาง เหมาะกับระบบราชการยุคใหม่',
+      previewClass: 'bg-[#0b1730] border-blue-800/70'
+    },
     {
       id: 'aurora_glass' as const,
       name: '6. Aurora Glass (ดีไซน์ใหม่ล่าสุด)',
