@@ -91,21 +91,32 @@ export const APP_MENUS: MenuDefinition[] = [
     desc: 'เพิ่ม ลบ แก้ไขผู้ใช้ และกำหนดสิทธิ์การเข้าถึงแต่ละเมนู',
     badge: 'เฉพาะ Admin',
     color: 'text-rose-500 bg-rose-500/10'
+  },
+  {
+    id: 'website_customizer',
+    label: 'ตกแต่งและจัดการเว็บไซต์',
+    desc: 'ปรับแต่งดีไซน์เมนูข้าง สไตล์สี และความโปร่งแสงไล่ระดับโทนสี',
+    badge: 'ตกแต่งเว็บ',
+    color: 'text-amber-500 bg-amber-500/10'
   }
 ];
 
 export const DEFAULT_ROLE_MENUS: Record<string, MenuKey[]> = {
-  admin: ['dashboard', 'calendar', 'booking', 'director', 'driver_mission', 'asset_register', 'asset_inspection', 'fuel', 'fleet', 'analytics', 'tracking', 'backup', 'users'],
-  director: ['dashboard', 'calendar', 'booking', 'director', 'driver_mission', 'asset_register', 'asset_inspection', 'analytics', 'tracking', 'backup'],
-  officer: ['dashboard', 'calendar', 'booking', 'asset_register', 'asset_inspection', 'tracking'],
-  driver: ['driver_mission', 'dashboard', 'calendar', 'fuel', 'fleet', 'tracking']
+  admin: ['dashboard', 'calendar', 'booking', 'director', 'driver_mission', 'asset_register', 'asset_inspection', 'fuel', 'fleet', 'analytics', 'tracking', 'backup', 'users', 'website_customizer'],
+  director: ['dashboard', 'calendar', 'booking', 'director', 'driver_mission', 'asset_register', 'asset_inspection', 'analytics', 'tracking', 'backup', 'website_customizer'],
+  officer: ['dashboard', 'calendar', 'booking', 'asset_register', 'asset_inspection', 'tracking', 'website_customizer'],
+  driver: ['driver_mission', 'dashboard', 'calendar', 'fuel', 'fleet', 'tracking', 'website_customizer']
 };
 
 export function getUserAllowedMenus(user?: User | null): MenuKey[] {
   if (!user) return ['dashboard', 'calendar', 'booking'];
   if (user.role === 'admin') {
     const menus = user.allowedMenus && user.allowedMenus.length > 0 ? user.allowedMenus : DEFAULT_ROLE_MENUS.admin;
-    return menus.includes('users') ? menus : [...menus, 'users'];
+    // ensure both users and website_customizer are present
+    let finalMenus = [...menus];
+    if (!finalMenus.includes('users')) finalMenus.push('users');
+    if (!finalMenus.includes('website_customizer')) finalMenus.push('website_customizer');
+    return finalMenus;
   }
   if (user.allowedMenus && user.allowedMenus.length > 0) {
     return user.allowedMenus;
@@ -126,8 +137,56 @@ export const SYSTEM_USERS: User[] = [
     phone: '076-481-482 ต่อ 11',
     email: 'admin.phangnga@m-culture.go.th',
     status: 'active',
-    allowedMenus: ['dashboard', 'calendar', 'booking', 'director', 'driver_mission', 'asset_register', 'asset_inspection', 'fuel', 'fleet', 'analytics', 'tracking', 'users'],
+    allowedMenus: ['dashboard', 'calendar', 'booking', 'director', 'driver_mission', 'asset_register', 'asset_inspection', 'fuel', 'fleet', 'analytics', 'tracking', 'users', 'website_customizer'],
     lineUserId: 'Ue3609b77d75e903ea3e3a4868b236e6f',
+    lineNotificationEnabled: true
+  },
+  {
+    id: 'u-officer',
+    username: 'officer',
+    password: 'dekcom2537',
+    name: 'นางสาวสุชาดา พัสดุดี',
+    position: 'เจ้าพนักงานพัสดุชำนาญงาน',
+    department: 'ฝ่ายบริหารทั่วไป',
+    role: 'officer',
+    roleTitle: 'เจ้าหน้าที่พัสดุและยานพาหนะ (Officer)',
+    phone: '076-481-482 ต่อ 15',
+    email: 'officer.phangnga@m-culture.go.th',
+    status: 'active',
+    allowedMenus: ['dashboard', 'calendar', 'booking', 'asset_register', 'asset_inspection', 'tracking'],
+    lineUserId: 'Ue3609b77d75e903ea3e3a4868b236e7a',
+    lineNotificationEnabled: true
+  },
+  {
+    id: 'u-director',
+    username: 'director',
+    password: 'dekcom2537',
+    name: 'นางสาวอุไรวรรณ แดงงาม',
+    position: 'วัฒนธรรมจังหวัดพังงา',
+    department: 'ฝ่ายบริหารทั่วไป',
+    role: 'director',
+    roleTitle: 'ผู้อำนวยการสำนักงานวัฒนธรรมจังหวัด (Director)',
+    phone: '076-481-482 ต่อ 20',
+    email: 'director.phangnga@m-culture.go.th',
+    status: 'active',
+    allowedMenus: ['dashboard', 'calendar', 'booking', 'director', 'driver_mission', 'asset_register', 'asset_inspection', 'analytics', 'tracking', 'backup'],
+    lineUserId: 'Ue3609b77d75e903ea3e3a4868b236e7b',
+    lineNotificationEnabled: true
+  },
+  {
+    id: 'u-driver',
+    username: 'driver',
+    password: 'dekcom2537',
+    name: 'นายสมคิด ขับขี่ปลอดภัย',
+    position: 'พนักงานขับรถยนต์ราชการ',
+    department: 'ฝ่ายบริหารทั่วไป',
+    role: 'driver',
+    roleTitle: 'พนักงานขับรถยนต์ส่วนกลาง (Driver)',
+    phone: '081-234-5678',
+    email: 'driver1.phangnga@m-culture.go.th',
+    status: 'active',
+    allowedMenus: ['driver_mission', 'dashboard', 'calendar', 'fuel', 'fleet', 'tracking'],
+    lineUserId: 'Ue3609b77d75e903ea3e3a4868b236e7c',
     lineNotificationEnabled: true
   }
 ];

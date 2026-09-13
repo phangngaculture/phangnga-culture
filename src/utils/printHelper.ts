@@ -7,82 +7,44 @@ export function printElementById(elementId: string, options: PrintOptions) {
   const element = document.getElementById(elementId);
   if (!element) {
     console.error(`Element with id ${elementId} not found`);
+    window.print();
     return;
   }
 
-  // Create temporary iframe for printing
-  const iframe = document.createElement('iframe');
-  iframe.style.position = 'fixed';
-  iframe.style.right = '0';
-  iframe.style.bottom = '0';
-  iframe.style.width = '0';
-  iframe.style.height = '0';
-  iframe.style.border = '0';
-  document.body.appendChild(iframe);
+  // Backup original document title and apply the print title
+  const originalTitle = document.title;
+  document.title = options.documentTitle;
 
-  const doc = iframe.contentWindow?.document || iframe.contentDocument;
-  if (!doc) {
-    console.error('Could not get iframe document');
-    return;
+  // Add the "printable-document" class to ensure it displays correctly during print
+  const hadClass = element.classList.contains('printable-document');
+  if (!hadClass) {
+    element.classList.add('printable-document');
   }
 
-  doc.open();
-  doc.write('<html><head><title>' + options.documentTitle + '</title>');
+  // Handle landscape orientation printing explicitly by adding temporary page style
+  let styleSheet: HTMLStyleElement | null = null;
+  if (options.orientation === 'landscape') {
+    styleSheet = document.createElement('style');
+    styleSheet.innerHTML = `@page { size: landscape; margin: 15mm; }`;
+    document.head.appendChild(styleSheet);
+  }
 
-  // Copy stylesheets from original document to preserve Tailwind CSS classes
-  const stylesheets = Array.from(document.querySelectorAll('link[rel="stylesheet"], style'));
-  stylesheets.forEach((sheet) => {
-    doc.write(sheet.outerHTML);
-  });
+  // Print using the top-level window print dialog, which works flawlessly in iframe previews
+  try {
+    window.print();
+  } catch (err) {
+    console.error('Failed to trigger window print, attempting fallback:', err);
+    // Fallback back to standard behavior if print is not supported
+  }
 
-  // Custom orientation and print-specific margins
-  doc.write(`
-    <style>
-      @page {
-        size: ${options.orientation || 'portrait'};
-        margin: 15mm 15mm 15mm 15mm;
-      }
-      body {
-        margin: 0;
-        padding: 0;
-        background: white !important;
-        color: black !important;
-        -webkit-print-color-adjust: exact;
-        print-color-adjust: exact;
-        font-family: 'Sarabun', 'Sukhothai', system-ui, sans-serif;
-      }
-      .break-inside-avoid {
-        break-inside: avoid;
-        page-break-inside: avoid;
-      }
-      .no-print {
-        display: none !important;
-      }
-    </style>
-  `);
-
-  doc.write('</head><body>');
-  doc.write(`<div class="${options.orientation === 'landscape' ? 'landscape' : 'portrait'}">`);
-  doc.write(element.innerHTML);
-  doc.write('</div>');
-  doc.write('</body></html>');
-  doc.close();
-
-  // Wait for resources/stylesheets to resolve, then trigger print
+  // Restore state after print dialog closes
   setTimeout(() => {
-    if (iframe.contentWindow) {
-      try {
-        iframe.contentWindow.focus();
-        iframe.contentWindow.print();
-      } catch (err) {
-        console.error('Failed to trigger iframe print:', err);
-      }
+    document.title = originalTitle;
+    if (!hadClass) {
+      element.classList.remove('printable-document');
     }
-    // Clean up from the main DOM
-    setTimeout(() => {
-      if (document.body.contains(iframe)) {
-        document.body.removeChild(iframe);
-      }
-    }, 1000);
-  }, 500);
+    if (styleSheet && document.head.contains(styleSheet)) {
+      document.head.removeChild(styleSheet);
+    }
+  }, 1000);
 }

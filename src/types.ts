@@ -15,7 +15,8 @@ export type MenuKey =
   | 'analytics'
   | 'tracking'
   | 'backup'
-  | 'users';
+  | 'users'
+  | 'website_customizer';
 
 export interface SystemBackupData {
   version: string;

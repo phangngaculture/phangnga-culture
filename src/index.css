@@ -537,23 +537,90 @@ aside ::-webkit-scrollbar-thumb:hover,
 /* ==========================================================================
    Mobile/Tablet App Shell Locking (ล็อกหน้าจอสำหรับ iPad และมือถือ)
    ========================================================================== */
-@media (max-width: 1535px) {
-  html, body {
-    overflow: hidden !important;
-    height: 100% !important;
-    height: 100vh !important;
-    height: 100dvh !important;
-    overscroll-behavior: none !important;
-    -webkit-overflow-scrolling: auto !important;
-  }
-  
-  #root {
-    height: 100% !important;
-    height: 100dvh !important;
-    overflow: hidden !important;
-    display: flex !important;
-    flex-direction: column !important;
-  }
+/* ==========================================================================
+   UI Customization & Style Overrides (เมนูตกแต่งสไตล์เว็บไซต์)
+   ========================================================================== */
+
+/* Brand Accent Colors */
+:root {
+  --brand-color: #f97316;
+  --brand-color-hover: #ea580c;
 }
+
+.bg-brand {
+  background-color: var(--brand-color) !important;
+}
+.bg-brand:hover {
+  background-color: var(--brand-color-hover) !important;
+}
+.text-brand {
+  color: var(--brand-color) !important;
+}
+.border-brand {
+  border-color: var(--brand-color) !important;
+}
+.ring-brand {
+  --tw-ring-color: var(--brand-color) !important;
+}
+
+/* Custom Font Size Multipliers */
+html.text-sz-small {
+  font-size: 13px !important;
+}
+html.text-sz-medium {
+  font-size: 14.5px !important;
+}
+html.text-sz-large {
+  font-size: 16.5px !important;
+}
+
+html.text-sz-small .text-xs, html.text-sz-small .text-\[10px\], html.text-sz-small .text-\[9px\] { font-size: 10px !important; }
+html.text-sz-small .text-sm { font-size: 12px !important; }
+html.text-sz-small .text-base { font-size: 14px !important; }
+html.text-sz-small .text-lg { font-size: 16px !important; }
+html.text-sz-small .text-xl { font-size: 18px !important; }
+
+html.text-sz-large .text-xs, html.text-sz-large .text-\[10px\], html.text-sz-large .text-\[9px\] { font-size: 12px !important; }
+html.text-sz-large .text-sm { font-size: 15px !important; }
+html.text-sz-large .text-base { font-size: 18px !important; }
+html.text-sz-large .text-lg { font-size: 21px !important; }
+html.text-sz-large .text-xl { font-size: 24px !important; }
+
+/* 3D Curved Ribbon Active Tab Style */
+.curved-ribbon-active {
+  position: relative !important;
+  border-top-right-radius: 0 !important;
+  border-bottom-right-radius: 0 !important;
+  background-color: #121824 !important;
+  color: #38bdf8 !important;
+  z-index: 10;
+}
+
+.curved-ribbon-active::before {
+  content: '';
+  position: absolute;
+  top: -20px;
+  right: 0;
+  width: 20px;
+  height: 20px;
+  background-color: transparent;
+  border-bottom-right-radius: 20px;
+  box-shadow: 0 10px 0 0 #121824;
+  pointer-events: none;
+}
+
+.curved-ribbon-active::after {
+  content: '';
+  position: absolute;
+  bottom: -20px;
+  right: 0;
+  width: 20px;
+  height: 20px;
+  background-color: transparent;
+  border-top-right-radius: 20px;
+  box-shadow: 0 -10px 0 0 #121824;
+  pointer-events: none;
+}
+
 
 

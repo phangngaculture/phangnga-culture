@@ -565,7 +565,8 @@ export const GpsTrackingView: React.FC<GpsTrackingViewProps> = ({ vehicles = [] 
     } else {
       // Fit all waypoints
       const bounds = L.latLngBounds(latlngs);
-      map.fitBounds(bounds, { padding: [50, 50] });
+      const pad = window.innerWidth < 768 ? 20 : 50;
+      map.fitBounds(bounds, { padding: [pad, pad] });
     }
   }, [activeProfile, viewMode, showTrafficArrows]);
 
@@ -727,7 +728,8 @@ export const GpsTrackingView: React.FC<GpsTrackingViewProps> = ({ vehicles = [] 
         otherMarkersRef.current.push(otherMarker);
       });
 
-      map.fitBounds(bounds, { padding: [60, 60] });
+      const pad = window.innerWidth < 768 ? 20 : 60;
+      map.fitBounds(bounds, { padding: [pad, pad] });
     }
   }, [viewMode, gpsProfiles, selectedVehicleId]);
 
@@ -753,7 +755,30 @@ export const GpsTrackingView: React.FC<GpsTrackingViewProps> = ({ vehicles = [] 
     if (!map) return;
     const latlngs = activeProfile.waypoints.map((w) => [w.lat, w.lng] as [number, number]);
     const bounds = L.latLngBounds(latlngs);
-    map.fitBounds(bounds, { padding: [50, 50] });
+    const pad = window.innerWidth < 768 ? 15 : 50;
+    map.fitBounds(bounds, { padding: [pad, pad] });
+    setFollowVehicle(false);
+  };
+
+  // Fit All Active Vehicles
+  const handleFitAllVehicles = () => {
+    const map = mapInstanceRef.current;
+    if (!map) return;
+
+    if (viewMode !== 'fleet') {
+      setViewMode('fleet');
+    }
+
+    const bounds = L.latLngBounds([[currentCoords.lat, currentCoords.lng]]);
+    (Object.values(gpsProfiles) as CarGpsProfile[]).forEach((prof) => {
+      const pos = prof.id === selectedVehicleId 
+        ? currentCoords 
+        : interpolatePosition(prof.waypoints, 0.5);
+      bounds.extend([pos.lat, pos.lng]);
+    });
+
+    const pad = window.innerWidth < 768 ? 20 : 60;
+    map.fitBounds(bounds, { padding: [pad, pad], animate: true });
     setFollowVehicle(false);
   };
 
@@ -923,7 +948,7 @@ export const GpsTrackingView: React.FC<GpsTrackingViewProps> = ({ vehicles = [] 
 
             {/* Interactive 3D Perspective Pitch & Bearing HUD Widget */}
             {is3DMode && (
-              <div className="absolute bottom-3 left-3 z-40 bg-slate-950/95 backdrop-blur-md text-white p-3 rounded-2xl border border-slate-800 shadow-2xl w-[220px] pointer-events-auto flex flex-col space-y-2.5">
+              <div className="absolute bottom-3 left-3 z-[1000] bg-slate-950/95 backdrop-blur-md text-white p-3 rounded-2xl border border-slate-800 shadow-2xl w-[220px] pointer-events-auto flex flex-col space-y-2.5">
                 <div className="flex items-center justify-between">
                   <span className="text-[10px] font-black uppercase tracking-wider text-orange-400 flex items-center gap-1.5">
                     <Compass className="w-3.5 h-3.5 animate-spin-slow" />
@@ -976,7 +1001,7 @@ export const GpsTrackingView: React.FC<GpsTrackingViewProps> = ({ vehicles = [] 
 
             {/* Smart 3D GPS HUD Navigation Panel */}
             {activeNavigationStep && viewMode === 'focus' && (
-              <div className="absolute top-3 left-3 z-40 bg-slate-950/95 backdrop-blur-md text-white p-3 rounded-2xl border border-slate-800 shadow-xl max-w-[260px] pointer-events-auto">
+              <div className="absolute top-3 left-3 z-[1000] bg-slate-950/95 backdrop-blur-md text-white p-3 rounded-2xl border border-slate-800 shadow-xl max-w-[260px] pointer-events-auto">
                 <div className="flex items-start space-x-3">
                   {/* Dynamic Turn Arrow Icon Box */}
                   <div className="bg-orange-600 p-2.5 rounded-xl flex items-center justify-center shrink-0 shadow-lg shadow-orange-600/30">
@@ -1018,7 +1043,7 @@ export const GpsTrackingView: React.FC<GpsTrackingViewProps> = ({ vehicles = [] 
             )}
 
             {/* Floating Map Overlay Action Buttons */}
-            <div className="absolute top-3 right-3 z-40 flex flex-col space-y-2 bg-white/95 backdrop-blur-md p-1.5 rounded-2xl shadow-lg border border-slate-200">
+            <div className="absolute top-3 right-3 z-[1000] flex flex-col space-y-2 bg-white/95 backdrop-blur-md p-1.5 rounded-2xl shadow-lg border border-slate-200">
               {/* 2D / 3D Perspectives Switcher */}
               <button
                 type="button"
@@ -1028,7 +1053,7 @@ export const GpsTrackingView: React.FC<GpsTrackingViewProps> = ({ vehicles = [] 
                     ? 'bg-orange-600 text-white border-orange-500 hover:bg-orange-700' 
                     : 'bg-white hover:bg-slate-50 text-slate-700 border-slate-200'
                 }`}
-                title="สลับมุมมอง 2D (แบนราบ) / 3D (มุมจีพีเอสนำทาง)"
+                title="สลับมุมมอง 2 มิติ (แบนราบ) / 3 มิติ (มุมนำทาง)"
               >
                 <Compass className={`w-4 h-4 mb-0.5 ${is3DMode ? 'animate-spin-slow' : ''}`} />
                 <span>{is3DMode ? '3D' : '2D'}</span>
@@ -1043,7 +1068,7 @@ export const GpsTrackingView: React.FC<GpsTrackingViewProps> = ({ vehicles = [] 
                     ? 'bg-emerald-600 text-white border-emerald-500 hover:bg-emerald-700' 
                     : 'bg-white hover:bg-slate-50 text-slate-700 border-slate-200'
                 }`}
-                title="สลับการแสดงป้ายชื่อถนน (Street Labels)"
+                title="สลับการแสดงป้ายชื่อถนน"
               >
                 <Eye className="w-4 h-4 mb-0.5" />
                 <span>ป้ายถนน</span>
@@ -1058,7 +1083,7 @@ export const GpsTrackingView: React.FC<GpsTrackingViewProps> = ({ vehicles = [] 
                     ? 'bg-blue-600 text-white border-blue-500 hover:bg-blue-700' 
                     : 'bg-white hover:bg-slate-50 text-slate-700 border-slate-200'
                 }`}
-                title="สลับลูกศรทิศทางจราจร (Traffic Directions)"
+                title="สลับลูกศรทิศทางจราจร"
               >
                 <Milestone className="w-4 h-4 mb-0.5" />
                 <span>ทิศทาง</span>
@@ -1068,7 +1093,7 @@ export const GpsTrackingView: React.FC<GpsTrackingViewProps> = ({ vehicles = [] 
                 type="button"
                 onClick={handleRecenter}
                 className="p-2 hover:bg-orange-50 text-slate-700 hover:text-orange-600 rounded-xl transition cursor-pointer"
-                title="เล็งกึ่งกลางที่รถคันนี้ (Recenter)"
+                title="จัดกึ่งกลางแผนที่ไปที่รถคันนี้"
               >
                 <Crosshair className="w-4 h-4" />
               </button>
@@ -1076,9 +1101,17 @@ export const GpsTrackingView: React.FC<GpsTrackingViewProps> = ({ vehicles = [] 
                 type="button"
                 onClick={handleFitRoute}
                 className="p-2 hover:bg-orange-50 text-slate-700 hover:text-orange-600 rounded-xl transition cursor-pointer"
-                title="ย่อดูทั้งเส้นทาง (Fit Route)"
+                title="ย่อขยายแสดงเส้นทางทั้งหมด"
               >
                 <Maximize2 className="w-4 h-4" />
+              </button>
+              <button
+                type="button"
+                onClick={handleFitAllVehicles}
+                className="p-2 hover:bg-orange-50 text-slate-700 hover:text-orange-600 rounded-xl transition cursor-pointer"
+                title="แสดงพิกัดตำแหน่งรถทั้งหมด"
+              >
+                <Car className="w-4 h-4 text-orange-600 animate-pulse" />
               </button>
               <button
                 type="button"
@@ -1095,8 +1128,8 @@ export const GpsTrackingView: React.FC<GpsTrackingViewProps> = ({ vehicles = [] 
               </button>
             </div>
 
-            {/* Coordinates Floating Pill - shifted when 3D mode is active to prevent overlapping */}
-            <div className={`absolute bottom-4 z-40 bg-slate-900/90 backdrop-blur-md text-white px-3.5 py-2 rounded-2xl border border-slate-700/80 shadow-lg flex items-center space-x-3 text-xs transition-all duration-300 ${is3DMode ? 'hidden sm:flex sm:left-[240px]' : 'left-4'}`}>
+            {/* Coordinates Floating Pill - shifted when 3D mode is active to prevent overlapping, never hidden */}
+            <div className={`absolute z-[1000] bg-slate-900/90 backdrop-blur-md text-white px-3.5 py-2 rounded-2xl border border-slate-700/80 shadow-lg flex items-center space-x-3 text-xs transition-all duration-300 ${is3DMode ? 'bottom-[160px] left-3 sm:bottom-4 sm:left-[240px]' : 'bottom-4 left-4'}`}>
               <div className="flex items-center space-x-1.5 font-mono text-[11px]">
                 <MapPin className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
                 <span>{currentCoords.lat.toFixed(5)}° N, {currentCoords.lng.toFixed(5)}° E</span>

@@ -28,6 +28,7 @@ import {
   Lock,
   Unlock,
   Sliders,
+  Palette,
   ChevronRight,
   Gauge,
   Camera,
@@ -71,7 +72,8 @@ const MENU_ICONS: Record<MenuKey, React.ComponentType<{ className?: string }>> =
   analytics: BarChart3,
   tracking: Navigation,
   backup: Database,
-  users: Users
+  users: Users,
+  website_customizer: Palette
 };
 
 const ROLE_LABELS: Record<UserRole, { label: string; title: string; color: string; bg: string; border: string }> = {

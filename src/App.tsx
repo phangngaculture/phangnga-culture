@@ -85,6 +85,8 @@ import { LoginScreen } from './components/LoginScreen';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { LineSimulatorModal } from './components/LineSimulatorModal';
 import { VoiceAlertSettingsModal } from './components/VoiceAlertSettingsModal';
+import { UiCustomizerModal } from './components/UiCustomizerModal';
+import { WebsiteCustomizerView } from './components/WebsiteCustomizerView';
 import { ShieldAlert } from 'lucide-react';
 import { registerServiceWorker, updateAppBadge, clearAppBadge } from './services/badgingService';
 import {
@@ -155,7 +157,7 @@ export default function App() {
         password: admin.password || 'dekcom2537',
         role: 'admin',
         status: 'active',
-        allowedMenus: ['dashboard', 'calendar', 'booking', 'director', 'driver_mission', 'fuel', 'fleet', 'analytics', 'tracking', 'backup', 'users']
+        allowedMenus: ['dashboard', 'calendar', 'booking', 'director', 'driver_mission', 'asset_register', 'asset_inspection', 'fuel', 'fleet', 'analytics', 'tracking', 'backup', 'users', 'website_customizer']
       });
     }
 
@@ -176,7 +178,7 @@ export default function App() {
       // Preserve the password the admin actually set; only fall back when unset.
       password: loaded.password || 'dekcom2537',
       role: 'admin',
-      allowedMenus: ['dashboard', 'calendar', 'booking', 'director', 'driver_mission', 'fuel', 'fleet', 'analytics', 'tracking', 'backup', 'users']
+      allowedMenus: ['dashboard', 'calendar', 'booking', 'director', 'driver_mission', 'asset_register', 'asset_inspection', 'fuel', 'fleet', 'analytics', 'tracking', 'backup', 'users', 'website_customizer']
     };
     saveLocalData(STORAGE_KEYS.CURRENT_USER, adminUser);
     return adminUser;
@@ -256,6 +258,49 @@ export default function App() {
   const [vehicles, setVehicles] = useState<Vehicle[]>(() =>
     loadSavedData<Vehicle[]>(STORAGE_KEYS.VEHICLES, VEHICLES)
   );
+
+  // UI Customizer State
+  const [uiStyle, setUiStyle] = useState<'modern' | 'ribbon' | 'classic' | 'slim_rail' | 'double_panel' | 'eevo_sleek'>(() =>
+    loadSavedData<'modern' | 'ribbon' | 'classic' | 'slim_rail' | 'double_panel' | 'eevo_sleek'>('mculture_ui_style', 'modern')
+  );
+  const [menuButtonColor, setMenuButtonColor] = useState<'orange' | 'emerald' | 'indigo' | 'rose' | 'violet'>(() =>
+    loadSavedData<'orange' | 'emerald' | 'indigo' | 'rose' | 'violet'>('mculture_menu_button_color', 'orange')
+  );
+  const [iconStyle, setIconStyle] = useState<'gradient' | 'neon' | 'flat'>(() =>
+    loadSavedData<'gradient' | 'neon' | 'flat'>('mculture_icon_style', 'gradient')
+  );
+  const [fontSize, setFontSize] = useState<'small' | 'medium' | 'large'>(() =>
+    loadSavedData<'small' | 'medium' | 'large'>('mculture_font_size', 'medium')
+  );
+  const [sidebarOpacity, setSidebarOpacity] = useState<number>(() =>
+    loadSavedData<number>('mculture_sidebar_opacity', 1.0)
+  );
+  const [isUiCustomizerOpen, setIsUiCustomizerOpen] = useState<boolean>(false);
+
+  // Apply Font Size and colors
+  useEffect(() => {
+    const root = document.documentElement;
+    root.classList.remove('text-sz-small', 'text-sz-medium', 'text-sz-large');
+    root.classList.add(`text-sz-${fontSize}`);
+
+    const colors = {
+      orange: { primary: '#f97316', hover: '#ea580c' },
+      emerald: { primary: '#10b981', hover: '#059669' },
+      indigo: { primary: '#6366f1', hover: '#4f46e5' },
+      rose: { primary: '#f43f5e', hover: '#e11d48' },
+      violet: { primary: '#8b5cf6', hover: '#7c3aed' },
+    };
+    const selected = colors[menuButtonColor] || colors.orange;
+    root.style.setProperty('--brand-color', selected.primary);
+    root.style.setProperty('--brand-color-hover', selected.hover);
+
+    saveLocalData('mculture_ui_style', uiStyle);
+    saveLocalData('mculture_menu_button_color', menuButtonColor);
+    saveLocalData('mculture_icon_style', iconStyle);
+    saveLocalData('mculture_font_size', fontSize);
+    saveLocalData('mculture_sidebar_opacity', sidebarOpacity);
+  }, [uiStyle, menuButtonColor, iconStyle, fontSize, sidebarOpacity]);
+
   const [activeTab, setActiveTab] = useState<string>('dashboard');
   const [dashboardSubView, setDashboardSubView] = useState<DashboardSubView>('overview');
   const [sidebarOpen, setSidebarOpen] = useState<boolean>(false);
@@ -1619,6 +1664,12 @@ export default function App() {
         voiceAlertsEnabled={voiceSettings.enabled}
         onOpenProfilePhoto={() => setIsProfilePhotoModalOpen(true)}
         soundEnabled={soundEnabled}
+        uiStyle={uiStyle}
+        menuButtonColor={menuButtonColor}
+        iconStyle={iconStyle}
+        fontSize={fontSize}
+        sidebarOpacity={sidebarOpacity}
+        onOpenUiCustomizer={() => setIsUiCustomizerOpen(true)}
       />
 
       {/* Top Header Navbar */}
@@ -1826,6 +1877,22 @@ export default function App() {
           />
         )}
 
+        {activeTab === 'website_customizer' && (
+          <WebsiteCustomizerView
+            uiStyle={uiStyle}
+            onSetUiStyle={setUiStyle}
+            menuButtonColor={menuButtonColor}
+            onSetMenuButtonColor={setMenuButtonColor}
+            iconStyle={iconStyle}
+            onSetIconStyle={setIconStyle}
+            fontSize={fontSize}
+            onSetFontSize={setFontSize}
+            sidebarOpacity={sidebarOpacity}
+            onSetSidebarOpacity={setSidebarOpacity}
+            soundEnabled={soundEnabled}
+          />
+        )}
+
         {/* Access Restricted Notice if user somehow lands on an unpermitted tab */}
         {activeTab !== 'dashboard' &&
           activeTab !== 'users' &&
@@ -1996,6 +2063,21 @@ export default function App() {
         isOpen={isVoiceSettingsModalOpen}
         onClose={() => setIsVoiceSettingsModalOpen(false)}
         onSettingsChanged={(newSettings) => setVoiceSettings(newSettings)}
+      />
+
+      {/* Website Custom UI Customizer Modal */}
+      <UiCustomizerModal
+        isOpen={isUiCustomizerOpen}
+        onClose={() => setIsUiCustomizerOpen(false)}
+        uiStyle={uiStyle}
+        onSetUiStyle={setUiStyle}
+        menuButtonColor={menuButtonColor}
+        onSetMenuButtonColor={setMenuButtonColor}
+        iconStyle={iconStyle}
+        onSetIconStyle={setIconStyle}
+        fontSize={fontSize}
+        onSetFontSize={setFontSize}
+        soundEnabled={soundEnabled}
       />
 
     </div>

@@ -189,25 +189,25 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   const greeting = getGreeting();
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Top Sub-Navigation Bar (Native App Horizontal Pills Bar on Mobile) */}
-      <div className="bg-white rounded-2xl p-2 sm:p-2.5 border border-slate-200 shadow-xs flex items-center justify-between gap-2 overflow-x-auto no-scrollbar">
-        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+      <div className="bg-white rounded-2xl p-1.5 sm:p-2 border border-slate-200 shadow-xs flex items-center justify-between gap-1 sm:gap-2 overflow-x-auto no-scrollbar">
+        <div className="flex items-center gap-1 sm:gap-2 shrink-0">
           {/* Sub-item 1: ภาพรวม */}
           <button
             id="subnav-btn-overview"
             type="button"
             onClick={() => handleSubViewChange('overview')}
-            className={`px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold flex items-center space-x-1.5 sm:space-x-2 transition cursor-pointer shrink-0 active:scale-95 ${
+            className={`px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-xl text-xs sm:text-sm font-semibold flex items-center space-x-1 sm:space-x-2 transition cursor-pointer shrink-0 active:scale-95 ${
               currentSubView === 'overview'
                 ? 'bg-gradient-to-r from-orange-600 to-amber-600 text-white shadow-md shadow-orange-600/25'
                 : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
             }`}
           >
-            <LayoutDashboard className="w-4 h-4" />
+            <LayoutDashboard className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             <span>ภาพรวม</span>
             <span
-              className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${
+              className={`text-[9px] sm:text-[10px] px-1.5 sm:px-2 py-0.5 rounded-full font-medium ${
                 currentSubView === 'overview'
                   ? 'bg-white/20 text-white'
                   : 'bg-slate-100 text-slate-600'
@@ -222,16 +222,16 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             id="subnav-btn-bookings"
             type="button"
             onClick={() => handleSubViewChange('bookings')}
-            className={`px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold flex items-center space-x-1.5 sm:space-x-2 transition cursor-pointer shrink-0 active:scale-95 ${
+            className={`px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-xl text-xs sm:text-sm font-semibold flex items-center space-x-1 sm:space-x-2 transition cursor-pointer shrink-0 active:scale-95 ${
               currentSubView === 'bookings'
                 ? 'bg-gradient-to-r from-orange-600 to-amber-600 text-white shadow-md shadow-orange-600/25'
                 : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
             }`}
           >
-            <FileText className="w-4 h-4" />
+            <FileText className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             <span>รายการใบเบิก</span>
             <span
-              className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
+              className={`text-[9px] sm:text-[10px] px-1.5 sm:px-2 py-0.5 rounded-full font-bold ${
                 currentSubView === 'bookings'
                   ? 'bg-white/20 text-white'
                   : 'bg-orange-100 text-orange-800'
@@ -241,21 +241,21 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             </span>
           </button>
 
-          {/* Sub-item 3: สถานะรถยนต์ราชการ */}
+          {/* Sub-item 3:  สถานะรถยนต์ราชการ */}
           <button
             id="subnav-btn-vehicles"
             type="button"
             onClick={() => handleSubViewChange('vehicles')}
-            className={`px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold flex items-center space-x-1.5 sm:space-x-2 transition cursor-pointer shrink-0 active:scale-95 ${
+            className={`px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-xl text-xs sm:text-sm font-semibold flex items-center space-x-1 sm:space-x-2 transition cursor-pointer shrink-0 active:scale-95 ${
               currentSubView === 'vehicles'
                 ? 'bg-gradient-to-r from-teal-700 to-emerald-700 text-white shadow-md shadow-teal-700/25'
                 : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
             }`}
           >
-            <Car className="w-4 h-4" />
+            <Car className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             <span>สถานะรถยนต์</span>
             <span
-              className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
+              className={`text-[9px] sm:text-[10px] px-1.5 sm:px-2 py-0.5 rounded-full font-bold ${
                 currentSubView === 'vehicles'
                   ? 'bg-white/20 text-white'
                   : 'bg-teal-100 text-teal-800'
@@ -283,58 +283,58 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       {/* 1. VIEW: ภาพรวม (KPI & สถิติ)                                             */}
       {/* ========================================================================= */}
       {currentSubView === 'overview' && (
-        <div className="space-y-6 animate-fadeIn">
+        <div className="space-y-4 sm:space-y-6 animate-fadeIn">
           {/* Welcome Banner Card */}
-          <div className="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 rounded-3xl p-6 md:p-8 text-white shadow-xl relative overflow-hidden border border-slate-800">
+          <div className="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 rounded-2xl md:rounded-3xl p-4 sm:p-6 md:p-8 text-white shadow-xl relative overflow-hidden border border-slate-800">
             <div className="absolute right-0 top-0 bottom-0 w-1/3 bg-gradient-to-l from-orange-500/10 to-transparent pointer-events-none" />
             
             {/* Top gold-amber subtle cultural line */}
             <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600" />
 
-            <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 relative z-10">
-              <div className="space-y-2.5">
-                <div className="flex flex-wrap items-center gap-2">
-                  <div className="inline-flex items-center space-x-1.5 bg-gradient-to-r from-amber-500/20 to-orange-500/20 text-amber-300 border border-amber-500/40 px-3 py-1 rounded-full text-xs font-semibold shadow-xs">
+            <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 sm:gap-6 relative z-10">
+              <div className="space-y-1.5 sm:space-y-2.5">
+                <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+                  <div className="inline-flex items-center space-x-1 sm:space-x-1.5 bg-gradient-to-r from-amber-500/20 to-orange-500/20 text-amber-300 border border-amber-500/40 px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-[10px] sm:text-xs font-semibold shadow-xs">
                     <span>{greeting.icon}</span>
                     <span>{greeting.text}, คุณ{currentUser.name}</span>
                   </div>
-                  <div className="inline-flex items-center space-x-1.5 bg-slate-800/80 text-slate-300 border border-slate-700/60 px-2.5 py-1 rounded-full text-xs font-medium">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
+                  <div className="inline-flex items-center space-x-1 sm:space-x-1.5 bg-slate-800/80 text-slate-300 border border-slate-700/60 px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full text-[10px] sm:text-xs font-medium">
+                    <span className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-emerald-400 animate-ping" />
                     <span>{currentUser.roleTitle}</span>
                     <span className="text-slate-500">•</span>
                     <span>{currentUser.department}</span>
                   </div>
                 </div>
 
-                <h1 className="text-xl md:text-2xl font-bold text-white tracking-tight flex items-center space-x-2">
+                <h1 className="text-base sm:text-xl md:text-2xl font-bold text-white tracking-tight flex items-center space-x-1.5 sm:space-x-2">
                   <span>ศูนย์บัญชาการยานพาหนะราชการ</span>
-                  <span className="text-xs bg-orange-500/20 text-orange-300 border border-orange-500/30 font-semibold px-2 py-0.5 rounded-md hidden sm:inline-block">
+                  <span className="text-[10px] bg-orange-500/20 text-orange-300 border border-orange-500/30 font-semibold px-1.5 py-0.2 rounded-md hidden sm:inline-block">
                     สวจ.พังงา
                   </span>
                 </h1>
-                <p className="text-xs md:text-sm text-slate-300 max-w-2xl leading-relaxed">
+                <p className="text-[11px] sm:text-xs md:text-sm text-slate-300 max-w-2xl leading-relaxed">
                   สำนักงานวัฒนธรรมจังหวัดพังงา — สรุปภาพรวมการใช้ยานพาหนะราชการ สถิติการเดินทาง
                   และตัวชี้วัดความพร้อมให้บริการประจำปีงบประมาณ 2569
                 </p>
               </div>
 
               {/* Quick Actions */}
-              <div className="flex flex-wrap gap-2.5">
+              <div className="flex flex-wrap gap-1.5 sm:gap-2.5">
                 <button
                   type="button"
                   onClick={() => onOpenBookingForm()}
-                  className="px-4 py-2.5 bg-orange-600 hover:bg-orange-700 text-white rounded-xl text-xs font-semibold transition shadow-md shadow-orange-600/30 flex items-center space-x-1.5 active:scale-95 cursor-pointer"
+                  className="px-3 py-2 sm:px-4 sm:py-2.5 bg-orange-600 hover:bg-orange-700 text-white rounded-xl text-[11px] sm:text-xs font-semibold transition shadow-md shadow-orange-600/30 flex items-center space-x-1 sm:space-x-1.5 active:scale-95 cursor-pointer"
                 >
-                  <PlusCircle className="w-4 h-4" />
+                  <PlusCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                   <span>เขียนใบเบิกใช้รถ</span>
                 </button>
 
                 <button
                   type="button"
                   onClick={onOpenCalendar}
-                  className="px-3.5 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-medium transition border border-slate-700 flex items-center space-x-1.5 cursor-pointer"
+                  className="px-3 py-2 sm:px-3.5 sm:py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-[11px] sm:text-xs font-semibold transition border border-slate-700 flex items-center space-x-1 sm:space-x-1.5 cursor-pointer"
                 >
-                  <Calendar className="w-4 h-4 text-blue-400" />
+                  <Calendar className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-400" />
                   <span>ปฏิทินภารกิจ</span>
                 </button>
 
@@ -347,9 +347,9 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                     <button
                       type="button"
                       onClick={() => onOpenDriverMissions()}
-                      className="px-3.5 py-2.5 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-semibold transition border border-amber-500 shadow-md shadow-amber-600/30 flex items-center space-x-1.5 cursor-pointer"
+                      className="px-3 py-2 sm:px-3.5 sm:py-2.5 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-[11px] sm:text-xs font-semibold transition border border-amber-500 shadow-md shadow-amber-600/30 flex items-center space-x-1 sm:space-x-1.5 cursor-pointer"
                     >
-                      <Gauge className="w-4 h-4 text-amber-200" />
+                      <Gauge className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-200" />
                       <span>ภารกิจคนขับ & ทะเบียนคุม</span>
                     </button>
                 )}
@@ -357,9 +357,9 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                 <button
                   type="button"
                   onClick={onOpenFuelForm}
-                  className="px-3.5 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-medium transition border border-slate-700 flex items-center space-x-1.5 cursor-pointer"
+                  className="px-3 py-2 sm:px-3.5 sm:py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-[11px] sm:text-xs font-semibold transition border border-slate-700 flex items-center space-x-1 sm:space-x-1.5 cursor-pointer"
                 >
-                  <Fuel className="w-4 h-4 text-teal-400" />
+                  <Fuel className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-teal-400" />
                   <span>บันทึกไมล์/น้ำมัน</span>
                 </button>
 
@@ -367,9 +367,9 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                   <button
                     type="button"
                     onClick={onOpenDirectorApproval}
-                    className="px-4 py-2.5 bg-teal-600 hover:bg-teal-700 text-white rounded-xl text-xs font-semibold transition shadow-md shadow-teal-600/30 flex items-center space-x-1.5 animate-pulse cursor-pointer"
+                    className="px-3 py-2 sm:px-4 sm:py-2.5 bg-teal-600 hover:bg-teal-700 text-white rounded-xl text-[11px] sm:text-xs font-semibold transition shadow-md shadow-teal-600/30 flex items-center space-x-1 sm:space-x-1.5 animate-pulse cursor-pointer"
                   >
-                    <FileCheck2 className="w-4 h-4" />
+                    <FileCheck2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                     <span>แผงอนุมัติ ({pendingCount})</span>
                   </button>
                 )}
@@ -378,9 +378,9 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                   <button
                     type="button"
                     onClick={onOpenUsers}
-                    className="px-3.5 py-2.5 bg-purple-900/60 hover:bg-purple-800 text-purple-200 rounded-xl text-xs font-medium transition border border-purple-700/50 flex items-center space-x-1.5 cursor-pointer"
+                    className="px-3 py-2 sm:px-3.5 sm:py-2.5 bg-purple-900/60 hover:bg-purple-800 text-purple-200 rounded-xl text-[11px] sm:text-xs font-semibold transition border border-purple-700/50 flex items-center space-x-1 sm:space-x-1.5 cursor-pointer"
                   >
-                    <Users className="w-4 h-4 text-purple-300" />
+                    <Users className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-purple-300" />
                     <span>จัดการผู้ใช้ & สิทธิ์</span>
                   </button>
                 )}
