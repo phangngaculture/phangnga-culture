@@ -22,7 +22,9 @@ import {
   Fuel,
   User as UserIcon,
   ShieldCheck,
-  TrendingUp
+  TrendingUp,
+  Eye,
+  Milestone
 } from 'lucide-react';
 
 interface GpsTrackingViewProps {
@@ -33,6 +35,8 @@ export interface Waypoint {
   lat: number;
   lng: number;
   label: string;
+  direction?: 'left' | 'right' | 'straight' | 'destination' | 'start';
+  roadName?: string;
 }
 
 export interface CarGpsProfile {
@@ -65,10 +69,10 @@ const DEFAULT_GPS_PROFILES: Record<string, CarGpsProfile> = {
     fuelLevel: 82,
     totalDistanceKm: 14.8,
     waypoints: [
-      { lat: 8.4501, lng: 98.5255, label: 'สำนักงานวัฒนธรรมจังหวัดพังงา (จุดเริ่มต้น)' },
-      { lat: 8.4565, lng: 98.5280, label: 'วงเวียนเขาตาปู / แยกวังหม้อแกง' },
-      { lat: 8.4630, lng: 98.5310, label: 'ถนนเพชรเกษม (สายในเมือง)' },
-      { lat: 8.4682, lng: 98.5341, label: 'ศาลากลางจังหวัดพังงา (ถ้ำน้ำผุด)' }
+      { lat: 8.4501, lng: 98.5255, label: 'สำนักงานวัฒนธรรมจังหวัดพังงา (จุดเริ่มต้น)', direction: 'start', roadName: 'ถนนพังงา-ทับปุด' },
+      { lat: 8.4565, lng: 98.5280, label: 'วงเวียนเขาตาปู / แยกวังหม้อแกง', direction: 'left', roadName: 'ถ.เพชรเกษม' },
+      { lat: 8.4630, lng: 98.5310, label: 'ถนนเพชรเกษม (สายในเมือง)', direction: 'straight', roadName: 'ถ.เพชรเกษม' },
+      { lat: 8.4682, lng: 98.5341, label: 'ศาลากลางจังหวัดพังงา (ถ้ำน้ำผุด)', direction: 'destination', roadName: 'ถนนถ้ำน้ำผุด' }
     ]
   },
   'v-revo': {
@@ -84,12 +88,12 @@ const DEFAULT_GPS_PROFILES: Record<string, CarGpsProfile> = {
     fuelLevel: 68,
     totalDistanceKm: 88.5,
     waypoints: [
-      { lat: 8.4501, lng: 98.5255, label: 'สำนักงานวัฒนธรรมจังหวัดพังงา' },
-      { lat: 8.3840, lng: 98.4120, label: 'ทางแยกบ่อแสน อ.ทับปุด' },
-      { lat: 8.2714, lng: 98.3075, label: 'สี่แยกโคกกลอย อ.ตะกั่วทุ่ง' },
-      { lat: 8.2018, lng: 98.2974, label: 'สะพานสารสิน (ด่านตรวจท่าฉัตรไชย)' },
-      { lat: 8.0250, lng: 98.3360, label: 'อนุสาวรีย์ท้าวเทพกระษัตรี ท้าวศรีสุนทร' },
-      { lat: 7.8839, lng: 98.3912, label: 'โรงแรมรอยัลภูเก็ตซิตี้ (จุดหมาย)' }
+      { lat: 8.4501, lng: 98.5255, label: 'สำนักงานวัฒนธรรมจังหวัดพังงา', direction: 'start', roadName: 'พง. 4015' },
+      { lat: 8.3840, lng: 98.4120, label: 'ทางแยกบ่อแสน อ.ทับปุด', direction: 'right', roadName: 'ถนนเพชรเกษม (ทล. 4)' },
+      { lat: 8.2714, lng: 98.3075, label: 'สี่แยกโคกกลอย อ.ตะกั่วทุ่ง', direction: 'straight', roadName: 'ทล. 402' },
+      { lat: 8.2018, lng: 98.2974, label: 'สะพานสารสิน (ด่านตรวจท่าฉัตรไชย)', direction: 'straight', roadName: 'สะพานสารสิน' },
+      { lat: 8.0250, lng: 98.3360, label: 'อนุสาวรีย์ท้าวเทพกระษัตรี', direction: 'straight', roadName: 'ถนนเทพกระษัตรี' },
+      { lat: 7.8839, lng: 98.3912, label: 'โรงแรมรอยัลภูเก็ตซิตี้ (จุดหมาย)', direction: 'destination', roadName: 'ถนนมนตรี' }
     ]
   },
   'v-commuter': {
@@ -105,12 +109,12 @@ const DEFAULT_GPS_PROFILES: Record<string, CarGpsProfile> = {
     fuelLevel: 75,
     totalDistanceKm: 65.2,
     waypoints: [
-      { lat: 8.4501, lng: 98.5255, label: 'สำนักงานวัฒนธรรมจังหวัดพังงา' },
-      { lat: 8.3995, lng: 98.2612, label: 'อ.ท้ายเหมือง (หาดท้ายเหมือง)' },
-      { lat: 8.5240, lng: 98.2560, label: 'บ้านลำแก่น / ท่าเรือทับละมุ' },
-      { lat: 8.6472, lng: 98.2520, label: 'เขาหลัก (หาดนางทอง)' },
-      { lat: 8.7600, lng: 98.3150, label: 'บ้านน้ำเค็ม' },
-      { lat: 8.8329, lng: 98.3642, label: 'ย่านเมืองเก่าตะกั่วป่า (จุดหมาย)' }
+      { lat: 8.4501, lng: 98.5255, label: 'สำนักงานวัฒนธรรมจังหวัดพังงา', direction: 'start', roadName: 'พง. 4015' },
+      { lat: 8.3995, lng: 98.2612, label: 'อ.ท้ายเหมือง (หาดท้ายเหมือง)', direction: 'straight', roadName: 'ถนนเพชรเกษม' },
+      { lat: 8.5240, lng: 98.2560, label: 'บ้านลำแก่น / ท่าเรือทับละมุ', direction: 'straight', roadName: 'ถนนเพชรเกษม' },
+      { lat: 8.6472, lng: 98.2520, label: 'เขาหลัก (หาดนางทอง)', direction: 'straight', roadName: 'ถนนเพชรเกษม' },
+      { lat: 8.7600, lng: 98.3150, label: 'บ้านน้ำเค็ม', direction: 'right', roadName: 'ทล. 401' },
+      { lat: 8.8329, lng: 98.3642, label: 'ย่านเมืองเก่าตะกั่วป่า (จุดหมาย)', direction: 'destination', roadName: 'ถนนสายวัฒนธรรม' }
     ]
   },
   'v-dmax': {
@@ -126,10 +130,10 @@ const DEFAULT_GPS_PROFILES: Record<string, CarGpsProfile> = {
     fuelLevel: 90,
     totalDistanceKm: 18.2,
     waypoints: [
-      { lat: 8.4501, lng: 98.5255, label: 'สำนักงานวัฒนธรรมจังหวัดพังงา' },
-      { lat: 8.4120, lng: 98.5410, label: 'ถนนพังงา-ทับปุด กม. 5' },
-      { lat: 8.3750, lng: 98.5520, label: 'ทางแยกเข้าบ้านบางพัฒน์' },
-      { lat: 8.3498, lng: 98.5630, label: 'ชุมชนคุณธรรมบ้านบางพัฒน์ (จุดหมาย)' }
+      { lat: 8.4501, lng: 98.5255, label: 'สำนักงานวัฒนธรรมจังหวัดพังงา', direction: 'start', roadName: 'ถนนพังงา-ทับปุด' },
+      { lat: 8.4120, lng: 98.5410, label: 'ถนนพังงา-ทับปุด กม. 5', direction: 'straight', roadName: 'ทล. 415' },
+      { lat: 8.3750, lng: 98.5520, label: 'ทางแยกเข้าบ้านบางพัฒน์', direction: 'right', roadName: 'ทางหลวงชนบท' },
+      { lat: 8.3498, lng: 98.5630, label: 'ชุมชนคุณธรรมบ้านบางพัฒน์ (จุดหมาย)', direction: 'destination', roadName: 'ถนนบางพัฒน์' }
     ]
   }
 };
@@ -168,27 +172,32 @@ export const MAP_STYLES = {
   voyager: {
     name: '🗺️ สีสันสดใสพรีเมียม (CartoDB Voyager)',
     url: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
-    attribution: '&copy; OpenStreetMap &copy; CARTO'
+    attribution: '&copy; OpenStreetMap &copy; CARTO',
+    labelsUrl: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager_only_labels/{z}/{x}/{y}{r}.png'
   },
   positron: {
     name: '🎨 มินิมอลคลีน (CartoDB Positron)',
     url: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
-    attribution: '&copy; OpenStreetMap &copy; CARTO'
+    attribution: '&copy; OpenStreetMap &copy; CARTO',
+    labelsUrl: 'https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png'
   },
   dark: {
     name: '🖤 ลักชัวรี่ดาร์กโหมด (CartoDB Dark)',
     url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
-    attribution: '&copy; OpenStreetMap &copy; CARTO'
+    attribution: '&copy; OpenStreetMap &copy; CARTO',
+    labelsUrl: 'https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}{r}.png'
   },
   satellite: {
     name: '🛰️ ภาพถ่ายดาวเทียมคมชัดสูง (Esri Satellite)',
     url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-    attribution: 'Tiles &copy; Esri &mdash; Source: Esri, USDA, USGS'
+    attribution: 'Tiles &copy; Esri &mdash; Source: Esri, USDA, USGS',
+    labelsUrl: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager_only_labels/{z}/{x}/{y}{r}.png'
   },
   standard: {
     name: '🌐 OpenStreetMap มาตรฐาน',
     url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-    attribution: '&copy; OpenStreetMap'
+    attribution: '&copy; OpenStreetMap',
+    labelsUrl: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager_only_labels/{z}/{x}/{y}{r}.png'
   }
 };
 
@@ -199,6 +208,9 @@ export const GpsTrackingView: React.FC<GpsTrackingViewProps> = ({ vehicles = [] 
   const otherMarkersRef = useRef<L.Marker[]>([]);
   const polylineRef = useRef<L.Polyline | null>(null);
   const waypointMarkersRef = useRef<L.Marker[]>([]);
+  const baseLayerRef = useRef<L.TileLayer | null>(null);
+  const labelsLayerRef = useRef<L.TileLayer | null>(null);
+  const directionArrowsRef = useRef<L.Marker[]>([]);
 
   // State
   const [selectedVehicleId, setSelectedVehicleId] = useState<string>('v-camry');
@@ -209,6 +221,9 @@ export const GpsTrackingView: React.FC<GpsTrackingViewProps> = ({ vehicles = [] 
   const [viewMode, setViewMode] = useState<'focus' | 'fleet'>('focus');
   const [mapStyle, setMapStyle] = useState<keyof typeof MAP_STYLES>('voyager');
   const [lastUpdatedTime, setLastUpdatedTime] = useState<string>('');
+  const [is3DMode, setIs3DMode] = useState<boolean>(true);
+  const [showLabels, setShowLabels] = useState<boolean>(true);
+  const [showTrafficArrows, setShowTrafficArrows] = useState<boolean>(true);
 
   // Merge default profiles with available vehicles from props
   const gpsProfiles = useMemo<Record<string, CarGpsProfile>>(() => {
@@ -231,6 +246,37 @@ export const GpsTrackingView: React.FC<GpsTrackingViewProps> = ({ vehicles = [] 
   // Current real-time coordinates of active vehicle
   const currentCoords = useMemo(() => {
     return interpolatePosition(activeProfile.waypoints, progress);
+  }, [activeProfile, progress]);
+
+  // Turn-by-Turn GPS Navigation Steps calculations based on progress
+  const activeNavigationStep = useMemo(() => {
+    const steps = activeProfile.waypoints;
+    if (steps.length < 2) return null;
+
+    const totalSegments = steps.length - 1;
+    const segmentIndex = Math.min(Math.floor(progress * totalSegments), totalSegments - 1);
+    const nextWaypoint = steps[segmentIndex + 1];
+    const currentWaypoint = steps[segmentIndex];
+
+    const segmentProgress = (progress * totalSegments) - segmentIndex;
+    const remainingPercentage = 1 - segmentProgress;
+
+    let distanceText = "";
+    if (nextWaypoint.direction === 'destination') {
+      const remainingDistance = (remainingPercentage * 1.5).toFixed(1);
+      distanceText = `อีก ${remainingDistance} กม.`;
+    } else {
+      const remainingDistanceM = Math.round(remainingPercentage * 800);
+      distanceText = remainingDistanceM > 1000 ? `อีก ${(remainingDistanceM / 1000).toFixed(1)} กม.` : `อีก ${remainingDistanceM} เมตร`;
+    }
+
+    return {
+      currentRoad: currentWaypoint.roadName || "ทางหลวงชนบท",
+      nextRoad: nextWaypoint.roadName || "ทางเชื่อมต่อ",
+      instruction: nextWaypoint.label,
+      direction: nextWaypoint.direction || "straight",
+      distanceLeft: distanceText
+    };
   }, [activeProfile, progress]);
 
   // Update clock
@@ -278,6 +324,17 @@ export const GpsTrackingView: React.FC<GpsTrackingViewProps> = ({ vehicles = [] 
       maxZoom: 19,
       attribution: selectedStyle.attribution
     }).addTo(map);
+    baseLayerRef.current = tileLayer;
+
+    // Add Labels layer if enabled
+    if (showLabels && selectedStyle.labelsUrl) {
+      const labelsLayer = L.tileLayer(selectedStyle.labelsUrl, {
+        maxZoom: 19,
+        zIndex: 10,
+        opacity: 0.9
+      }).addTo(map);
+      labelsLayerRef.current = labelsLayer;
+    }
 
     mapInstanceRef.current = map;
 
@@ -289,28 +346,48 @@ export const GpsTrackingView: React.FC<GpsTrackingViewProps> = ({ vehicles = [] 
 
     return () => {
       resizeObserver.disconnect();
+      if (baseLayerRef.current) map.removeLayer(baseLayerRef.current);
+      if (labelsLayerRef.current) map.removeLayer(labelsLayerRef.current);
+      directionArrowsRef.current.forEach((m) => map.removeLayer(m));
       map.remove();
       mapInstanceRef.current = null;
     };
   }, []);
 
-  // Update Tile Layer if style changes
+  // Update Tile Layer if style or labels toggled
   useEffect(() => {
     const map = mapInstanceRef.current;
     if (!map) return;
 
-    map.eachLayer((layer) => {
-      if (layer instanceof L.TileLayer) {
-        map.removeLayer(layer);
-      }
-    });
+    // Remove old layers
+    if (baseLayerRef.current) {
+      map.removeLayer(baseLayerRef.current);
+      baseLayerRef.current = null;
+    }
+    if (labelsLayerRef.current) {
+      map.removeLayer(labelsLayerRef.current);
+      labelsLayerRef.current = null;
+    }
 
     const selectedStyle = MAP_STYLES[mapStyle];
-    L.tileLayer(selectedStyle.url, {
+    
+    // Create base tile layer
+    const baseLayer = L.tileLayer(selectedStyle.url, {
       maxZoom: 19,
       attribution: selectedStyle.attribution
     }).addTo(map);
-  }, [mapStyle]);
+    baseLayerRef.current = baseLayer;
+
+    // Create labels overlay if enabled
+    if (showLabels && selectedStyle.labelsUrl) {
+      const labelsLayer = L.tileLayer(selectedStyle.labelsUrl, {
+        maxZoom: 19,
+        zIndex: 10,
+        opacity: 0.9
+      }).addTo(map);
+      labelsLayerRef.current = labelsLayer;
+    }
+  }, [mapStyle, showLabels]);
 
   // Render or update route polyline & waypoints for active vehicle
   useEffect(() => {
@@ -326,6 +403,10 @@ export const GpsTrackingView: React.FC<GpsTrackingViewProps> = ({ vehicles = [] 
     // Remove old waypoint markers
     waypointMarkersRef.current.forEach((m) => map.removeLayer(m));
     waypointMarkersRef.current = [];
+
+    // Remove old direction arrows
+    directionArrowsRef.current.forEach((m) => map.removeLayer(m));
+    directionArrowsRef.current = [];
 
     // Draw route polyline
     const latlngs = activeProfile.waypoints.map((w) => [w.lat, w.lng] as [number, number]);
@@ -344,41 +425,138 @@ export const GpsTrackingView: React.FC<GpsTrackingViewProps> = ({ vehicles = [] 
       const isStart = idx === 0;
       const isEnd = idx === activeProfile.waypoints.length - 1;
 
+      const directionEmoji = 
+        w.direction === 'left' ? '⬅️' :
+        w.direction === 'right' ? '➡️' :
+        w.direction === 'straight' ? '⬆️' :
+        w.direction === 'start' ? '🚀' : '🏁';
+
       const markerHtml = `
-        <div style="
-          background-color: ${isStart ? '#10b981' : isEnd ? '#ef4444' : '#64748b'};
-          color: white;
-          width: 24px;
-          height: 24px;
-          border-radius: 50%;
-          border: 2px solid white;
-          box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+        <div class="custom-waypoint-billboard" style="
           display: flex;
+          flex-direction: column;
           align-items: center;
-          justify-content: center;
-          font-size: 11px;
-          font-weight: bold;
+          position: relative;
+          width: 140px;
+          height: 60px;
         ">
-          ${isStart ? '🚩' : isEnd ? '🏁' : idx + 1}
+          <!-- Green highway road sign -->
+          <div style="
+            background-color: #047857;
+            color: white;
+            font-size: 9px;
+            font-weight: bold;
+            padding: 3px 6px;
+            border-radius: 6px;
+            border: 1.5px solid white;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.35);
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            position: absolute;
+            bottom: 24px;
+            transform: translateX(-50%);
+            left: 50%;
+          ">
+            <span style="background-color: rgba(255,255,255,0.25); color: #fff; padding: 0.5px 3px; border-radius: 3px; font-size: 8px;">
+              ${w.roadName || 'ทางหลวง'}
+            </span>
+            <span>${directionEmoji} ${w.label.replace(/\(.*\)/, '').substring(0, 14)}</span>
+          </div>
+
+          <!-- Bottom pole & node -->
+          <div style="
+            background-color: ${isStart ? '#10b981' : isEnd ? '#ef4444' : '#0284c7'};
+            color: white;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            border: 1.5px solid white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 9px;
+            font-weight: bold;
+            position: absolute;
+            bottom: 4px;
+            transform: translateX(-50%);
+            left: 50%;
+          ">
+            ${idx + 1}
+          </div>
         </div>
       `;
 
       const icon = L.divIcon({
         className: 'custom-waypoint-icon',
         html: markerHtml,
-        iconSize: [24, 24],
-        iconAnchor: [12, 12]
+        iconSize: [140, 60],
+        iconAnchor: [70, 56]
       });
 
       const marker = L.marker([w.lat, w.lng], { icon }).addTo(map);
       marker.bindPopup(`
         <div style="font-family: sans-serif; font-size: 12px; padding: 2px;">
           <strong style="color: #0f172a;">${w.label}</strong>
-          <div style="color: #64748b; font-size: 10px; margin-top: 2px;">พิกัด: ${w.lat.toFixed(4)}, ${w.lng.toFixed(4)}</div>
+          <div style="color: #64748b; font-size: 10px; margin-top: 2px;">ทางเชื่อมต่อ: ${w.roadName || '-'}</div>
+          <div style="color: #64748b; font-size: 10px;">พิกัด: ${w.lat.toFixed(4)}, ${w.lng.toFixed(4)}</div>
         </div>
       `);
       waypointMarkersRef.current.push(marker);
     });
+
+    // Draw route direction flow arrows
+    if (showTrafficArrows && activeProfile.waypoints.length > 1) {
+      const waypoints = activeProfile.waypoints;
+      for (let i = 0; i < waypoints.length - 1; i++) {
+        const p1 = waypoints[i];
+        const p2 = waypoints[i + 1];
+
+        // Draw multiple arrows per segment for visual flow
+        const arrowPositions = [0.33, 0.67];
+        arrowPositions.forEach((t) => {
+          const lat = p1.lat + (p2.lat - p1.lat) * t;
+          const lng = p1.lng + (p2.lng - p1.lng) * t;
+
+          // Calculate angle for chevron arrow rotation
+          const dLng = p2.lng - p1.lng;
+          const dLat = p2.lat - p1.lat;
+          const angleRad = Math.atan2(dLng, dLat);
+          let heading = (angleRad * 180) / Math.PI;
+          heading = (heading + 360) % 360;
+
+          const arrowHtml = `
+            <div style="
+              transform: rotate(${heading}deg); 
+              color: ${activeProfile.color};
+              font-size: 13px;
+              line-height: 1;
+              font-weight: 900;
+              text-shadow: -1.5px -1.5px 0 #fff, 1.5px -1.5px 0 #fff, -1.5px 1.5px 0 #fff, 1.5px 1.5px 0 #fff;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              width: 18px;
+              height: 18px;
+            ">
+              ▲
+            </div>
+          `;
+
+          const arrowIcon = L.divIcon({
+            className: 'route-direction-arrow',
+            html: arrowHtml,
+            iconSize: [18, 18],
+            iconAnchor: [9, 9]
+          });
+
+          const arrowMarker = L.marker([lat, lng], { icon: arrowIcon, interactive: false }).addTo(map);
+          directionArrowsRef.current.push(arrowMarker);
+        });
+      }
+    }
 
     if (viewMode === 'focus') {
       map.setView([currentCoords.lat, currentCoords.lng], 13);
@@ -387,7 +565,7 @@ export const GpsTrackingView: React.FC<GpsTrackingViewProps> = ({ vehicles = [] 
       const bounds = L.latLngBounds(latlngs);
       map.fitBounds(bounds, { padding: [50, 50] });
     }
-  }, [activeProfile, viewMode]);
+  }, [activeProfile, viewMode, showTrafficArrows]);
 
   // Update Active Vehicle Marker position and rotation
   useEffect(() => {
@@ -707,12 +885,130 @@ export const GpsTrackingView: React.FC<GpsTrackingViewProps> = ({ vehicles = [] 
             </div>
           </div>
 
-          {/* Leaflet Map DOM Element */}
-          <div className="relative w-full h-[460px] sm:h-[520px] bg-slate-100 z-0">
+          {/* Leaflet Map DOM Element with CSS 3D transformation */}
+          <div className={`relative w-full h-[460px] sm:h-[520px] bg-slate-100 z-0 map-container-wrapper ${is3DMode ? 'map-3d-active' : ''}`}>
+            <style>{`
+              .map-container-wrapper {
+                perspective: 1500px;
+                overflow: hidden;
+                transition: all 0.5s ease-in-out;
+              }
+              .map-3d-active .leaflet-map-pane {
+                transform: rotateX(52deg) rotateZ(0deg) translateZ(0px) scale(1.15) translateY(-25px);
+                transform-origin: 50% 100%;
+                transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+              }
+              /* Counter-tilt markers to stand upright */
+              .map-3d-active .custom-waypoint-icon,
+              .map-3d-active .custom-car-icon,
+              .map-3d-active .other-car-icon,
+              .map-3d-active .leaflet-popup-pane {
+                transform: rotateX(-52deg) translateZ(12px) !important;
+                transform-origin: bottom center;
+                transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+                filter: drop-shadow(0 8px 16px rgba(0,0,0,0.3));
+              }
+              @keyframes spin-slow {
+                from { transform: rotate(0deg); }
+                to { transform: rotate(360deg); }
+              }
+              .animate-spin-slow {
+                animation: spin-slow 8s linear infinite;
+              }
+            `}</style>
+
             <div ref={mapContainerRef} className="w-full h-full" />
+
+            {/* Smart 3D GPS HUD Navigation Panel */}
+            {activeNavigationStep && viewMode === 'focus' && (
+              <div className="absolute top-3 left-3 z-40 bg-slate-950/95 backdrop-blur-md text-white p-3 rounded-2xl border border-slate-800 shadow-xl max-w-[260px] pointer-events-auto">
+                <div className="flex items-start space-x-3">
+                  {/* Dynamic Turn Arrow Icon Box */}
+                  <div className="bg-orange-600 p-2.5 rounded-xl flex items-center justify-center shrink-0 shadow-lg shadow-orange-600/30">
+                    {activeNavigationStep.direction === 'left' ? (
+                      <span className="text-xl font-bold">⬅️</span>
+                    ) : activeNavigationStep.direction === 'right' ? (
+                      <span className="text-xl font-bold">➡️</span>
+                    ) : activeNavigationStep.direction === 'start' ? (
+                      <span className="text-xl font-bold">🚀</span>
+                    ) : activeNavigationStep.direction === 'destination' ? (
+                      <span className="text-xl font-bold">🏁</span>
+                    ) : (
+                      <span className="text-xl font-bold">⬆️</span>
+                    )}
+                  </div>
+
+                  <div className="space-y-1">
+                    {/* Distance Remaining & Road name */}
+                    <div className="flex items-baseline space-x-2">
+                      <span className="text-sm font-black font-mono text-orange-400">{activeNavigationStep.distanceLeft}</span>
+                      <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider truncate max-w-[120px]">
+                        {activeNavigationStep.nextRoad}
+                      </span>
+                    </div>
+                    
+                    {/* Next Instruction */}
+                    <p className="text-xs font-bold text-slate-100 leading-tight">
+                      {activeNavigationStep.instruction}
+                    </p>
+
+                    {/* Current Road */}
+                    <div className="text-[9px] text-slate-400 flex items-center space-x-1 pt-0.5">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                      <span className="truncate">ถนนปัจจุบัน: {activeNavigationStep.currentRoad}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Floating Map Overlay Action Buttons */}
             <div className="absolute top-3 right-3 z-40 flex flex-col space-y-2 bg-white/95 backdrop-blur-md p-1.5 rounded-2xl shadow-lg border border-slate-200">
+              {/* 2D / 3D Perspectives Switcher */}
+              <button
+                type="button"
+                onClick={() => setIs3DMode(!is3DMode)}
+                className={`p-2 rounded-xl transition cursor-pointer flex flex-col items-center justify-center font-black text-[9px] border ${
+                  is3DMode 
+                    ? 'bg-orange-600 text-white border-orange-500 hover:bg-orange-700' 
+                    : 'bg-white hover:bg-slate-50 text-slate-700 border-slate-200'
+                }`}
+                title="สลับมุมมอง 2D (แบนราบ) / 3D (มุมจีพีเอสนำทาง)"
+              >
+                <Compass className={`w-4 h-4 mb-0.5 ${is3DMode ? 'animate-spin-slow' : ''}`} />
+                <span>{is3DMode ? '3D' : '2D'}</span>
+              </button>
+
+              {/* Street Labels Toggle */}
+              <button
+                type="button"
+                onClick={() => setShowLabels(!showLabels)}
+                className={`p-2 rounded-xl transition cursor-pointer flex flex-col items-center justify-center font-black text-[9px] border ${
+                  showLabels 
+                    ? 'bg-emerald-600 text-white border-emerald-500 hover:bg-emerald-700' 
+                    : 'bg-white hover:bg-slate-50 text-slate-700 border-slate-200'
+                }`}
+                title="สลับการแสดงป้ายชื่อถนน (Street Labels)"
+              >
+                <Eye className="w-4 h-4 mb-0.5" />
+                <span>ป้ายถนน</span>
+              </button>
+
+              {/* Traffic Directions Flow Toggle */}
+              <button
+                type="button"
+                onClick={() => setShowTrafficArrows(!showTrafficArrows)}
+                className={`p-2 rounded-xl transition cursor-pointer flex flex-col items-center justify-center font-black text-[9px] border ${
+                  showTrafficArrows 
+                    ? 'bg-blue-600 text-white border-blue-500 hover:bg-blue-700' 
+                    : 'bg-white hover:bg-slate-50 text-slate-700 border-slate-200'
+                }`}
+                title="สลับลูกศรทิศทางจราจร (Traffic Directions)"
+              >
+                <Milestone className="w-4 h-4 mb-0.5" />
+                <span>ทิศทาง</span>
+              </button>
+
               <button
                 type="button"
                 onClick={handleRecenter}
