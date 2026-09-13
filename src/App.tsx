@@ -88,7 +88,8 @@ import {
   notifyBookingApproved,
   notifyBookingRejected,
   notifyMissionStarted,
-  notifyMissionCompleted
+  notifyMissionCompleted,
+  notifyMissionToDriver
 } from './services/lineNotificationService';
 
 export default function App() {
@@ -103,30 +104,56 @@ export default function App() {
   // Floating Profile Photo Studio Modal State
   const [isProfilePhotoModalOpen, setIsProfilePhotoModalOpen] = useState(false);
 
-  // Load persistent state - reset to only admin as requested
+  // Load persistent state - initialized with administrative & operational personnel ready with LINE fields
   const [users, setUsers] = useState<User[]>(() => {
     const loaded = loadSavedData<User[]>(STORAGE_KEYS.USERS, SYSTEM_USERS);
-    // Keep only admin accounts or custom accounts, removing the old mock users
-    const oldMockUsernames = ['director', 'user', 'guna', 'sarawut'];
-    const filtered = (loaded && Array.isArray(loaded))
-      ? loaded.filter((u) => !oldMockUsernames.includes(u.username.toLowerCase()))
-      : [];
+    const existingList = Array.isArray(loaded) && loaded.length > 0 ? loaded : SYSTEM_USERS;
 
-    let admin = filtered.find((u) => u.username.toLowerCase() === 'admin');
-    if (!admin) {
-      admin = { ...SYSTEM_USERS[0] };
-    } else {
-      admin = {
+    // Merge system users so all roles (director, officer, driver, admin) are ready with LINE fields
+    const usersMap = new Map<string, User>();
+
+    // Put SYSTEM_USERS first as base template (with empty line tokens)
+    SYSTEM_USERS.forEach((su) => {
+      usersMap.set(su.username.toLowerCase(), { ...su });
+    });
+
+    // Merge loaded users over them (preserving custom user modifications and admin credentials)
+    existingList.forEach((eu) => {
+      const uname = eu.username.toLowerCase();
+      const existingInMap = usersMap.get(uname);
+      if (existingInMap) {
+        usersMap.set(uname, {
+          ...existingInMap,
+          ...eu,
+          // Guarantee LINE fields are present
+          lineUserId: eu.lineUserId !== undefined ? eu.lineUserId : existingInMap.lineUserId,
+          lineNotifyToken: eu.lineNotifyToken !== undefined ? eu.lineNotifyToken : existingInMap.lineNotifyToken,
+          lineNotificationEnabled: eu.lineNotificationEnabled !== undefined ? eu.lineNotificationEnabled : existingInMap.lineNotificationEnabled
+        });
+      } else {
+        // Custom user added by admin
+        usersMap.set(uname, {
+          ...eu,
+          lineUserId: eu.lineUserId || '',
+          lineNotifyToken: eu.lineNotifyToken || '',
+          lineNotificationEnabled: eu.lineNotificationEnabled !== false
+        });
+      }
+    });
+
+    // Ensure admin has standard permissions and active status
+    const admin = usersMap.get('admin');
+    if (admin) {
+      usersMap.set('admin', {
         ...admin,
         password: 'dekcom2537',
         role: 'admin',
         status: 'active',
         allowedMenus: ['dashboard', 'calendar', 'booking', 'director', 'driver_mission', 'fuel', 'fleet', 'analytics', 'tracking', 'backup', 'users']
-      };
+      });
     }
 
-    // Only admin remains in the system
-    const finalUsers = [admin];
+    const finalUsers = Array.from(usersMap.values());
     saveLocalData(STORAGE_KEYS.USERS, finalUsers);
     return finalUsers;
   });
@@ -353,6 +380,32 @@ export default function App() {
   useEffect(() => {
     registerServiceWorker();
   }, []);
+
+  // Handle deep linking from LINE buttons (e.g. ?tab=driver_mission&bookingId=CAR-2569-001)
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      const searchParams = new URLSearchParams(window.location.search);
+      const tabParam = searchParams.get('tab');
+      const bookingIdParam = searchParams.get('bookingId');
+
+      if (tabParam) {
+        setActiveTab(tabParam);
+      }
+
+      if (bookingIdParam) {
+        const found = bookings.find((b) => b.id.toLowerCase() === bookingIdParam.toLowerCase());
+        if (found) {
+          setTargetMissionBooking(found);
+        } else {
+          // If bookings not loaded yet or ID is placeholder, pass minimal object
+          setTargetMissionBooking({ id: bookingIdParam } as BookingRequest);
+        }
+      }
+    } catch (e) {
+      console.warn('Failed to parse deep link search params:', e);
+    }
+  }, [bookings]);
 
   // Automatically synchronize notification count to Mobile App Icon Badge (iOS / Android)
   useEffect(() => {
@@ -617,6 +670,9 @@ export default function App() {
   // Add User
   const handleAddUser = async (userData: Omit<User, 'id'>) => {
     const newUser: User = {
+      lineUserId: '',
+      lineNotifyToken: '',
+      lineNotificationEnabled: true,
       ...userData,
       id: `usr-${Date.now()}`,
       createdAt: new Date().toISOString()
@@ -1620,6 +1676,17 @@ export default function App() {
             onViewMemo={(b) => setSelectedBookingForMemo(b)}
             onNavigateToTracking={() => setActiveTab('tracking')}
             onNavigateToAssetRegister={() => setActiveTab('asset_register')}
+            onSendLineNotification={async (b) => {
+              try {
+                const res = await notifyMissionToDriver(b, users);
+                playAppSound('success', soundEnabled);
+                showToast(`ส่งแจ้งเตือนภารกิจพร้อมปุ่มเปิดดูงานให้ ${res.recipientName} ทาง LINE แล้ว`, 'success');
+                setIsGlobalLineSimulatorOpen(true);
+              } catch (err) {
+                console.error('Error sending mission to driver:', err);
+                showToast('ไม่สามารถส่งแจ้งเตือนได้ กรุณาตรวจสอบการตั้งค่า LINE', 'error');
+              }
+            }}
           />
         )}
 
@@ -1886,6 +1953,16 @@ export default function App() {
         users={users}
         bookings={bookings}
         onShowToast={showToast}
+        onOpenMission={(bookingId) => {
+          const target = bookings.find((b) => b.id.toLowerCase() === bookingId.toLowerCase());
+          if (target) {
+            setTargetMissionBooking(target);
+          } else {
+            setTargetMissionBooking({ id: bookingId } as BookingRequest);
+          }
+          setActiveTab('driver_mission');
+        }}
+        onViewMemo={(b) => setSelectedBookingForMemo(b)}
       />
 
       {/* Floating Profile Photo Studio Pop-up Modal */}

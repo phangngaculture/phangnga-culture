@@ -262,6 +262,7 @@ export interface LineNotificationPayload {
   token?: string;
   title: string;
   message: string;
+  flex?: Record<string, unknown>;
   eventType: LineEventType;
   bookingId?: string;
   timestamp?: string;
@@ -277,6 +278,7 @@ export interface LineNotificationLog {
   status: 'success' | 'simulated' | 'failed';
   mode: 'messaging_api' | 'notify' | 'webhook' | 'simulation';
   eventType: LineEventType;
+  bookingId?: string;
   details?: string;
 }
 
@@ -285,6 +287,7 @@ export interface GlobalLineConfig {
   channelSecret?: string;
   webhookUrl?: string;
   notifyToken?: string;
+  appBaseUrl?: string;
   defaultEnabled: boolean;
   simulationModeOnly: boolean;
 }

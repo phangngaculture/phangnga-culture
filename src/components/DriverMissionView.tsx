@@ -34,7 +34,8 @@ import {
   Users,
   Lock,
   UserCheck,
-  RotateCcw
+  RotateCcw,
+  Send
 } from 'lucide-react';
 
 interface DriverMissionViewProps {
@@ -49,6 +50,7 @@ interface DriverMissionViewProps {
   onViewMemo: (booking: BookingRequest) => void;
   onNavigateToTracking?: () => void;
   onNavigateToAssetRegister?: () => void;
+  onSendLineNotification?: (booking: BookingRequest, customNote?: string) => Promise<void> | void;
 }
 
 export const DriverMissionView: React.FC<DriverMissionViewProps> = ({
@@ -62,7 +64,8 @@ export const DriverMissionView: React.FC<DriverMissionViewProps> = ({
   onUpdateVehicleOdometer,
   onViewMemo,
   onNavigateToTracking,
-  onNavigateToAssetRegister
+  onNavigateToAssetRegister,
+  onSendLineNotification
 }) => {
   // Status filter for missions
   const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -95,17 +98,31 @@ export const DriverMissionView: React.FC<DriverMissionViewProps> = ({
   const [selectedBookingForStart, setSelectedBookingForStart] = useState<BookingRequest | null>(null);
   const [selectedBookingForComplete, setSelectedBookingForComplete] = useState<BookingRequest | null>(null);
   const [successToast, setSuccessToast] = useState<string | null>(null);
+  const [highlightedBookingId, setHighlightedBookingId] = useState<string | null>(null);
 
-  // Auto-open target booking if specified from dashboard navigation
+  // Auto-open target booking if specified from dashboard or deep link navigation
   useEffect(() => {
     if (initialTargetBookingId) {
-      const target = bookings.find((b) => b.id === initialTargetBookingId);
-      if (target && canUserExecuteMission(target, currentUser, allUsers)) {
-        if (target.status === 'approved') {
-          setSelectedBookingForStart(target);
-        } else if (target.status === 'in_progress') {
-          setSelectedBookingForComplete(target);
+      const target = bookings.find((b) => b.id.toLowerCase() === initialTargetBookingId.toLowerCase());
+      if (target) {
+        setHighlightedBookingId(target.id);
+        setStatusFilter('all');
+        setSelectedDriverFilter('all');
+
+        if (canUserExecuteMission(target, currentUser, allUsers)) {
+          if (target.status === 'approved') {
+            setSelectedBookingForStart(target);
+          } else if (target.status === 'in_progress') {
+            setSelectedBookingForComplete(target);
+          }
         }
+
+        setTimeout(() => {
+          const el = document.getElementById(`mission-card-${target.id}`);
+          if (el) {
+            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }
+        }, 300);
       }
       onClearInitialTargetBooking?.();
     }
@@ -556,6 +573,30 @@ export const DriverMissionView: React.FC<DriverMissionViewProps> = ({
           </div>
 
           {/* Missions Cards List */}
+          {highlightedBookingId && (
+            <div className="bg-emerald-50 border-2 border-emerald-400 p-4 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs text-emerald-950 shadow-sm animate-in fade-in duration-300">
+              <div className="flex items-center space-x-2.5">
+                <span className="text-2xl">🎯</span>
+                <div>
+                  <div className="font-bold text-emerald-900 flex items-center space-x-2">
+                    <span>เปิดดูภารกิจตามลิงก์แจ้งเตือน LINE</span>
+                    <span className="bg-emerald-200 text-emerald-900 px-2 py-0.5 rounded-full font-mono text-[11px]">{highlightedBookingId}</span>
+                  </div>
+                  <div className="text-emerald-700 text-[11px] mt-0.5">
+                    ระบบได้เลื่อนหน้าจอและไฮไลท์การ์ดภารกิจนี้ให้ท่านแล้ว พร้อมให้กดเริ่มงานหรือกรอกไมล์ได้ทันที
+                  </div>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setHighlightedBookingId(null)}
+                className="px-3 py-1.5 bg-white border border-emerald-300 rounded-xl text-emerald-800 font-semibold hover:bg-emerald-100 transition shrink-0 cursor-pointer text-xs"
+              >
+                ปิดการเน้น
+              </button>
+            </div>
+          )}
+
           {driverMissions.length === 0 ? (
             <div className="bg-white rounded-3xl p-12 text-center border border-slate-200 space-y-3">
               <Car className="w-12 h-12 text-slate-300 mx-auto" />
@@ -571,12 +612,16 @@ export const DriverMissionView: React.FC<DriverMissionViewProps> = ({
                 const isInProgress = b.status === 'in_progress';
                 const isCompleted = b.status === 'completed';
                 const vehicle = vehicles.find((v) => v.id === b.carId);
+                const isHighlighted = highlightedBookingId === b.id;
 
                 return (
                   <div
                     key={b.id}
+                    id={`mission-card-${b.id}`}
                     className={`rounded-3xl border transition-all p-5 sm:p-6 card-3d-hover ${
-                      isInProgress
+                      isHighlighted
+                        ? 'border-emerald-500 ring-4 ring-emerald-500/30 bg-emerald-50/40 shadow-lg'
+                        : isInProgress
                         ? 'border-amber-400 dark:border-amber-500/40 ring-2 ring-amber-400/20 bg-gradient-to-br from-amber-50/10 to-amber-100/5 dark:from-amber-950/15 dark:to-amber-900/5 shadow-xs hover:shadow-md'
                         : isReadyToStart
                         ? 'border-orange-200 dark:border-orange-500/20 hover:border-orange-300 bg-gradient-to-br from-orange-50/50 to-amber-50/30 dark:from-orange-950/10 dark:to-amber-950/5 shadow-xs hover:shadow-md'
@@ -822,12 +867,24 @@ export const DriverMissionView: React.FC<DriverMissionViewProps> = ({
                         <div className="flex items-center space-x-2">
                           <button
                             onClick={() => onViewMemo(b)}
-                            className="px-3 py-2 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 rounded-xl text-xs font-medium transition flex items-center space-x-1"
+                            className="px-3 py-2 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 rounded-xl text-xs font-medium transition flex items-center space-x-1 cursor-pointer"
                             title="ดูใบคำขอขอใช้รถยนต์ส่วนกลาง"
                           >
                             <Eye className="w-3.5 h-3.5 text-orange-600" />
                             <span>ดูใบคำขอ</span>
                           </button>
+
+                          {onSendLineNotification && (
+                            <button
+                              type="button"
+                              onClick={() => onSendLineNotification(b)}
+                              className="px-3 py-2 bg-emerald-50 hover:bg-emerald-100 active:scale-95 text-emerald-700 border border-emerald-300 rounded-xl text-xs font-semibold transition flex items-center space-x-1 cursor-pointer"
+                              title="ส่งแจ้งเตือนภารกิจนี้เข้า LINE พร้อมปุ่มเปิดดูงาน"
+                            >
+                              <Send className="w-3.5 h-3.5 text-[#06c755]" />
+                              <span>ส่งเข้า LINE</span>
+                            </button>
+                          )}
 
                           {isInProgress && onNavigateToTracking && (
                             <button

@@ -14,7 +14,10 @@ import {
   Check,
   RefreshCw,
   ExternalLink,
-  Bell
+  Bell,
+  AlertTriangle,
+  Radio,
+  HelpCircle
 } from 'lucide-react';
 import { LineNotificationLog, GlobalLineConfig, User, BookingRequest } from '../types';
 import {
@@ -26,7 +29,9 @@ import {
   formatNewBookingMessage,
   formatApprovedBookingMessage,
   formatRejectedBookingMessage,
-  formatMissionStartedMessage
+  formatMissionStartedMessage,
+  createBookingFlexBubble,
+  checkServerLineStatus
 } from '../services/lineNotificationService';
 
 interface LineSimulatorModalProps {
@@ -36,6 +41,8 @@ interface LineSimulatorModalProps {
   users: User[];
   bookings?: BookingRequest[];
   onShowToast?: (message: string, type?: 'success' | 'info' | 'warning' | 'error') => void;
+  onOpenMission?: (bookingId: string) => void;
+  onViewMemo?: (booking: BookingRequest) => void;
 }
 
 export const LineSimulatorModal: React.FC<LineSimulatorModalProps> = ({
@@ -44,19 +51,39 @@ export const LineSimulatorModal: React.FC<LineSimulatorModalProps> = ({
   currentUser,
   users,
   bookings = [],
-  onShowToast
+  onShowToast,
+  onOpenMission,
+  onViewMemo
 }) => {
   const [activeTab, setActiveTab] = useState<'chat' | 'logs' | 'config'>('chat');
   const [logs, setLogs] = useState<LineNotificationLog[]>([]);
   const [config, setConfig] = useState<GlobalLineConfig>(getGlobalLineConfig());
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [isSimulating, setIsSimulating] = useState(false);
+  const [serverStatus, setServerStatus] = useState<{ configured: boolean; hasEnvToken?: boolean; message: string } | null>(null);
+  const [isCheckingServer, setIsCheckingServer] = useState(false);
+  const [testTargetId, setTestTargetId] = useState<string>(currentUser.lineUserId || 'Ue3609b77d75e903ea3e3a4868b236e6f');
+  const [isTestingLive, setIsTestingLive] = useState(false);
+  const [testResult, setTestResult] = useState<{ success: boolean; message: string } | null>(null);
+
+  const fetchServerStatus = async () => {
+    setIsCheckingServer(true);
+    try {
+      const status = await checkServerLineStatus();
+      setServerStatus(status);
+    } catch {
+      setServerStatus({ configured: false, message: 'ไม่สามารถติดต่อเซิร์ฟเวอร์หลังบ้านได้' });
+    } finally {
+      setIsCheckingServer(false);
+    }
+  };
 
   // Load logs on mount and subscribe to dispatched events
   useEffect(() => {
     if (!isOpen) return;
     setLogs(getLineNotificationLogs());
     setConfig(getGlobalLineConfig());
+    fetchServerStatus();
 
     const handleDispatched = () => {
       setLogs(getLineNotificationLogs());
@@ -141,19 +168,94 @@ export const LineSimulatorModal: React.FC<LineSimulatorModalProps> = ({
       eventType = 'mission_started';
     }
 
+    const flex = createBookingFlexBubble(sampleBooking, eventType, title);
+
     await sendLineNotification({
       recipientUserId: currentUser.id,
       recipientName: currentUser.name,
-      lineUserId: currentUser.lineUserId || 'U-CURRENT-USER',
-      token: currentUser.lineNotifyToken,
+      lineUserId: currentUser.lineUserId || testTargetId || 'Ue3609b77d75e903ea3e3a4868b236e6f',
+      token: currentUser.lineNotifyToken || config.channelAccessToken,
       title,
       message,
+      flex,
       eventType,
       bookingId: sampleBooking.id
     });
 
     setIsSimulating(false);
     onShowToast?.(`จำลองการส่งการแจ้งเตือน LINE "${title}" สำเร็จ`, 'success');
+  };
+
+  // Live push direct test
+  const handleTestLivePush = async () => {
+    if (!testTargetId.trim()) {
+      onShowToast?.('กรุณาระบุ LINE User ID ของผู้รับ (ขึ้นต้นด้วย U...)', 'warning');
+      return;
+    }
+
+    setIsTestingLive(true);
+    setTestResult(null);
+
+    const sampleBooking: BookingRequest = bookings[0] || {
+      id: 'CAR-69001',
+      memoNo: 'พง ๐๐๓๒(พิเศษ)/ว ๐๑๑',
+      date: '2026-09-12',
+      startTime: '08:30',
+      endTime: '16:30',
+      name: currentUser.name,
+      username: currentUser.username,
+      position: currentUser.position,
+      department: currentUser.department,
+      purpose: 'ทดสอบส่งการแจ้งเตือน LINE Flex Message ระบบงานยานพาหนะ สวจ.พังงา',
+      destination: 'ศาลากลางจังหวัดพังงา',
+      destProvince: 'พังงา',
+      destAmphoe: 'เมืองพังงา',
+      destTambon: 'ท้ายช้าง',
+      destDetail: '',
+      carId: 'v-camry',
+      carName: 'Toyota Camry (VIP เก๋ง)',
+      driverType: 'driver',
+      driverName: 'นายศราวุธ เกตุรักษ์',
+      status: 'pending'
+    };
+
+    const title = '🔔 ทดสอบส่งเข้า LINE จริง: ระบบยานพาหนะ สวจ.พังงา';
+    const message = `🔔 แจ้งเตือนทดสอบระบบยานพาหนะ สวจ.พังงา\nถึง: ${currentUser.name}\nเวลา: ${new Date().toLocaleString('th-TH')}`;
+    const flex = createBookingFlexBubble(sampleBooking, 'new_booking', title);
+
+    try {
+      const res = await sendLineNotification({
+        recipientUserId: currentUser.id,
+        recipientName: currentUser.name,
+        lineUserId: testTargetId.trim(),
+        token: config.channelAccessToken,
+        title,
+        message,
+        flex,
+        eventType: 'test',
+        bookingId: sampleBooking.id
+      });
+
+      setTestResult({
+        success: res.mode === 'messaging_api' || res.mode === 'webhook',
+        message: res.message
+      });
+
+      if (res.mode === 'messaging_api') {
+        onShowToast?.('ส่งข้อความเข้าแชต LINE สำเร็จเรียบร้อย!', 'success');
+      } else if (res.mode === 'simulation') {
+        onShowToast?.('บันทึกในโหมดจำลอง (ยังไม่มี Token หรืออยู่ใน Simulation Mode)', 'info');
+      }
+    } catch (err: unknown) {
+      const errMsg = err instanceof Error ? err.message : String(err);
+      setTestResult({
+        success: false,
+        message: `ข้อผิดพลาด: ${errMsg}`
+      });
+      onShowToast?.(`เกิดข้อผิดพลาดในการส่ง: ${errMsg}`, 'error');
+    } finally {
+      setIsTestingLive(false);
+    }
   };
 
   return (
@@ -375,6 +477,44 @@ export const LineSimulatorModal: React.FC<LineSimulatorModalProps> = ({
                               {latestLog.message}
                             </pre>
 
+                            {/* Direct Action Buttons Simulation */}
+                            {(() => {
+                              const targetBookingId = latestLog.bookingId || latestLog.message.match(/CAR-\d+/i)?.[0];
+                              const targetBooking = bookings.find(b => b.id.toLowerCase() === targetBookingId?.toLowerCase());
+                              if (!targetBookingId) return null;
+                              return (
+                                <div className="pt-2 border-t border-slate-100 space-y-1.5">
+                                  <div className="text-[10px] font-bold text-slate-400">ปุ่มเปิดดูที่ส่งไปใน LINE:</div>
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      onOpenMission?.(targetBookingId);
+                                      onClose();
+                                    }}
+                                    className="w-full py-1.5 px-2 bg-[#06c755] hover:bg-[#05b34c] active:scale-98 text-white rounded-lg text-center font-bold text-[11px] shadow-xs flex items-center justify-center space-x-1.5 transition cursor-pointer"
+                                  >
+                                    <span>🚗</span>
+                                    <span>เปิดภารกิจงานนี้ (คนขับ)</span>
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      if (targetBooking) {
+                                        onViewMemo?.(targetBooking);
+                                      } else {
+                                        onOpenMission?.(targetBookingId);
+                                      }
+                                      onClose();
+                                    }}
+                                    className="w-full py-1.5 px-2 bg-slate-100 hover:bg-slate-200 active:scale-98 text-slate-700 rounded-lg text-center font-medium text-[11px] flex items-center justify-center space-x-1.5 transition cursor-pointer"
+                                  >
+                                    <span>📋</span>
+                                    <span>ดูใบบันทึกขอใช้รถ</span>
+                                  </button>
+                                </div>
+                              );
+                            })()}
+
                             <div className="pt-1 flex items-center justify-between text-[10px] text-slate-400 border-t border-slate-50">
                               <span>ส่งถึง: {latestLog.recipient}</span>
                               <span className="font-mono">
@@ -459,6 +599,41 @@ export const LineSimulatorModal: React.FC<LineSimulatorModalProps> = ({
                       <div className="p-2.5 bg-slate-50 rounded-xl text-[11px] text-slate-700 whitespace-pre-wrap font-sans border border-slate-100">
                         {log.message}
                       </div>
+
+                      {/* Direct Navigation Button from Log */}
+                      {(() => {
+                        const logBookingId = log.bookingId || log.message.match(/CAR-\d+/i)?.[0];
+                        const matched = bookings.find(b => b.id.toLowerCase() === logBookingId?.toLowerCase());
+                        if (!logBookingId) return null;
+                        return (
+                          <div className="flex items-center space-x-2 pt-1">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                onOpenMission?.(logBookingId);
+                                onClose();
+                              }}
+                              className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-semibold flex items-center space-x-1 shadow-xs transition cursor-pointer active:scale-95"
+                            >
+                              <span>🚗</span>
+                              <span>เปิดดูภารกิจนี้ (คนขับ)</span>
+                            </button>
+                            {matched && (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  onViewMemo?.(matched);
+                                  onClose();
+                                }}
+                                className="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-medium flex items-center space-x-1 transition cursor-pointer active:scale-95"
+                              >
+                                <span>📋</span>
+                                <span>ดูใบคำขอ</span>
+                              </button>
+                            )}
+                          </div>
+                        );
+                      })()}
                     </div>
                   ))}
                 </div>
@@ -468,74 +643,220 @@ export const LineSimulatorModal: React.FC<LineSimulatorModalProps> = ({
 
           {/* TAB 3: GLOBAL CONFIG */}
           {activeTab === 'config' && (
-            <form onSubmit={handleSaveConfig} className="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs space-y-5 max-w-2xl mx-auto">
-              <div>
-                <h4 className="text-sm font-bold text-slate-800">การตั้งค่าเชื่อมต่อ LINE ส่วนกลางของหน่วยงาน</h4>
-                <p className="text-xs text-slate-500 mt-0.5">
-                  กำหนดค่าเริ่มต้นสำหรับ LINE Messaging API หรือ Webhook Proxy (เช่น Google Apps Script) สำหรับระบบส่วนกลาง
-                </p>
-              </div>
-
-              <div className="space-y-4">
-                {/* Channel Access Token */}
-                <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-700">
-                    LINE Channel Access Token (Long-Lived)
-                  </label>
-                  <input
-                    type="text"
-                    value={config.channelAccessToken || ''}
-                    onChange={(e) => setConfig({ ...config, channelAccessToken: e.target.value })}
-                    placeholder="เช่น eyJhbGciOiJIUzI1NiJ9..."
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#06c755]"
-                  />
-                  <span className="text-[10px] text-slate-400 block">
-                    สร้างและรับได้จาก LINE Developers Console &gt; Messaging API &gt; Channel access token
-                  </span>
-                </div>
-
-                {/* Webhook URL (Recommended for browser without CORS issues) */}
-                <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-700">
-                    Custom Webhook / GAS Proxy URL (แนะนำสำหรับระบบบนเว็บเบราว์เซอร์)
-                  </label>
-                  <input
-                    type="url"
-                    value={config.webhookUrl || ''}
-                    onChange={(e) => setConfig({ ...config, webhookUrl: e.target.value })}
-                    placeholder="เช่น https://script.google.com/macros/s/.../exec"
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#06c755]"
-                  />
-                  <span className="text-[10px] text-slate-400 block">
-                    URL ของ Google Apps Script หรือ Cloud Function ที่ทำหน้าที่รับคำขอและ Push LINE ให้โดยไม่ติด CORS
-                  </span>
-                </div>
-
-                {/* Simulation Only Toggle */}
-                <label className="flex items-center space-x-3 p-3 bg-slate-50 rounded-xl border border-slate-200 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={config.simulationModeOnly}
-                    onChange={(e) => setConfig({ ...config, simulationModeOnly: e.target.checked })}
-                    className="w-4 h-4 rounded text-[#06c755] focus:ring-[#06c755]"
-                  />
-                  <div>
-                    <div className="text-xs font-bold text-slate-800">บังคับใช้โหมดจำลองเท่านั้น (Simulation Mode Only)</div>
-                    <div className="text-[11px] text-slate-500">บันทึกและแสดงในระบบจำลองโดยไม่ยิงคำขอออกไปยังอินเทอร์เน็ตจริง</div>
+            <div className="space-y-5 max-w-2xl mx-auto">
+              {/* Backend Status Card */}
+              <div className="bg-white p-4.5 rounded-2xl border border-slate-200 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                <div className="flex items-center space-x-3">
+                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
+                    serverStatus?.hasEnvToken ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'
+                  }`}>
+                    <Radio className="w-5 h-5 animate-pulse" />
                   </div>
-                </label>
-              </div>
-
-              <div className="flex justify-end pt-2">
+                  <div>
+                    <div className="flex items-center space-x-2">
+                      <h4 className="text-xs font-bold text-slate-800">สถานะเซิร์ฟเวอร์หลังบ้าน (LINE Proxy)</h4>
+                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                        serverStatus?.hasEnvToken
+                          ? 'bg-emerald-100 text-emerald-800'
+                          : 'bg-amber-100 text-amber-800'
+                      }`}>
+                        {serverStatus?.hasEnvToken ? 'พร้อมใช้งาน (มี Token บนเซิร์ฟเวอร์)' : 'พร้อมรับ Token ผ่านหน้าเว็บ'}
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-slate-500 mt-0.5">
+                      {serverStatus?.message || 'กำลังตรวจสอบการเชื่อมต่อเซิร์ฟเวอร์...'}
+                    </p>
+                  </div>
+                </div>
                 <button
-                  type="submit"
-                  className="px-5 py-2.5 bg-[#06c755] hover:bg-[#05b34c] text-white rounded-xl text-xs font-bold shadow-md shadow-emerald-600/20 transition flex items-center space-x-2"
+                  type="button"
+                  onClick={fetchServerStatus}
+                  disabled={isCheckingServer}
+                  className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold flex items-center space-x-1.5 transition self-end sm:self-center"
                 >
-                  <Check className="w-4 h-4" />
-                  <span>บันทึกการตั้งค่า</span>
+                  <RefreshCw className={`w-3.5 h-3.5 ${isCheckingServer ? 'animate-spin' : ''}`} />
+                  <span>ตรวจสอบใหม่</span>
                 </button>
               </div>
-            </form>
+
+              {/* Direct Live Test Section */}
+              <div className="bg-gradient-to-br from-emerald-50 to-teal-50/40 p-5 rounded-2xl border border-emerald-200/80 shadow-xs space-y-3">
+                <div className="flex items-center space-x-2">
+                  <span className="w-2.5 h-2.5 rounded-full bg-[#06c755] animate-ping" />
+                  <h4 className="text-xs font-bold text-emerald-900">ทดสอบยิง Flex Message เข้า LINE จริง</h4>
+                </div>
+                <p className="text-[11px] text-emerald-700">
+                  ทดลองส่งการ์ด Flex Message ทางราชการไปยัง LINE User ID โดยตรงผ่านเซิร์ฟเวอร์
+                </p>
+
+                <div className="flex flex-col sm:flex-row gap-2 pt-1">
+                  <div className="flex-1">
+                    <input
+                      type="text"
+                      value={testTargetId}
+                      onChange={(e) => setTestTargetId(e.target.value)}
+                      placeholder="ระบุ LINE User ID (ขึ้นต้นด้วย U...)"
+                      className="w-full px-3 py-2 bg-white border border-emerald-200 rounded-xl text-xs font-mono focus:outline-none focus:ring-2 focus:ring-[#06c755]"
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleTestLivePush}
+                    disabled={isTestingLive}
+                    className="px-4 py-2 bg-[#06c755] hover:bg-[#05b34c] text-white rounded-xl text-xs font-bold shadow-md shadow-emerald-600/20 transition flex items-center justify-center space-x-2 whitespace-nowrap disabled:opacity-50"
+                  >
+                    {isTestingLive ? (
+                      <>
+                        <RefreshCw className="w-4 h-4 animate-spin" />
+                        <span>กำลังยิง LINE...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Send className="w-4 h-4" />
+                        <span>ส่งทดสอบเข้า LINE จริง</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+
+                {testResult && (
+                  <div className={`p-3 rounded-xl border text-xs flex items-start space-x-2 ${
+                    testResult.success
+                      ? 'bg-emerald-100/70 border-emerald-300 text-emerald-800'
+                      : 'bg-rose-50 border-rose-200 text-rose-800'
+                  }`}>
+                    {testResult.success ? (
+                      <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                    ) : (
+                      <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
+                    )}
+                    <div className="space-y-0.5">
+                      <div className="font-bold">{testResult.success ? 'สำเร็จ!' : 'พบข้อผิดพลาด'}</div>
+                      <div className="text-[11px] leading-relaxed">{testResult.message}</div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Main Configuration Form */}
+              <form onSubmit={handleSaveConfig} className="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs space-y-5">
+                <div>
+                  <h4 className="text-sm font-bold text-slate-800">การตั้งค่าเชื่อมต่อ LINE ส่วนกลางของหน่วยงาน</h4>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    กำหนดค่าเริ่มต้นสำหรับ LINE Messaging API หรือ Webhook Proxy สำหรับระบบส่วนกลาง
+                  </p>
+                </div>
+
+                <div className="space-y-4">
+                  {/* Channel Access Token */}
+                  <div className="space-y-1">
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-bold text-slate-700">
+                        LINE Channel Access Token (Long-Lived)
+                      </label>
+                      {serverStatus?.hasEnvToken && (
+                        <span className="text-[10px] text-emerald-600 font-medium">✓ มีในตัวแปรระบบแล้ว (เว้นว่างได้)</span>
+                      )}
+                    </div>
+                    <input
+                      type="text"
+                      value={config.channelAccessToken || ''}
+                      onChange={(e) => setConfig({ ...config, channelAccessToken: e.target.value })}
+                      placeholder="เช่น eyJhbGciOiJIUzI1NiJ9..."
+                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#06c755]"
+                    />
+                    <span className="text-[10px] text-slate-400 block">
+                      สร้างและรับได้จาก LINE Developers Console &gt; Messaging API &gt; Channel access token
+                    </span>
+                  </div>
+
+                  {/* Webhook URL */}
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-slate-700">
+                      Custom Webhook / GAS Proxy URL (ตัวเลือกเสริม)
+                    </label>
+                    <input
+                      type="url"
+                      value={config.webhookUrl || ''}
+                      onChange={(e) => setConfig({ ...config, webhookUrl: e.target.value })}
+                      placeholder="เช่น https://script.google.com/macros/s/.../exec"
+                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#06c755]"
+                    />
+                    <span className="text-[10px] text-slate-400 block">
+                      URL ของ Google Apps Script หรือ Webhook Proxy ที่ทำหน้าที่สำรอง (Optional)
+                    </span>
+                  </div>
+
+                  {/* App Base URL for Deep Links */}
+                  <div className="space-y-1">
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-bold text-slate-700">
+                        URL สำหรับปุ่มเปิดดูใน LINE (App Base URL)
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (typeof window !== 'undefined' && window.location.origin) {
+                            setConfig({ ...config, appBaseUrl: window.location.origin });
+                            onShowToast?.('ตรวจจับ URL ปัจจุบันเรียบร้อยแล้ว', 'info');
+                          }
+                        }}
+                        className="text-[11px] text-emerald-600 hover:text-emerald-700 font-semibold underline cursor-pointer"
+                      >
+                        ตรวจจับ URL ปัจจุบันอัตโนมัติ
+                      </button>
+                    </div>
+                    <input
+                      type="url"
+                      value={config.appBaseUrl || ''}
+                      onChange={(e) => setConfig({ ...config, appBaseUrl: e.target.value })}
+                      placeholder={typeof window !== 'undefined' ? window.location.origin : 'https://...'}
+                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#06c755]"
+                    />
+                    <span className="text-[10px] text-slate-400 block">
+                      ระบุโดเมนระบบที่ต้องการให้ปุ่มใน LINE นำทางกลับมาเปิดภารกิจของคนขับ (หากเว้นว่างจะใช้ URL ของเบราว์เซอร์ปัจจุบันโดยอัตโนมัติ)
+                    </span>
+                  </div>
+
+                  {/* Simulation Only Toggle */}
+                  <label className="flex items-center space-x-3 p-3 bg-slate-50 rounded-xl border border-slate-200 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={config.simulationModeOnly}
+                      onChange={(e) => setConfig({ ...config, simulationModeOnly: e.target.checked })}
+                      className="w-4 h-4 rounded text-[#06c755] focus:ring-[#06c755]"
+                    />
+                    <div>
+                      <div className="text-xs font-bold text-slate-800">บังคับใช้โหมดจำลองเท่านั้น (Simulation Mode Only)</div>
+                      <div className="text-[11px] text-slate-500">บันทึกและแสดงในระบบจำลองโดยไม่ยิงคำขอออกไปยัง LINE จริง</div>
+                    </div>
+                  </label>
+                </div>
+
+                <div className="flex justify-end pt-2">
+                  <button
+                    type="submit"
+                    className="px-5 py-2.5 bg-[#06c755] hover:bg-[#05b34c] text-white rounded-xl text-xs font-bold shadow-md shadow-emerald-600/20 transition flex items-center space-x-2"
+                  >
+                    <Check className="w-4 h-4" />
+                    <span>บันทึกการตั้งค่า</span>
+                  </button>
+                </div>
+              </form>
+
+              {/* Instructions Card */}
+              <div className="bg-slate-50 p-4.5 rounded-2xl border border-slate-200 space-y-2.5">
+                <div className="flex items-center space-x-2 text-slate-700">
+                  <HelpCircle className="w-4 h-4 text-[#06c755]" />
+                  <h5 className="text-xs font-bold">วิธีค้นหา LINE User ID ของตนเอง เพื่อรับแจ้งเตือน</h5>
+                </div>
+                <ol className="text-xs text-slate-600 space-y-1 list-decimal list-inside leading-relaxed">
+                  <li>LINE User ID ของแต่ละบุคคลจะเป็นรหัสขึ้นต้นด้วยตัวอักษร <strong>U</strong> ตามด้วยตัวเลขและตัวอักษร 32 หลัก (เช่น <code className="bg-white px-1.5 py-0.5 rounded border text-[11px] text-purple-700">Ue3609b77d75e903ea3e3a4868b236e6f</code>)</li>
+                  <li>สามารถขอรับได้เมื่อเพิ่มเพื่อนกับ LINE Official Account ของสำนักงาน และทักข้อความ</li>
+                  <li>นำรหัสนี้ไประบุที่หน้า <strong>"ข้อมูลผู้ใช้ / โปรไฟล์"</strong> หรือช่อง <strong>"LINE User ID"</strong> ในระบบ</li>
+                </ol>
+              </div>
+            </div>
           )}
 
         </div>
