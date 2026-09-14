@@ -199,14 +199,6 @@ export default function App() {
 
     let loaded = loadSavedData<BookingRequest[]>(STORAGE_KEYS.BOOKINGS, INITIAL_BOOKINGS);
 
-    // If user has existing localStorage with fewer than 10 items, complement with the 10 mock missions
-    if (loaded && loaded.length < INITIAL_BOOKINGS.length) {
-      const existingIds = new Set(loaded.map((b) => b.id));
-      const missingMissions = INITIAL_BOOKINGS.filter((b) => !existingIds.has(b.id));
-      loaded = [...loaded, ...missingMissions];
-      saveLocalData(STORAGE_KEYS.BOOKINGS, loaded);
-    }
-
     return loaded.map((b) => {
       let memo = b.memoNo || '';
       if (memo.includes('พง ๐๐๓๐.๑') || memo.includes('พง0030.1') || memo.includes('พง 0030.1')) {
@@ -369,6 +361,15 @@ export default function App() {
     const unsubscribe = subscribeToFirestore(
       {
         onBookingsChange: (cloudBookings) => {
+          const isClearedForProduction =
+            typeof window !== 'undefined' &&
+            localStorage.getItem('mculture_bookings_cleared_for_production') === 'true';
+
+          if (isClearedForProduction) {
+            setBookings([]);
+            return;
+          }
+
           if (cloudBookings) {
             // Check for remote events (new booking created or approved on another device)
             if (!isInitialFirestoreLoadRef.current && prevBookingsRef.current.length > 0) {
@@ -1030,7 +1031,12 @@ export default function App() {
       const updated = bookings.filter((b) => b.id !== bookingId);
       setBookings(updated);
       saveLocalData(STORAGE_KEYS.BOOKINGS, updated);
-      await deleteBookingFromFirestore(bookingId);
+      if (updated.length === 0) {
+        localStorage.setItem('mculture_bookings_cleared_for_production', 'true');
+        await clearAllBookingsFromFirestore();
+      } else {
+        await deleteBookingFromFirestore(bookingId);
+      }
       triggerAutoSync(updated);
       playAppSound('click', soundEnabled);
       showToast(`ลบคำขอ ${bookingId} เรียบร้อยแล้ว`, 'info');

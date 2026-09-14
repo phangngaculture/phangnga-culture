@@ -880,17 +880,6 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                   <FileText className="w-5 h-5 text-orange-600" />
                   <span>รายการใบเบิกและสถานะคำขอทั้งหมด ({sortedBookings.length} รายการ)</span>
                 </h3>
-                {onOpenClearAllBookings && (currentUser.role === 'admin' || currentUser.role === 'director') && bookings.length > 0 && (
-                  <button
-                    type="button"
-                    onClick={onOpenClearAllBookings}
-                    className="px-2.5 py-1 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-lg text-[11px] font-semibold flex items-center space-x-1.5 transition cursor-pointer shadow-2xs"
-                    title="ลบใบคำขอทั้งหมดเพื่อเตรียมเริ่มใช้งานจริง"
-                  >
-                    <Trash2 className="w-3.5 h-3.5 text-rose-600" />
-                    <span>ลบคำขอทั้งหมด (เริ่มใช้จริง)</span>
-                  </button>
-                )}
               </div>
               <p className="text-xs text-slate-500 mt-1">
                 เรียงตามวันเดินทางล่าสุดไว้ด้านบน คัดกรองตามสถานะและค้นหาคำขอได้ทันที

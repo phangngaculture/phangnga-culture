@@ -196,24 +196,11 @@ export const subscribeToFirestore = (
     const unsubBookings = onSnapshot(
       bookingsCol,
       (snapshot) => {
-        const isCleared = typeof window !== 'undefined' && localStorage.getItem('mculture_bookings_cleared_for_production') === 'true';
-
         if (!snapshot.empty) {
           const items = snapshot.docs.map((d) => d.data() as BookingRequest);
-          if (!isCleared && initialData?.bookings && initialData.bookings.length > 0) {
-            const existingIds = new Set(snapshot.docs.map((d) => d.id));
-            const missing = initialData.bookings.filter((b) => b && b.id && !existingIds.has(b.id));
-            if (missing.length > 0) {
-              seedCollection('bookings', missing);
-              items.push(...missing);
-            }
-          }
           // Sort latest first
           items.sort((a, b) => new Date(b.createdAt || b.date).getTime() - new Date(a.createdAt || a.date).getTime());
           callbacks.onBookingsChange?.(items);
-        } else if (!isCleared && initialData?.bookings && initialData.bookings.length > 0) {
-          // Seed if completely empty only if not deliberately cleared for production
-          seedCollection('bookings', initialData.bookings);
         } else {
           callbacks.onBookingsChange?.([]);
         }
@@ -230,19 +217,8 @@ export const subscribeToFirestore = (
       (snapshot) => {
         if (!snapshot.empty) {
           const items = snapshot.docs.map((d) => d.data() as Vehicle);
-          if (initialData?.vehicles && initialData.vehicles.length > 0) {
-            const existingIds = new Set(snapshot.docs.map((d) => d.id));
-            const missing = initialData.vehicles.filter((v) => v && v.id && !existingIds.has(v.id));
-            if (missing.length > 0) {
-              seedCollection('vehicles', missing);
-              items.push(...missing);
-            }
-          }
           callbacks.onVehiclesChange?.(items);
-        } else if (initialData?.vehicles && initialData.vehicles.length > 0) {
-          seedCollection('vehicles', initialData.vehicles);
         } else {
-          // Emit the empty state so deleting the last vehicle propagates to other clients
           callbacks.onVehiclesChange?.([]);
         }
       },
@@ -257,18 +233,8 @@ export const subscribeToFirestore = (
       (snapshot) => {
         if (!snapshot.empty) {
           const items = snapshot.docs.map((d) => d.data() as FuelLog);
-          if (initialData?.fuelLogs && initialData.fuelLogs.length > 0) {
-            const existingIds = new Set(snapshot.docs.map((d) => d.id));
-            const missing = initialData.fuelLogs.filter((f) => f && f.id && !existingIds.has(f.id));
-            if (missing.length > 0) {
-              seedCollection('fuelLogs', missing);
-              items.push(...missing);
-            }
-          }
           items.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
           callbacks.onFuelLogsChange?.(items);
-        } else if (initialData?.fuelLogs && initialData.fuelLogs.length > 0) {
-          seedCollection('fuelLogs', initialData.fuelLogs);
         } else {
           callbacks.onFuelLogsChange?.([]);
         }
@@ -284,18 +250,8 @@ export const subscribeToFirestore = (
       (snapshot) => {
         if (!snapshot.empty) {
           const items = snapshot.docs.map((d) => d.data() as MaintenanceRecord);
-          if (initialData?.maintenanceRecords && initialData.maintenanceRecords.length > 0) {
-            const existingIds = new Set(snapshot.docs.map((d) => d.id));
-            const missing = initialData.maintenanceRecords.filter((m) => m && m.id && !existingIds.has(m.id));
-            if (missing.length > 0) {
-              seedCollection('maintenanceRecords', missing);
-              items.push(...missing);
-            }
-          }
           items.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
           callbacks.onMaintenanceChange?.(items);
-        } else if (initialData?.maintenanceRecords && initialData.maintenanceRecords.length > 0) {
-          seedCollection('maintenanceRecords', initialData.maintenanceRecords);
         } else {
           callbacks.onMaintenanceChange?.([]);
         }
@@ -311,17 +267,7 @@ export const subscribeToFirestore = (
       (snapshot) => {
         if (!snapshot.empty) {
           const items = snapshot.docs.map((d) => d.data() as User);
-          if (initialData?.users && initialData.users.length > 0) {
-            const existingIds = new Set(snapshot.docs.map((d) => d.id));
-            const missing = initialData.users.filter((u) => u && u.id && !existingIds.has(u.id));
-            if (missing.length > 0) {
-              seedCollection('users', missing);
-              items.push(...missing);
-            }
-          }
           callbacks.onUsersChange?.(items);
-        } else if (initialData?.users && initialData.users.length > 0) {
-          seedCollection('users', initialData.users);
         } else {
           callbacks.onUsersChange?.([]);
         }
