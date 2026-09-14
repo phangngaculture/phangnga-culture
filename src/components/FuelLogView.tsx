@@ -12,7 +12,10 @@ import {
   DollarSign,
   Droplets,
   Calendar,
-  AlertTriangle
+  AlertTriangle,
+  Edit2,
+  Trash2,
+  X
 } from 'lucide-react';
 
 interface FuelLogViewProps {
@@ -21,6 +24,8 @@ interface FuelLogViewProps {
   vehicles: Vehicle[];
   currentUser: User;
   onAddFuelLog: (log: Omit<FuelLog, 'id'>) => void;
+  onUpdateFuelLog?: (id: string, data: Partial<FuelLog>) => void;
+  onDeleteFuelLog?: (id: string) => void;
 }
 
 export const FuelLogView: React.FC<FuelLogViewProps> = ({
@@ -28,10 +33,13 @@ export const FuelLogView: React.FC<FuelLogViewProps> = ({
   bookings,
   vehicles,
   currentUser,
-  onAddFuelLog
+  onAddFuelLog,
+  onUpdateFuelLog,
+  onDeleteFuelLog
 }) => {
   const approvedBookings = useMemo(() => bookings.filter((b) => b.status === 'approved'), [bookings]);
 
+  const [editingLog, setEditingLog] = useState<FuelLog | null>(null);
   const [bookingId, setBookingId] = useState<string>(approvedBookings[0]?.id || '');
   const [startMileage, setStartMileage] = useState<number>(89430);
   const [endMileage, setEndMileage] = useState<number>(89620);
@@ -56,6 +64,33 @@ export const FuelLogView: React.FC<FuelLogViewProps> = ({
   const fuelEfficiency = litres > 0 ? (distance / litres).toFixed(2) : '0';
   const costPerKm = distance > 0 ? (cost / distance).toFixed(2) : '0';
 
+  const handleStartEdit = (log: FuelLog) => {
+    setEditingLog(log);
+    setBookingId(log.bookingId);
+    setStartMileage(log.startMileage);
+    setEndMileage(log.endMileage);
+    setLitres(log.litres);
+    setCost(log.cost);
+    setFuelStation(log.fuelStation);
+    setReceiptNo(log.receiptNo || '');
+    setRating(log.rating);
+    setNotes(log.notes || '');
+    if (log.checklist) {
+      setChecklist(log.checklist);
+    }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleCancelEdit = () => {
+    setEditingLog(null);
+    setStartMileage(89430);
+    setEndMileage(89620);
+    setLitres(18.5);
+    setCost(640);
+    setReceiptNo('RC-690901');
+    setNotes('เครื่องยนต์ทำงานปกติ ไม่พบสัญญาณไฟเตือน แอร์เย็น');
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -66,22 +101,41 @@ export const FuelLogView: React.FC<FuelLogViewProps> = ({
 
     const selectedBooking = bookings.find((b) => b.id === bookingId);
 
-    onAddFuelLog({
-      bookingId: bookingId || 'CAR-GENERAL',
-      carPlate: selectedBooking ? selectedBooking.carName : 'กข 1234 พังงา',
-      driverName: selectedBooking ? selectedBooking.driverName : currentUser.name,
-      startMileage,
-      endMileage,
-      distance,
-      litres,
-      cost,
-      fuelStation,
-      receiptNo,
-      rating,
-      checklist,
-      notes,
-      date: new Date().toISOString().split('T')[0]
-    });
+    if (editingLog && onUpdateFuelLog) {
+      onUpdateFuelLog(editingLog.id, {
+        bookingId: bookingId || editingLog.bookingId,
+        carPlate: selectedBooking ? selectedBooking.carName : editingLog.carPlate,
+        driverName: selectedBooking ? selectedBooking.driverName : editingLog.driverName,
+        startMileage,
+        endMileage,
+        distance,
+        litres,
+        cost,
+        fuelStation,
+        receiptNo,
+        rating,
+        checklist,
+        notes
+      });
+      setEditingLog(null);
+    } else {
+      onAddFuelLog({
+        bookingId: bookingId || 'CAR-GENERAL',
+        carPlate: selectedBooking ? selectedBooking.carName : 'กข 1234 พังงา',
+        driverName: selectedBooking ? selectedBooking.driverName : currentUser.name,
+        startMileage,
+        endMileage,
+        distance,
+        litres,
+        cost,
+        fuelStation,
+        receiptNo,
+        rating,
+        checklist,
+        notes,
+        date: new Date().toISOString().split('T')[0]
+      });
+    }
   };
 
   const totalFuelCost = fuelLogs.reduce((sum, item) => sum + item.cost, 0);
@@ -131,12 +185,31 @@ export const FuelLogView: React.FC<FuelLogViewProps> = ({
         
         {/* Form Card (5 cols) */}
         <div className="lg:col-span-5 bg-white rounded-2xl p-6 border border-slate-200 shadow-xs space-y-4">
-          <div className="flex items-center space-x-2 border-b border-slate-100 pb-3">
-            <Gauge className="w-4 h-4 text-teal-700" />
-            <h3 className="font-bold text-xs md:text-sm text-slate-900">
-              แบบบันทึกการใช้เชื้อเพลิงและเลขไมล์
-            </h3>
+          <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+            <div className="flex items-center space-x-2">
+              <Gauge className="w-4 h-4 text-teal-700" />
+              <h3 className="font-bold text-xs md:text-sm text-slate-900">
+                {editingLog ? 'แก้ไขข้อมูลการใช้เชื้อเพลิงและเลขไมล์' : 'แบบบันทึกการใช้เชื้อเพลิงและเลขไมล์'}
+              </h3>
+            </div>
+            {editingLog && (
+              <button
+                type="button"
+                onClick={handleCancelEdit}
+                className="inline-flex items-center space-x-1 px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg text-[10px] font-medium transition cursor-pointer"
+              >
+                <X className="w-3 h-3" />
+                <span>ยกเลิก</span>
+              </button>
+            )}
           </div>
+
+          {editingLog && (
+            <div className="p-2.5 bg-amber-50 border border-amber-200 rounded-xl text-[11px] text-amber-800 flex items-center justify-between">
+              <span>กำลังแก้ไขบันทึก: <b>{editingLog.id}</b></span>
+              <span className="text-[10px] text-amber-600 font-medium">กดบันทึกเพื่ออัปเดต</span>
+            </div>
+          )}
 
           <form onSubmit={handleSubmit} className="space-y-4 text-xs">
             
@@ -340,10 +413,10 @@ export const FuelLogView: React.FC<FuelLogViewProps> = ({
 
             <button
               type="submit"
-              className="w-full py-3 bg-teal-800 hover:bg-teal-900 text-white rounded-xl text-xs font-semibold transition shadow-md shadow-teal-900/20 flex items-center justify-center space-x-1.5"
+              className="w-full py-3 bg-teal-800 hover:bg-teal-900 text-white rounded-xl text-xs font-semibold transition shadow-md shadow-teal-900/20 flex items-center justify-center space-x-1.5 cursor-pointer active:scale-98"
             >
               <FileCheck className="w-4 h-4" />
-              <span>บันทึกข้อมูลเชื้อเพลิงและไมล์</span>
+              <span>{editingLog ? 'บันทึกการแก้ไขข้อมูลเชื้อเพลิง' : 'บันทึกข้อมูลเชื้อเพลิงและไมล์'}</span>
             </button>
           </form>
         </div>
@@ -367,18 +440,47 @@ export const FuelLogView: React.FC<FuelLogViewProps> = ({
               fuelLogs.map((log) => (
                 <div
                   key={log.id}
-                  className="p-4 rounded-xl border border-slate-200 bg-slate-50 hover:bg-white hover:border-teal-300 transition space-y-2 text-xs shadow-2xs"
+                  className={`p-4 rounded-xl border ${
+                    editingLog?.id === log.id ? 'border-amber-400 bg-amber-50/50' : 'border-slate-200 bg-slate-50'
+                  } hover:bg-white hover:border-teal-300 transition space-y-2 text-xs shadow-2xs`}
                 >
                   <div className="flex justify-between items-center border-b border-slate-200/80 pb-2">
-                    <div>
+                    <div className="flex items-center space-x-2">
                       <span className="font-mono font-bold text-slate-900">{log.id}</span>
-                      <span className="text-[11px] text-slate-500 ml-2">
+                      <span className="text-[11px] text-slate-500">
                         [อ้างอิง: {log.bookingId}]
                       </span>
                     </div>
-                    <span className="text-[10px] font-bold bg-teal-100 text-teal-800 px-2.5 py-0.5 rounded-full">
-                      {formatThaiDate(log.date, 'short')}
-                    </span>
+                    <div className="flex items-center space-x-2">
+                      <span className="text-[10px] font-bold bg-teal-100 text-teal-800 px-2.5 py-0.5 rounded-full">
+                        {formatThaiDate(log.date, 'short')}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => handleStartEdit(log)}
+                        className="p-1 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-md transition cursor-pointer"
+                        title="แก้ไขข้อมูล"
+                      >
+                        <Edit2 className="w-3.5 h-3.5" />
+                      </button>
+                      {onDeleteFuelLog && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (window.confirm(`ยืนยันการลบข้อมูลการเติมน้ำมัน/ไมล์ ${log.id} ใช่หรือไม่?`)) {
+                              onDeleteFuelLog(log.id);
+                              if (editingLog?.id === log.id) {
+                                handleCancelEdit();
+                              }
+                            }
+                          }}
+                          className="p-1 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-md transition cursor-pointer"
+                          title="ลบข้อมูล"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      )}
+                    </div>
                   </div>
 
                   <div className="flex justify-between items-center font-medium text-slate-800">

@@ -50,7 +50,9 @@ import {
   saveVehicleToFirestore,
   deleteVehicleFromFirestore,
   saveFuelLogToFirestore,
+  deleteFuelLogFromFirestore,
   saveMaintenanceToFirestore,
+  deleteMaintenanceFromFirestore,
   saveUserToFirestore,
   deleteUserFromFirestore,
   saveNotificationToFirestore,
@@ -1479,6 +1481,37 @@ export default function App() {
     showToast(`บันทึกข้อมูลเชื้อเพลิง ${newId} สำเร็จ`, 'success');
   };
 
+  // Handle Update Fuel Log
+  const handleUpdateFuelLog = async (logId: string, data: Partial<FuelLog>) => {
+    let updatedLogObj: FuelLog | undefined;
+    const updatedFuel = fuelLogs.map((log) => {
+      if (log.id === logId) {
+        updatedLogObj = { ...log, ...data } as FuelLog;
+        return updatedLogObj;
+      }
+      return log;
+    });
+    setFuelLogs(updatedFuel);
+    saveLocalData(STORAGE_KEYS.FUEL_LOGS, updatedFuel);
+    if (updatedLogObj) {
+      await saveFuelLogToFirestore(updatedLogObj);
+    }
+    triggerAutoSync(undefined, updatedFuel);
+    playAppSound('success', soundEnabled);
+    showToast(`บันทึกการแก้ไขข้อมูลเชื้อเพลิง ${logId} สำเร็จ`, 'success');
+  };
+
+  // Handle Delete Fuel Log
+  const handleDeleteFuelLog = async (logId: string) => {
+    const updatedFuel = fuelLogs.filter((log) => log.id !== logId);
+    setFuelLogs(updatedFuel);
+    saveLocalData(STORAGE_KEYS.FUEL_LOGS, updatedFuel);
+    await deleteFuelLogFromFirestore(logId);
+    triggerAutoSync(undefined, updatedFuel);
+    playAppSound('click', soundEnabled);
+    showToast(`ลบข้อมูลเชื้อเพลิง ${logId} เรียบร้อยแล้ว`, 'info');
+  };
+
   // Handle Add Maintenance Record
   const handleAddMaintenanceRecord = async (recordData: Omit<MaintenanceRecord, 'id'>) => {
     const newId = `MNT-2569-${String(maintenanceRecords.length + 1).padStart(3, '0')}`;
@@ -1541,6 +1574,37 @@ export default function App() {
 
     playAppSound('success', soundEnabled);
     showToast(`บันทึกงานซ่อมบำรุง ${newId} สำเร็จ`, 'success');
+  };
+
+  // Handle Update Maintenance Record
+  const handleUpdateMaintenanceRecord = async (recordId: string, data: Partial<MaintenanceRecord>) => {
+    let updatedRecordObj: MaintenanceRecord | undefined;
+    const updatedMnt = maintenanceRecords.map((r) => {
+      if (r.id === recordId) {
+        updatedRecordObj = { ...r, ...data } as MaintenanceRecord;
+        return updatedRecordObj;
+      }
+      return r;
+    });
+    setMaintenanceRecords(updatedMnt);
+    saveLocalData(STORAGE_KEYS.MAINTENANCE, updatedMnt);
+    if (updatedRecordObj) {
+      await saveMaintenanceToFirestore(updatedRecordObj);
+    }
+    triggerAutoSync(undefined, undefined, updatedMnt);
+    playAppSound('success', soundEnabled);
+    showToast(`บันทึกการแก้ไขงานซ่อมบำรุง ${recordId} สำเร็จ`, 'success');
+  };
+
+  // Handle Delete Maintenance Record
+  const handleDeleteMaintenanceRecord = async (recordId: string) => {
+    const updatedMnt = maintenanceRecords.filter((r) => r.id !== recordId);
+    setMaintenanceRecords(updatedMnt);
+    saveLocalData(STORAGE_KEYS.MAINTENANCE, updatedMnt);
+    await deleteMaintenanceFromFirestore(recordId);
+    triggerAutoSync(undefined, undefined, updatedMnt);
+    playAppSound('click', soundEnabled);
+    showToast(`ลบประวัติงานซ่อมบำรุง ${recordId} เรียบร้อยแล้ว`, 'info');
   };
 
   // Handle Update Vehicle Status
@@ -1822,6 +1886,8 @@ export default function App() {
             vehicles={vehicles}
             currentUser={currentUser}
             onAddFuelLog={handleAddFuelLog}
+            onUpdateFuelLog={handleUpdateFuelLog}
+            onDeleteFuelLog={handleDeleteFuelLog}
           />
         )}
 
@@ -1832,6 +1898,8 @@ export default function App() {
             currentUser={currentUser}
             users={users}
             onAddMaintenanceRecord={handleAddMaintenanceRecord}
+            onUpdateMaintenanceRecord={handleUpdateMaintenanceRecord}
+            onDeleteMaintenanceRecord={handleDeleteMaintenanceRecord}
             onUpdateVehicleStatus={handleUpdateVehicleStatus}
             onAddVehicle={handleAddVehicle}
             onUpdateVehicle={handleUpdateVehicle}

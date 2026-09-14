@@ -460,6 +460,18 @@ export const saveFuelLogToFirestore = async (log: FuelLog): Promise<boolean> => 
   }
 };
 
+export const deleteFuelLogFromFirestore = async (fuelLogId: string): Promise<boolean> => {
+  try {
+    const docRef = doc(db, 'fuelLogs', fuelLogId);
+    await deleteDoc(docRef);
+    console.log(`[Firestore] Successfully deleted fuel log: ${fuelLogId}`);
+    return true;
+  } catch (err) {
+    handleFirestoreError(err, OperationType.DELETE, `fuelLogs/${fuelLogId}`);
+    return false;
+  }
+};
+
 export const saveMaintenanceToFirestore = async (record: MaintenanceRecord): Promise<boolean> => {
   try {
     const docRef = doc(db, 'maintenanceRecords', record.id);
@@ -468,6 +480,18 @@ export const saveMaintenanceToFirestore = async (record: MaintenanceRecord): Pro
     return true;
   } catch (err) {
     handleFirestoreError(err, OperationType.WRITE, `maintenanceRecords/${record.id}`);
+    return false;
+  }
+};
+
+export const deleteMaintenanceFromFirestore = async (recordId: string): Promise<boolean> => {
+  try {
+    const docRef = doc(db, 'maintenanceRecords', recordId);
+    await deleteDoc(docRef);
+    console.log(`[Firestore] Successfully deleted maintenance record: ${recordId}`);
+    return true;
+  } catch (err) {
+    handleFirestoreError(err, OperationType.DELETE, `maintenanceRecords/${recordId}`);
     return false;
   }
 };

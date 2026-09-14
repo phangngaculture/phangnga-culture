@@ -52,11 +52,12 @@ export const SwipeableBookingCard: React.FC<SwipeableBookingCardProps> = ({
   const hasMovedSignificant = useRef(false);
 
   // Determine user permissions for this booking
-  const isOwner = currentUser.username === b.username;
+  const isOwner = currentUser.id === b.userId || currentUser.username === b.username || currentUser.name === b.name;
   const isAdmin = currentUser.role === 'admin';
   const isDirector = currentUser.role === 'director' || isAdmin;
   const isPending = b.status === 'pending' || b.status === 'pending_director';
-  const canDelete = (isOwner || isAdmin) && isPending;
+  const canDelete = isAdmin || (isOwner && (isPending || b.status === 'rejected' || b.status === 'cancelled'));
+  const canEdit = isAdmin || (isOwner && isPending);
 
   // Maximum swipe reveal width
   // If can delete: show both View Memo (76px) + Delete (76px) = 152px
@@ -398,32 +399,34 @@ export const SwipeableBookingCard: React.FC<SwipeableBookingCardProps> = ({
             </button>
           )}
 
-          {(isOwner || isAdmin) && isPending && (
+          {(canEdit || canDelete) && (
             <div className="flex items-center space-x-1.5">
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onEditBooking(b);
-                }}
-                className="px-2.5 py-2 bg-amber-50 hover:bg-amber-100 active:scale-95 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300 rounded-xl text-xs font-medium transition cursor-pointer"
-                title="แก้ไขใบเบิก"
-              >
-                <Edit className="w-3.5 h-3.5" />
-              </button>
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  if (window.confirm(`ยืนยันการลบใบคำขอใช้รถยนต์เลขที่ ${b.id}?`)) {
+              {canEdit && (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onEditBooking(b);
+                  }}
+                  className="px-2.5 py-2 bg-amber-50 hover:bg-amber-100 active:scale-95 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300 rounded-xl text-xs font-medium transition cursor-pointer"
+                  title="แก้ไขใบเบิก"
+                >
+                  <Edit className="w-3.5 h-3.5" />
+                </button>
+              )}
+              {canDelete && (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
                     onDeleteBooking(b.id);
-                  }
-                }}
-                className="px-2.5 py-2 bg-rose-50 hover:bg-rose-100 active:scale-95 text-rose-600 dark:bg-rose-950/40 dark:text-rose-300 rounded-xl text-xs font-medium transition cursor-pointer"
-                title="ลบคำขอ"
-              >
-                <Trash2 className="w-3.5 h-3.5" />
-              </button>
+                  }}
+                  className="px-2.5 py-2 bg-rose-50 hover:bg-rose-100 active:scale-95 text-rose-600 dark:bg-rose-950/40 dark:text-rose-300 rounded-xl text-xs font-medium transition cursor-pointer"
+                  title="ลบคำขอ"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                </button>
+              )}
             </div>
           )}
         </div>

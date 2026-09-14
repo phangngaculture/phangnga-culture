@@ -31,6 +31,8 @@ interface FleetMaintenanceViewProps {
   currentUser: User;
   users?: User[];
   onAddMaintenanceRecord: (record: Omit<MaintenanceRecord, 'id'>) => void;
+  onUpdateMaintenanceRecord?: (recordId: string, data: Partial<MaintenanceRecord>) => void;
+  onDeleteMaintenanceRecord?: (recordId: string) => void;
   onUpdateVehicleStatus: (vehicleId: string, status: Vehicle['status']) => void;
   onAddVehicle?: (vehicle: Omit<Vehicle, 'id'>) => void;
   onUpdateVehicle?: (vehicleId: string, data: Partial<Vehicle>) => void;
@@ -52,12 +54,15 @@ export const FleetMaintenanceView: React.FC<FleetMaintenanceViewProps> = ({
   currentUser,
   users = [],
   onAddMaintenanceRecord,
+  onUpdateMaintenanceRecord,
+  onDeleteMaintenanceRecord,
   onUpdateVehicleStatus,
   onAddVehicle,
   onUpdateVehicle,
   onDeleteVehicle
 }) => {
   const [showAddModal, setShowAddModal] = useState(false);
+  const [editingRecord, setEditingRecord] = useState<MaintenanceRecord | null>(null);
   const [filterVehicleId, setFilterVehicleId] = useState<string>('all');
 
   // Vehicle Edit / Add / Delete Modal States
@@ -107,6 +112,48 @@ export const FleetMaintenanceView: React.FC<FleetMaintenanceViewProps> = ({
   const [technicianNotes, setTechnicianNotes] = useState('');
   const [status, setStatus] = useState<'completed' | 'in_progress' | 'scheduled'>('completed');
 
+  const handleOpenAddRecord = () => {
+    setEditingRecord(null);
+    const firstCar = vehicles[0];
+    const initialCarId = firstCar?.id || 'v-camry';
+    setSelectedCarId(initialCarId);
+    setServiceType('oil_change');
+    setTitle('');
+    if (firstCar?.name.includes('Toyota')) {
+      setServiceCenter('ศูนย์โตโยต้า พังงา (บจก.โตโยต้า พังงา)');
+    } else if (firstCar?.name.includes('Isuzu')) {
+      setServiceCenter('ศูนย์อีซูซุอันดามันเซลส์ สาขาพังงา');
+    } else {
+      setServiceCenter('ศูนย์บริการมาตรฐาน');
+    }
+    setDate(new Date().toISOString().split('T')[0]);
+    setMileageAtService(firstCar?.odometer || 149000);
+    setNextDueMileage((firstCar?.odometer || 149000) + 10000);
+    setNextDueDate('2027-03-01');
+    setCost(2800);
+    setInvoiceNo('INV-2569-');
+    setTechnicianNotes('');
+    setStatus('completed');
+    setShowAddModal(true);
+  };
+
+  const handleOpenEditRecord = (r: MaintenanceRecord) => {
+    setEditingRecord(r);
+    setSelectedCarId(r.carId);
+    setServiceType(r.serviceType);
+    setTitle(r.title);
+    setServiceCenter(r.serviceCenter);
+    setDate(r.date);
+    setMileageAtService(r.mileageAtService);
+    setNextDueMileage(r.nextDueMileage || 0);
+    setNextDueDate(r.nextDueDate || '');
+    setCost(r.cost);
+    setInvoiceNo(r.invoiceNo || '');
+    setTechnicianNotes(r.technicianNotes || '');
+    setStatus(r.status);
+    setShowAddModal(true);
+  };
+
   // Handle vehicle selection change in form to pre-populate current mileage
   const handleCarSelect = (vId: string) => {
     setSelectedCarId(vId);
@@ -129,23 +176,44 @@ export const FleetMaintenanceView: React.FC<FleetMaintenanceViewProps> = ({
 
     const opt = SERVICE_TYPE_OPTIONS.find((o) => o.type === serviceType);
 
-    onAddMaintenanceRecord({
-      carId: selectedCarId,
-      carName: car.name,
-      carPlate: car.plate,
-      serviceType,
-      serviceTypeLabel: opt?.label || 'งานซ่อมบำรุง',
-      title: title || `${opt?.label} - ${car.name}`,
-      serviceCenter,
-      date,
-      mileageAtService,
-      nextDueMileage: nextDueMileage || undefined,
-      nextDueDate: nextDueDate || undefined,
-      cost,
-      invoiceNo,
-      technicianNotes,
-      status
-    });
+    if (editingRecord && onUpdateMaintenanceRecord) {
+      onUpdateMaintenanceRecord(editingRecord.id, {
+        carId: selectedCarId,
+        carName: car.name,
+        carPlate: car.plate,
+        serviceType,
+        serviceTypeLabel: opt?.label || 'งานซ่อมบำรุง',
+        title: title || `${opt?.label} - ${car.name}`,
+        serviceCenter,
+        date,
+        mileageAtService,
+        nextDueMileage: nextDueMileage || undefined,
+        nextDueDate: nextDueDate || undefined,
+        cost,
+        invoiceNo,
+        technicianNotes,
+        status
+      });
+      setEditingRecord(null);
+    } else {
+      onAddMaintenanceRecord({
+        carId: selectedCarId,
+        carName: car.name,
+        carPlate: car.plate,
+        serviceType,
+        serviceTypeLabel: opt?.label || 'งานซ่อมบำรุง',
+        title: title || `${opt?.label} - ${car.name}`,
+        serviceCenter,
+        date,
+        mileageAtService,
+        nextDueMileage: nextDueMileage || undefined,
+        nextDueDate: nextDueDate || undefined,
+        cost,
+        invoiceNo,
+        technicianNotes,
+        status
+      });
+    }
 
     setShowAddModal(false);
     setTitle('');
@@ -207,10 +275,7 @@ export const FleetMaintenanceView: React.FC<FleetMaintenanceViewProps> = ({
               )}
 
               <button
-                onClick={() => {
-                  handleCarSelect(vehicles[0]?.id || 'v-camry');
-                  setShowAddModal(true);
-                }}
+                onClick={handleOpenAddRecord}
                 className="px-5 py-3.5 bg-orange-600 hover:bg-orange-700 text-white rounded-2xl text-xs font-semibold transition shadow-lg shadow-orange-600/30 flex items-center justify-center space-x-2"
               >
                 <PlusCircle className="w-4 h-4" />
@@ -474,6 +539,7 @@ export const FleetMaintenanceView: React.FC<FleetMaintenanceViewProps> = ({
                   <th className="p-3 text-right">เลขไมล์ซ่อม</th>
                   <th className="p-3 text-right">ค่าใช้จ่าย</th>
                   <th className="p-3 text-center">สถานะ</th>
+                  <th className="p-3 text-right">จัดการ</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 text-slate-700">
@@ -523,6 +589,32 @@ export const FleetMaintenanceView: React.FC<FleetMaintenanceViewProps> = ({
                         </span>
                       )}
                     </td>
+                    <td className="p-3 text-right whitespace-nowrap">
+                      <div className="flex items-center justify-end space-x-1">
+                        <button
+                          type="button"
+                          onClick={() => handleOpenEditRecord(r)}
+                          className="p-1.5 text-slate-400 hover:text-orange-600 hover:bg-orange-50 rounded-lg transition cursor-pointer"
+                          title="แก้ไขรายการซ่อมบำรุง"
+                        >
+                          <Edit3 className="w-3.5 h-3.5" />
+                        </button>
+                        {onDeleteMaintenanceRecord && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (window.confirm(`ยืนยันการลบประวัติงานซ่อมบำรุง ${r.id} (${r.title}) ใช่หรือไม่?`)) {
+                                onDeleteMaintenanceRecord(r.id);
+                              }
+                            }}
+                            className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition cursor-pointer"
+                            title="ลบรายการซ่อมบำรุง"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        )}
+                      </div>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -539,7 +631,7 @@ export const FleetMaintenanceView: React.FC<FleetMaintenanceViewProps> = ({
               <div className="flex items-center space-x-2">
                 <Wrench className="w-5 h-5 text-orange-600" />
                 <h3 className="font-bold text-sm md:text-base text-slate-900">
-                  บันทึกรายการซ่อมบำรุง / ตรวจสภาพรถยนต์ราชการ
+                  {editingRecord ? 'แก้ไขรายการซ่อมบำรุง / ตรวจสภาพรถยนต์ราชการ' : 'บันทึกรายการซ่อมบำรุง / ตรวจสภาพรถยนต์ราชการ'}
                 </h3>
               </div>
               <button
@@ -706,10 +798,10 @@ export const FleetMaintenanceView: React.FC<FleetMaintenanceViewProps> = ({
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2.5 bg-orange-600 hover:bg-orange-700 text-white rounded-xl text-xs font-semibold shadow-md shadow-orange-600/20 flex items-center space-x-1.5"
+                  className="px-5 py-2.5 bg-orange-600 hover:bg-orange-700 text-white rounded-xl text-xs font-semibold shadow-md shadow-orange-600/20 flex items-center space-x-1.5 cursor-pointer active:scale-95 transition"
                 >
                   <CheckCircle2 className="w-4 h-4" />
-                  <span>บันทึกประวัติการซ่อม</span>
+                  <span>{editingRecord ? 'บันทึกการแก้ไข' : 'บันทึกประวัติการซ่อม'}</span>
                 </button>
               </div>
             </form>
