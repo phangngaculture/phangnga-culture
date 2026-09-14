@@ -27,7 +27,8 @@ const VEHICLE_TYPE_PRESETS = [
   'รถกระบะบรรทุกโดยสาร 4 ประตู',
   'รถกระบะตรวจการ 2 ประตูแค็บ',
   'รถยนต์อเนกประสงค์ SUV / PPV 7 ที่นั่ง',
-  'รถยนต์พลังงานไฟฟ้า 100% (EV)'
+  'รถยนต์พลังงานไฟฟ้า 100% (EV)',
+  'รถจักรยานยนต์ราชการ (Motorcycle)'
 ];
 
 const FUEL_TYPE_PRESETS = [
@@ -35,6 +36,7 @@ const FUEL_TYPE_PRESETS = [
   'ดีเซล B20',
   'เบนซิน Gasohol 95',
   'เบนซิน Gasohol 91',
+  'เบนซิน Gasohol 91/95',
   'เบนซิน E20',
   'ไฮบริด (Gasoline / Electric)',
   'ไฟฟ้า 100% (Battery EV)'
@@ -123,6 +125,18 @@ export const VehicleModal: React.FC<VehicleModalProps> = ({
 
   if (!isOpen) return null;
 
+  const handleFillMotorcycleTemplate = () => {
+    setName('Honda Wave 110i (รถจักรยานยนต์ราชการ)');
+    setPlate('1กค 8888 พังงา');
+    setType('รถจักรยานยนต์ราชการ (Motorcycle)');
+    setSeats(2);
+    setFuelType('เบนซิน Gasohol 91/95');
+    setOdometer(14250);
+    setNextServiceMileage(15000);
+    setFuelEfficiencyAvg(45.5);
+    setInsuranceCompany('วิริยะประกันภัย (พ.ร.บ. และประกันภัย)');
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -194,6 +208,21 @@ export const VehicleModal: React.FC<VehicleModalProps> = ({
             <div className="p-3.5 bg-rose-50 border border-rose-200 rounded-xl text-rose-700 text-xs flex items-center space-x-2">
               <AlertCircle className="w-4 h-4 flex-shrink-0" />
               <span>{errorMsg}</span>
+            </div>
+          )}
+
+          {!isEditing && (
+            <div className="bg-amber-50 border border-amber-200 rounded-2xl p-3.5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs">
+              <span className="text-amber-900 font-medium">
+                ต้องการเพิ่มรถจักรยานยนต์ราชการหรือไม่? คลิกเพื่อกรอกข้อมูลตัวอย่างทันที
+              </span>
+              <button
+                type="button"
+                onClick={handleFillMotorcycleTemplate}
+                className="px-3.5 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl font-semibold transition cursor-pointer shrink-0 shadow-xs"
+              >
+                + เติมตัวอย่างรถจักรยานยนต์
+              </button>
             </div>
           )}
 

@@ -283,6 +283,44 @@ export const VEHICLES: Vehicle[] = [
     insuranceCompany: 'เมืองไทยประกันภัย (ชั้น 1 ราชการ)',
     nextServiceMileage: 170000,
     fuelEfficiencyAvg: 13.1
+  },
+  {
+    id: 'v-motorcycle-1',
+    name: 'Honda Wave 110i (รถจักรยานยนต์ราชการ)',
+    plate: '1กค 8888 พังงา',
+    type: 'รถจักรยานยนต์ส่วนบุคคล/ราชการ',
+    seats: 2,
+    fuelType: 'เบนซิน Gasohol 91/95',
+    status: 'available',
+    odometer: 14250,
+    driverName: 'นายเรวัติ แสงสว่าง',
+    colorTag: 'from-red-600 to-rose-700',
+    year: 2565,
+    taxExpiry: '2027-05-12',
+    actExpiry: '2027-05-12',
+    insuranceExpiry: '2027-06-01',
+    insuranceCompany: 'วิริยะประกันภัย (พ.ร.บ. และประกันภัย)',
+    nextServiceMileage: 15000,
+    fuelEfficiencyAvg: 45.5
+  },
+  {
+    id: 'v-motorcycle-2',
+    name: 'Yamaha Finn 115i (รถจักรยานยนต์ปฏิบัติงาน)',
+    plate: '1กข 7777 พังงา',
+    type: 'รถจักรยานยนต์ส่วนบุคคล/ราชการ',
+    seats: 2,
+    fuelType: 'เบนซิน Gasohol 91/95',
+    status: 'available',
+    odometer: 9840,
+    driverName: 'นายศราวุธ เกตุรักษ์',
+    colorTag: 'from-blue-600 to-indigo-700',
+    year: 2566,
+    taxExpiry: '2027-08-15',
+    actExpiry: '2027-08-15',
+    insuranceExpiry: '2027-09-01',
+    insuranceCompany: 'ทิพยประกันภัย (พ.ร.บ. และประกันภัย)',
+    nextServiceMileage: 10000,
+    fuelEfficiencyAvg: 48.0
   }
 ];
 

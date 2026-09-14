@@ -85,6 +85,36 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
     if (typeof window === 'undefined') return true;
     return localStorage.getItem('mculture_show_top_actions') !== 'false';
   });
+
+  const [showConfigModal, setShowConfigModal] = useState(false);
+  const [iconConfig, setIconConfig] = useState<{
+    driverMission: boolean;
+    assetRegister: boolean;
+    assetInspection: boolean;
+    cloudStatus: boolean;
+    lineAlert: boolean;
+    darkMode: boolean;
+    voiceAlert: boolean;
+    soundToggle: boolean;
+  }>(() => {
+    if (typeof window === 'undefined') {
+      return { driverMission: true, assetRegister: true, assetInspection: true, cloudStatus: true, lineAlert: true, darkMode: true, voiceAlert: true, soundToggle: true };
+    }
+    try {
+      const saved = localStorage.getItem('mculture_top_icons_config');
+      if (saved) return JSON.parse(saved);
+    } catch {}
+    return { driverMission: true, assetRegister: true, assetInspection: true, cloudStatus: true, lineAlert: true, darkMode: true, voiceAlert: true, soundToggle: true };
+  });
+
+  const updateIconConfig = (key: keyof typeof iconConfig) => {
+    setIconConfig((prev) => {
+      const next = { ...prev, [key]: !prev[key] };
+      localStorage.setItem('mculture_top_icons_config', JSON.stringify(next));
+      return next;
+    });
+  };
+
   const [badgePermission, setBadgePermission] = useState<NotificationPermission | 'unsupported'>('default');
 
   const unreadCount = notifications.filter((n) => !n.read).length;
@@ -189,7 +219,128 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
         </div>
 
         {/* Right: Actions, Google Sheets, Sound, Notifications, User Switcher */}
-        <div className="flex items-center space-x-2 sm:space-x-2.5">
+        <div className="flex items-center space-x-2 sm:space-x-2.5 relative">
+
+          {/* Config / Customizer Button (matching user request image) */}
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => setShowConfigModal(!showConfigModal)}
+              className={`w-9 h-9 rounded-xl flex items-center justify-center transition border cursor-pointer ${
+                showConfigModal
+                  ? 'bg-orange-500 text-white border-orange-600 shadow-md shadow-orange-500/30'
+                  : 'bg-orange-50 hover:bg-orange-100 text-orange-700 border-orange-200'
+              }`}
+              title="ตั้งค่าแสดง/ซ่อนไอคอนเมนูด้านบนแต่ละตัว"
+              aria-label="ตั้งค่าไอคอน"
+            >
+              <Sliders className="w-4 h-4" />
+            </button>
+
+            {/* Icon Customization Dropdown Modal */}
+            {showConfigModal && (
+              <div className="absolute right-0 mt-2.5 w-72 bg-white rounded-3xl shadow-2xl border border-slate-200 p-4 z-50 animate-in fade-in slide-in-from-top-2 text-xs">
+                <div className="flex items-center justify-between pb-3 border-b border-slate-100 mb-3">
+                  <div className="flex items-center space-x-2">
+                    <Sliders className="w-4 h-4 text-orange-600" />
+                    <span className="font-bold text-slate-800 text-sm">เลือกเปิด/ปิดไอคอนเมนูด้านบน</span>
+                  </div>
+                  <button
+                    onClick={() => setShowConfigModal(false)}
+                    className="w-6 h-6 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 flex items-center justify-center text-xs cursor-pointer"
+                  >
+                    ✕
+                  </button>
+                </div>
+
+                <div className="space-y-2 max-h-[60vh] overflow-y-auto pr-1">
+                  <label className="flex items-center justify-between p-2 rounded-xl hover:bg-slate-50 cursor-pointer transition">
+                    <span className="font-medium text-slate-700">🚗 ภารกิจคนขับ (Driver Mission)</span>
+                    <input
+                      type="checkbox"
+                      checked={iconConfig.driverMission}
+                      onChange={() => updateIconConfig('driverMission')}
+                      className="w-4 h-4 text-orange-600 rounded border-slate-300 focus:ring-orange-500 cursor-pointer"
+                    />
+                  </label>
+
+                  <label className="flex items-center justify-between p-2 rounded-xl hover:bg-slate-50 cursor-pointer transition">
+                    <span className="font-medium text-slate-700">📊 สมุดทะเบียนคุม (Register)</span>
+                    <input
+                      type="checkbox"
+                      checked={iconConfig.assetRegister}
+                      onChange={() => updateIconConfig('assetRegister')}
+                      className="w-4 h-4 text-teal-600 rounded border-slate-300 focus:ring-teal-500 cursor-pointer"
+                    />
+                  </label>
+
+                  <label className="flex items-center justify-between p-2 rounded-xl hover:bg-slate-50 cursor-pointer transition">
+                    <span className="font-medium text-slate-700">🛡️ พัสดุตรวจรับรถ (Inspection)</span>
+                    <input
+                      type="checkbox"
+                      checked={iconConfig.assetInspection}
+                      onChange={() => updateIconConfig('assetInspection')}
+                      className="w-4 h-4 text-emerald-600 rounded border-slate-300 focus:ring-emerald-500 cursor-pointer"
+                    />
+                  </label>
+
+                  <label className="flex items-center justify-between p-2 rounded-xl hover:bg-slate-50 cursor-pointer transition">
+                    <span className="font-medium text-slate-700">☁️ Cloud Firestore Status</span>
+                    <input
+                      type="checkbox"
+                      checked={iconConfig.cloudStatus}
+                      onChange={() => updateIconConfig('cloudStatus')}
+                      className="w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500 cursor-pointer"
+                    />
+                  </label>
+
+                  <label className="flex items-center justify-between p-2 rounded-xl hover:bg-slate-50 cursor-pointer transition">
+                    <span className="font-medium text-slate-700">💬 LINE Alert Simulator</span>
+                    <input
+                      type="checkbox"
+                      checked={iconConfig.lineAlert}
+                      onChange={() => updateIconConfig('lineAlert')}
+                      className="w-4 h-4 text-emerald-600 rounded border-slate-300 focus:ring-emerald-500 cursor-pointer"
+                    />
+                  </label>
+
+                  <label className="flex items-center justify-between p-2 rounded-xl hover:bg-slate-50 cursor-pointer transition">
+                    <span className="font-medium text-slate-700">🌙 โหมดกลางคืน (Dark Mode)</span>
+                    <input
+                      type="checkbox"
+                      checked={iconConfig.darkMode}
+                      onChange={() => updateIconConfig('darkMode')}
+                      className="w-4 h-4 text-amber-600 rounded border-slate-300 focus:ring-amber-500 cursor-pointer"
+                    />
+                  </label>
+
+                  <label className="flex items-center justify-between p-2 rounded-xl hover:bg-slate-50 cursor-pointer transition">
+                    <span className="font-medium text-slate-700">🔊 เสียงพูดเตือน (Voice Alerts)</span>
+                    <input
+                      type="checkbox"
+                      checked={iconConfig.voiceAlert}
+                      onChange={() => updateIconConfig('voiceAlert')}
+                      className="w-4 h-4 text-amber-600 rounded border-slate-300 focus:ring-amber-500 cursor-pointer"
+                    />
+                  </label>
+
+                  <label className="flex items-center justify-between p-2 rounded-xl hover:bg-slate-50 cursor-pointer transition">
+                    <span className="font-medium text-slate-700">🔔 เสียงเอฟเฟกต์ (Sound FX)</span>
+                    <input
+                      type="checkbox"
+                      checked={iconConfig.soundToggle}
+                      onChange={() => updateIconConfig('soundToggle')}
+                      className="w-4 h-4 text-orange-600 rounded border-slate-300 focus:ring-orange-500 cursor-pointer"
+                    />
+                  </label>
+                </div>
+
+                <div className="mt-3 pt-2.5 border-t border-slate-100 text-center">
+                  <span className="text-[10px] text-slate-400">บันทึกอัตโนมัติ • สำนักงานวัฒนธรรมจังหวัดพังงา</span>
+                </div>
+              </div>
+            )}
+          </div>
 
           <button
             type="button"
@@ -199,17 +350,17 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
                 ? 'bg-orange-50 hover:bg-orange-100 text-orange-700 border-orange-200'
                 : 'bg-slate-100 hover:bg-slate-200 text-slate-600 border-slate-200'
             }`}
-            title={showTopActions ? 'ซ่อนเมนูไอคอนด้านบน' : 'แสดงเมนูไอคอนด้านบน'}
-            aria-label={showTopActions ? 'ซ่อนเมนูไอคอนด้านบน' : 'แสดงเมนูไอคอนด้านบน'}
+            title={showTopActions ? 'ซ่อนเมนูไอคอนทั้งหมด' : 'แสดงเมนูไอคอนทั้งหมด'}
+            aria-label="ซ่อน/แสดงเมนูทั้งหมด"
           >
-            <Sliders className="w-4 h-4" />
+            <Menu className="w-4 h-4" />
           </button>
 
           {showTopActions && (
             <>
           
-          {/* Quick Mission Button for Driver & Permitted Users (desktop/tablet only, mobile has it on bottom bar) */}
-          {(currentUser.role === 'driver' || getUserAllowedMenus(currentUser).includes('driver_mission')) && (
+          {/* Quick Mission Button for Driver & Permitted Users (desktop/tablet only) */}
+          {iconConfig.driverMission && (currentUser.role === 'driver' || getUserAllowedMenus(currentUser).includes('driver_mission')) && (
             <button
               onClick={() => onTabChange('driver_mission')}
               className={`hidden 2xl:flex h-9 px-2.5 sm:px-3 rounded-xl items-center space-x-1.5 transition border text-xs font-semibold shadow-xs ${
@@ -225,7 +376,7 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
           )}
 
           {/* Quick Asset Register Button for Permitted Users */}
-          {getUserAllowedMenus(currentUser).includes('asset_register') && (
+          {iconConfig.assetRegister && getUserAllowedMenus(currentUser).includes('asset_register') && (
             <button
               onClick={() => onTabChange('asset_register')}
               className={`hidden 2xl:flex h-9 px-2.5 sm:px-3 rounded-xl items-center space-x-1.5 transition border text-xs font-semibold shadow-xs ${
@@ -241,7 +392,7 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
           )}
 
           {/* Quick Inspection Button for Logistics Officer / Permitted Users */}
-          {getUserAllowedMenus(currentUser).includes('asset_inspection') && (
+          {iconConfig.assetInspection && getUserAllowedMenus(currentUser).includes('asset_inspection') && (
             <button
               onClick={() => onTabChange('asset_inspection')}
               className={`hidden 2xl:flex h-9 px-2.5 sm:px-3 rounded-xl items-center space-x-1.5 transition border text-xs font-semibold shadow-xs ${
@@ -257,38 +408,40 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
           )}
 
           {/* Cloud Firestore Status Badge & Quick Backup Access */}
-          <button
-            onClick={() => {
-              if (currentUser.role === 'admin' || getUserAllowedMenus(currentUser).includes('backup')) {
-                onTabChange('backup');
-              }
-            }}
-            className={`hidden sm:flex h-9 px-2.5 sm:px-3 rounded-xl items-center space-x-1.5 border text-xs font-semibold shadow-xs transition cursor-pointer ${
-              activeTab === 'backup'
-                ? 'bg-sky-600 text-white border-sky-500 shadow-md shadow-sky-600/30'
-                : firestoreStatus === 'connected'
-                ? 'bg-blue-50 hover:bg-blue-100/80 text-blue-800 border-blue-200'
-                : firestoreStatus === 'syncing'
-                ? 'bg-amber-50 hover:bg-amber-100/80 text-amber-800 border-amber-200'
-                : 'bg-slate-50 hover:bg-slate-100 text-slate-600 border-slate-200'
-            }`}
-            title="คลิกเพื่อเปิดหน้าสำรองข้อมูลและดูสถานะ Cloud Firestore (Backup & Recovery)"
-          >
-            <Cloud className={`w-4 h-4 ${activeTab === 'backup' ? 'text-white' : 'text-blue-600'}`} />
-            <span className="hidden lg:inline">
-              {firestoreStatus === 'connected' ? 'Firestore เชื่อมต่อแล้ว' : firestoreStatus === 'syncing' ? 'กำลังซิงก์...' : 'Cloud DB'}
-            </span>
-            <span
-              className={`w-2 h-2 rounded-full ${
-                firestoreStatus === 'connected'
-                  ? 'bg-emerald-500 ring-2 ring-emerald-200'
-                  : 'bg-amber-500 animate-pulse'
+          {iconConfig.cloudStatus && (
+            <button
+              onClick={() => {
+                if (currentUser.role === 'admin' || getUserAllowedMenus(currentUser).includes('backup')) {
+                  onTabChange('backup');
+                }
+              }}
+              className={`hidden sm:flex h-9 px-2.5 sm:px-3 rounded-xl items-center space-x-1.5 border text-xs font-semibold shadow-xs transition cursor-pointer ${
+                activeTab === 'backup'
+                  ? 'bg-sky-600 text-white border-sky-500 shadow-md shadow-sky-600/30'
+                  : firestoreStatus === 'connected'
+                  ? 'bg-blue-50 hover:bg-blue-100/80 text-blue-800 border-blue-200'
+                  : firestoreStatus === 'syncing'
+                  ? 'bg-amber-50 hover:bg-amber-100/80 text-amber-800 border-amber-200'
+                  : 'bg-slate-50 hover:bg-slate-100 text-slate-600 border-slate-200'
               }`}
-            />
-          </button>
+              title="คลิกเพื่อเปิดหน้าสำรองข้อมูลและดูสถานะ Cloud Firestore (Backup & Recovery)"
+            >
+              <Cloud className={`w-4 h-4 ${activeTab === 'backup' ? 'text-white' : 'text-blue-600'}`} />
+              <span className="hidden lg:inline">
+                {firestoreStatus === 'connected' ? 'Firestore เชื่อมต่อแล้ว' : firestoreStatus === 'syncing' ? 'กำลังซิงก์...' : 'Cloud DB'}
+              </span>
+              <span
+                className={`w-2 h-2 rounded-full ${
+                  firestoreStatus === 'connected'
+                    ? 'bg-emerald-500 ring-2 ring-emerald-200'
+                    : 'bg-amber-500 animate-pulse'
+                }`}
+              />
+            </button>
+          )}
 
           {/* LINE Notification Simulator Quick Button */}
-          {onOpenLineSimulator && (
+          {iconConfig.lineAlert && onOpenLineSimulator && (
             <button
               onClick={onOpenLineSimulator}
               className="hidden sm:flex px-2.5 py-1.5 rounded-xl border border-emerald-200 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-xs font-semibold items-center space-x-1.5 transition shadow-2xs cursor-pointer"
@@ -301,7 +454,7 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
           )}
 
           {/* Dark Mode Toggle */}
-          {onToggleDarkMode && (
+          {iconConfig.darkMode && onToggleDarkMode && (
             <button
               id="btn-toggle-dark-mode"
               type="button"
@@ -322,7 +475,7 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
           )}
 
           {/* Voice Alerts Button */}
-          {onOpenVoiceSettings && (
+          {iconConfig.voiceAlert && onOpenVoiceSettings && (
             <button
               id="btn-voice-alerts-settings"
               type="button"
@@ -343,17 +496,19 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
           )}
 
           {/* Sound Toggle */}
-          <button
-            onClick={onToggleSound}
-            className={`hidden sm:flex w-9 h-9 rounded-xl items-center justify-center transition border ${
-              soundEnabled
-                ? 'bg-slate-100 hover:bg-orange-50 text-slate-700 hover:text-orange-600 border-slate-200'
-                : 'bg-rose-50 text-rose-500 border-rose-200'
-            }`}
-            title={soundEnabled ? 'เปิดเสียงเอฟเฟกต์แล้ว' : 'ปิดเสียงแล้ว'}
-          >
-            {soundEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
-          </button>
+          {iconConfig.soundToggle && (
+            <button
+              onClick={onToggleSound}
+              className={`hidden sm:flex w-9 h-9 rounded-xl items-center justify-center transition border ${
+                soundEnabled
+                  ? 'bg-slate-100 hover:bg-orange-50 text-slate-700 hover:text-orange-600 border-slate-200'
+                  : 'bg-rose-50 text-rose-500 border-rose-200'
+              }`}
+              title={soundEnabled ? 'เปิดเสียงเอฟเฟกต์แล้ว' : 'ปิดเสียงแล้ว'}
+            >
+              {soundEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
+            </button>
+          )}
 
             </>
           )}

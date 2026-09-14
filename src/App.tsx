@@ -59,6 +59,7 @@ import {
   manualForceSyncAllToFirestore
 } from './services/firestoreService';
 import { HeaderNav } from './components/HeaderNav';
+import { MarqueeTicker } from './components/MarqueeTicker';
 import { Sidebar } from './components/Sidebar';
 import { DashboardView } from './components/DashboardView';
 import { CalendarView } from './components/CalendarView';
@@ -257,9 +258,16 @@ export default function App() {
     }
   }, [darkMode]);
 
-  const [vehicles, setVehicles] = useState<Vehicle[]>(() =>
-    loadSavedData<Vehicle[]>(STORAGE_KEYS.VEHICLES, VEHICLES)
-  );
+  const [vehicles, setVehicles] = useState<Vehicle[]>(() => {
+    let loaded = loadSavedData<Vehicle[]>(STORAGE_KEYS.VEHICLES, VEHICLES);
+    if (loaded && loaded.length < VEHICLES.length) {
+      const existingIds = new Set(loaded.map((v) => v.id));
+      const missingVehicles = VEHICLES.filter((v) => !existingIds.has(v.id));
+      loaded = [...loaded, ...missingVehicles];
+      saveLocalData(STORAGE_KEYS.VEHICLES, loaded);
+    }
+    return Array.isArray(loaded) ? loaded : VEHICLES;
+  });
 
   // UI Customizer State
   const [uiStyle, setUiStyle] = useState<'modern' | 'ribbon' | 'classic' | 'slim_rail' | 'double_panel' | 'eevo_sleek' | 'aurora_glass' | 'minimal_clean' | 'neumorphism_soft' | 'midnight_navy' | 'obsidian_prism' | 'ai_minimal'>(() =>
@@ -1738,6 +1746,12 @@ export default function App() {
         fontSize={fontSize}
         sidebarOpacity={sidebarOpacity}
         onOpenUiCustomizer={() => setIsUiCustomizerOpen(true)}
+      />
+
+      {/* Running Light Ticker Announcement Banner */}
+      <MarqueeTicker
+        vehicles={vehicles}
+        pendingCount={bookings.filter((b) => b.status === 'pending' || b.status === 'pending_director').length}
       />
 
       {/* Top Header Navbar */}

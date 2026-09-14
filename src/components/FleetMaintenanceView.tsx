@@ -8,6 +8,7 @@ import {
   AlertTriangle,
   PlusCircle,
   Car,
+  Bike,
   FileText,
   DollarSign,
   CheckCircle2,
@@ -345,9 +346,15 @@ export const FleetMaintenanceView: React.FC<FleetMaintenanceViewProps> = ({
               <div className="space-y-3 pt-0.5">
                 <div className="flex justify-between items-start">
                   <div className="flex items-center space-x-2.5">
-                    <div className="w-9 h-9 rounded-xl bg-orange-50 text-orange-600 flex items-center justify-center font-bold border border-orange-100 shadow-2xs">
-                      <Car className="w-5 h-5" />
-                    </div>
+                    {(() => {
+                      const isMoto = v.type.includes('จักรยานยนต์') || v.name.includes('Wave') || v.name.includes('Finn') || v.name.includes('มอเตอร์ไซค์');
+                      const IconComponent = isMoto ? Bike : Car;
+                      return (
+                        <div className={`w-9 h-9 rounded-xl ${isMoto ? 'bg-blue-50 text-blue-600 border-blue-100' : 'bg-orange-50 text-orange-600 border-orange-100'} flex items-center justify-center font-bold border shadow-2xs`}>
+                          <IconComponent className="w-5 h-5" />
+                        </div>
+                      );
+                    })()}
                     <div>
                       <h3 className="font-bold text-xs md:text-sm text-slate-900 leading-tight">
                         {v.name}

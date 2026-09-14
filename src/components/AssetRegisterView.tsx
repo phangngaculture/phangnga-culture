@@ -9,6 +9,7 @@ import {
   Search,
   Filter,
   Car,
+  Bike,
   Calendar,
   CheckCircle2,
   Clock,
@@ -460,7 +461,14 @@ export const AssetRegisterView: React.FC<AssetRegisterViewProps> = ({
                           {b.memoNo || b.id}
                         </td>
                         <td className="p-3 font-semibold text-teal-900 whitespace-nowrap">
-                          {b.carName}
+                          <div className="flex items-center space-x-2">
+                            {(() => {
+                              const isMoto = (b.carName || '').includes('จักรยานยนต์') || (b.carName || '').includes('Wave') || (b.carName || '').includes('Finn') || (b.carName || '').includes('มอเตอร์ไซค์');
+                              const IconComponent = isMoto ? Bike : Car;
+                              return <IconComponent className={`w-4 h-4 ${isMoto ? 'text-blue-600' : 'text-teal-600'} shrink-0`} />;
+                            })()}
+                            <span>{b.carName}</span>
+                          </div>
                         </td>
                         <td className="p-3">
                           <span className="font-semibold text-slate-800 block whitespace-nowrap">{b.name}</span>
