@@ -584,8 +584,8 @@ export const sendLineNotification = async (
   const webhookUrl = globalConfig.webhookUrl || '';
   const token = payload.token || globalConfig.channelAccessToken || '';
 
-  // 1. Send via Backend Server (/api/line/send) -> LINE Messaging API
-  if (lineUserId && !globalConfig.simulationModeOnly) {
+  // 1. Send via Backend Server (/api/line/send) -> LINE Messaging API or LINE Notify
+  if ((lineUserId || token) && !globalConfig.simulationModeOnly) {
     try {
       const resp = await fetch('/api/line/send', {
         method: 'POST',
@@ -608,19 +608,19 @@ export const sendLineNotification = async (
           id: `line-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
           timestamp,
           recipient: payload.recipientName,
-          lineUserId,
+          lineUserId: lineUserId || 'NOTIFY-TOKEN',
           title: payload.title,
           message: payload.message,
           status: 'success',
-          mode: 'messaging_api',
+          mode: data.mode === 'line_notify' ? 'webhook' : 'messaging_api',
           eventType: payload.eventType,
-          details: 'ส่งผ่าน LINE Messaging API Push (Server) สำเร็จ'
+          details: data.mode === 'line_notify' ? 'ส่งผ่าน LINE Notify สำเร็จ' : 'ส่งผ่าน LINE Messaging API Push สำเร็จ'
         };
         saveLineNotificationLog(log);
-        return { success: true, mode: 'messaging_api', message: 'ส่งผ่าน LINE Messaging API สำเร็จ' };
+        return { success: true, mode: data.mode === 'line_notify' ? 'webhook' : 'messaging_api', message: 'ส่งผ่าน LINE สำเร็จ' };
       }
 
-      const errorMsg = data?.message || `HTTP ${resp.status}`;
+      const errorMsg = data?.message || data?.error || `HTTP ${resp.status}`;
       console.warn('[LINE] Server push notification error:', errorMsg);
     } catch (err) {
       console.warn('[LINE] Server notification request failed:', err);
