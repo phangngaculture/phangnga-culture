@@ -33,7 +33,8 @@ import {
   ChevronDown,
   Table,
   FileSpreadsheet,
-  Layers
+  Layers,
+  Eye
 } from 'lucide-react';
 
 export type OfficialDocType = 'memo' | 'register' | 'out_province';
@@ -759,17 +760,7 @@ export const OfficialMemoModal: React.FC<OfficialMemoModalProps> = ({
                     </div>
                   </div>
 
-                  {booking.attachmentName && (
-                    <div className="flex items-start space-x-2.5 pt-1">
-                      <Paperclip className="w-4 h-4 text-slate-400 mt-0.5 shrink-0" />
-                      <div>
-                        <span className="text-slate-400 block text-[10px]">เอกสารแนบ</span>
-                        <span className="font-medium text-slate-800 dark:text-slate-200 italic">
-                          {booking.attachmentName}
-                        </span>
-                      </div>
-                    </div>
-                  )}
+
                 </div>
               </div>
 
@@ -1127,11 +1118,7 @@ export const OfficialMemoModal: React.FC<OfficialMemoModalProps> = ({
                         {booking.driverType === 'self' ? `${booking.name} (ผู้ขอขับขี่ด้วยตนเอง)` : booking.driverName}
                       </p>
 
-                      {booking.attachmentName && (
-                        <p className="text-[12pt] text-black italic">
-                          [ เอกสารประกอบ: {booking.attachmentName} ]
-                        </p>
-                      )}
+
 
                       <p>จึงเรียนมาเพื่อโปรดพิจารณาอนุมัติ</p>
                     </div>
@@ -1432,7 +1419,7 @@ export const OfficialMemoModal: React.FC<OfficialMemoModalProps> = ({
                             <th className="border border-black p-1 text-right font-bold pr-1">ไมล์กลับ</th>
                             <th className="border border-black p-1 text-right font-bold pr-1">รวม (กม.)</th>
                             <th className="border border-black p-1 text-center font-bold">น้ำมัน (ลิตร/บาท)</th>
-                            <th className="border border-black p-1 text-center font-bold">พนักงานขับรถ</th>
+                            <th className="border border-black p-1 text-center font-bold">ลายเซ็นผู้ขับรถ</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -1826,6 +1813,8 @@ export const OfficialMemoModal: React.FC<OfficialMemoModalProps> = ({
         </div>
 
       </div>
+
+
     </div>
   );
 };

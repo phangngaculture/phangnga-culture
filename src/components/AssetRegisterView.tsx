@@ -439,7 +439,7 @@ export const AssetRegisterView: React.FC<AssetRegisterViewProps> = ({
                     <th className="p-3 text-right">ไมล์กลับ</th>
                     <th className="p-3 text-right">ระยะทาง (กม.)</th>
                     <th className="p-3 text-center">น้ำมันที่เติม</th>
-                    <th className="p-3">พนักงานขับรถ</th>
+                    <th className="p-3">ลายเซ็นผู้ขับรถ</th>
                     <th className="p-3 text-center">สถานะตรวจรับ</th>
                     <th className="p-3 text-center">เอกสาร</th>
                   </tr>
@@ -512,7 +512,7 @@ export const AssetRegisterView: React.FC<AssetRegisterViewProps> = ({
                           )}
                         </td>
                         <td className="p-3 font-medium text-slate-700 whitespace-nowrap">
-                          {b.driverName || '-'}
+                          {b.driverName ? `(ลงชื่อ) ${b.driverName}` : '-'}
                         </td>
                         <td className="p-3 text-center whitespace-nowrap">
                           {isFinished ? (

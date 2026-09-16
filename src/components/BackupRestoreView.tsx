@@ -44,6 +44,7 @@ interface BackupRestoreViewProps {
   firestoreStatus?: 'connected' | 'syncing' | 'error' | 'idle';
   onForceCloudSync?: () => Promise<void>;
   onOpenClearAllBookings?: () => void;
+  onSeedTestData?: () => Promise<void> | void;
 }
 
 export const BackupRestoreView: React.FC<BackupRestoreViewProps> = ({
@@ -57,11 +58,13 @@ export const BackupRestoreView: React.FC<BackupRestoreViewProps> = ({
   onRestoreAllData,
   firestoreStatus = 'connected',
   onForceCloudSync,
-  onOpenClearAllBookings
+  onOpenClearAllBookings,
+  onSeedTestData
 }) => {
   const [isExporting, setIsExporting] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
   const [isCloudSyncing, setIsCloudSyncing] = useState(false);
+  const [isSeeding, setIsSeeding] = useState(false);
   const [statusMessage, setStatusMessage] = useState<{ type: 'success' | 'error' | 'info'; text: string } | null>(null);
   
   // Staging for imported backup file preview before actual restore
@@ -498,6 +501,65 @@ export const BackupRestoreView: React.FC<BackupRestoreViewProps> = ({
           </div>
         </div>
       </div>
+
+      {/* Seed Test Data Section */}
+      {onSeedTestData && (
+        <div className="bg-gradient-to-br from-emerald-50/70 via-white to-teal-50/50 rounded-2xl p-5 border border-emerald-200 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+          <div className="flex items-start space-x-3.5">
+            <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
+              <Sparkles className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="flex items-center space-x-2">
+                <h4 className="font-bold text-sm text-slate-900">
+                  ป้อนข้อมูลทดสอบระบบล่วงหน้า (Seed Test Data)
+                </h4>
+                <span className="text-[10px] bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full font-bold">
+                  จำลองข้อมูลเต็มรูปแบบ
+                </span>
+              </div>
+              <p className="text-xs text-slate-600 mt-0.5 max-w-2xl leading-relaxed">
+                เติมข้อมูลตัวอย่างสมบูรณ์แบบ ทั้งคำขอใช้รถ (Bookings), ยานพาหนะ, ประวัติการเติมน้ำมัน, การซ่อมบำรุง และบัญชีผู้ใช้ เพื่อนำไปทดสอบในขั้นตอนต่างๆ และตรวจสอบความบกพร่องของระบบก่อนนำไปใช้งานจริง
+              </p>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={async () => {
+              setIsSeeding(true);
+              try {
+                await onSeedTestData();
+                setStatusMessage({
+                  type: 'success',
+                  text: 'ป้อนข้อมูลทดสอบ (Test Seed Data) ลงในระบบสำเร็จเรียบร้อยแล้ว ทุกโมดูลพร้อมทดสอบ'
+                });
+              } catch (e: any) {
+                setStatusMessage({
+                  type: 'error',
+                  text: `เกิดข้อผิดพลาดในการป้อนข้อมูลทดสอบ: ${e.message || String(e)}`
+                });
+              } finally {
+                setIsSeeding(false);
+              }
+            }}
+            disabled={isSeeding}
+            className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-xs flex items-center space-x-2 transition shadow-sm hover:shadow shrink-0 cursor-pointer disabled:opacity-50"
+          >
+            {isSeeding ? (
+              <>
+                <RefreshCw className="w-4 h-4 animate-spin" />
+                <span>กำลังป้อนข้อมูล...</span>
+              </>
+            ) : (
+              <>
+                <Sparkles className="w-4 h-4" />
+                <span>ป้อนข้อมูลทดสอบทันที</span>
+              </>
+            )}
+          </button>
+        </div>
+      )}
 
       {/* Production Launch: Reset Test Bookings */}
       {onOpenClearAllBookings && (

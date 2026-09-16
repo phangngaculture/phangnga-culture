@@ -637,7 +637,7 @@ export const PrintOfficialRegisterModal: React.FC<PrintOfficialRegisterModalProp
                         <th className="border border-slate-900 p-1 text-right font-bold">ไมล์กลับ</th>
                         <th className="border border-slate-900 p-1 text-right font-bold">รวม (กม.)</th>
                         <th className="border border-slate-900 p-1 text-center font-bold">น้ำมัน (ลิตร/บาท)</th>
-                        <th className="border border-slate-900 p-1 text-center font-bold">พนักงานขับรถ</th>
+                        <th className="border border-slate-900 p-1 text-center font-bold">ลายเซ็นผู้ขับรถ</th>
                         <th className="border border-slate-900 p-1 text-center font-bold">สถานะตรวจ</th>
                       </tr>
                     </thead>
@@ -710,7 +710,7 @@ export const PrintOfficialRegisterModal: React.FC<PrintOfficialRegisterModalProp
                                 )}
                               </td>
                               <td className="border border-slate-900 p-1 text-center leading-tight">
-                                {b.driverName || '-'}
+                                {b.driverName ? `(ลงชื่อ) ${b.driverName}` : '-'}
                               </td>
                               <td className="border border-slate-900 p-1 text-center text-[9px] font-bold">
                                 {b.status === 'completed' || b.registeredInAssetControl ? (

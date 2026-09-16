@@ -113,60 +113,48 @@ export default function App() {
   // Floating Profile Photo Studio Modal State
   const [isProfilePhotoModalOpen, setIsProfilePhotoModalOpen] = useState(false);
 
-  // Load persistent state - initialized with administrative & operational personnel ready with LINE fields
+  // Load persistent state - initialized with stored users, respecting user additions, edits, and deletions
   const [users, setUsers] = useState<User[]>(() => {
+    const rawLocal = typeof window !== 'undefined' ? localStorage.getItem(STORAGE_KEYS.USERS) : null;
+    if (!rawLocal) {
+      saveLocalData(STORAGE_KEYS.USERS, SYSTEM_USERS);
+      return SYSTEM_USERS;
+    }
     const loaded = loadSavedData<User[]>(STORAGE_KEYS.USERS, SYSTEM_USERS);
-    const existingList = Array.isArray(loaded) && loaded.length > 0 ? loaded : SYSTEM_USERS;
+    const validList = Array.isArray(loaded) ? loaded : SYSTEM_USERS;
 
-    // Merge system users so all roles (director, officer, driver, admin) are ready with LINE fields
-    const usersMap = new Map<string, User>();
+    // Ensure all users have required LINE fields and valid structures
+    const normalized = validList.map((u) => ({
+      ...u,
+      lineUserId: u.lineUserId !== undefined ? u.lineUserId : '',
+      lineNotifyToken: u.lineNotifyToken !== undefined ? u.lineNotifyToken : '',
+      lineNotificationEnabled: u.lineNotificationEnabled !== false
+    }));
 
-    // Put SYSTEM_USERS first as base template (with empty line tokens)
-    SYSTEM_USERS.forEach((su) => {
-      usersMap.set(su.username.toLowerCase(), { ...su });
-    });
-
-    // Merge loaded users over them (preserving custom user modifications and admin credentials)
-    existingList.forEach((eu) => {
-      const uname = eu.username.toLowerCase();
-      const existingInMap = usersMap.get(uname);
-      if (existingInMap) {
-        usersMap.set(uname, {
-          ...existingInMap,
-          ...eu,
-          // Guarantee LINE fields are present
-          lineUserId: eu.lineUserId !== undefined ? eu.lineUserId : existingInMap.lineUserId,
-          lineNotifyToken: eu.lineNotifyToken !== undefined ? eu.lineNotifyToken : existingInMap.lineNotifyToken,
-          lineNotificationEnabled: eu.lineNotificationEnabled !== undefined ? eu.lineNotificationEnabled : existingInMap.lineNotificationEnabled
-        });
-      } else {
-        // Custom user added by admin
-        usersMap.set(uname, {
-          ...eu,
-          lineUserId: eu.lineUserId || '',
-          lineNotifyToken: eu.lineNotifyToken || '',
-          lineNotificationEnabled: eu.lineNotificationEnabled !== false
-        });
-      }
-    });
-
-    // Ensure admin has standard permissions and active status.
-    // NOTE: never overwrite the stored password here — doing so silently reverted any
-    // password the admin had changed as soon as the page was refreshed.
-    const admin = usersMap.get('admin');
-    if (admin) {
-      usersMap.set('admin', {
-        ...admin,
-        password: admin.password || 'dekcom2537',
+    // Ensure admin user always exists and has proper permissions
+    const adminIndex = normalized.findIndex((u) => u.username.toLowerCase() === 'admin');
+    if (adminIndex >= 0) {
+      normalized[adminIndex] = {
+        ...normalized[adminIndex],
+        password: normalized[adminIndex].password || 'dekcom2537',
         role: 'admin',
         status: 'active',
         allowedMenus: ['dashboard', 'calendar', 'booking', 'director', 'driver_mission', 'asset_register', 'asset_inspection', 'fuel', 'fleet', 'analytics', 'tracking', 'backup', 'users', 'website_customizer']
-      });
+      };
+    } else {
+      const defaultAdmin = SYSTEM_USERS.find((su) => su.username.toLowerCase() === 'admin');
+      if (defaultAdmin) {
+        normalized.unshift({
+          ...defaultAdmin,
+          lineUserId: defaultAdmin.lineUserId || '',
+          lineNotifyToken: defaultAdmin.lineNotifyToken || '',
+          lineNotificationEnabled: defaultAdmin.lineNotificationEnabled !== false
+        });
+      }
     }
 
-    const finalUsers = Array.from(usersMap.values());
-    saveLocalData(STORAGE_KEYS.USERS, finalUsers);
-    return finalUsers;
+    saveLocalData(STORAGE_KEYS.USERS, normalized);
+    return normalized;
   });
 
   const [currentUser, setCurrentUser] = useState<User>(() => {
@@ -1701,6 +1689,42 @@ export default function App() {
     showToast('กู้คืนข้อมูลระบบทั้งหมดและบันทึกลง Cloud Firestore เรียบร้อยแล้ว', 'success');
   };
 
+  // Handle Seeding Test Data for testing all modules
+  const handleSeedTestData = async () => {
+    try {
+      setBookings(INITIAL_BOOKINGS);
+      setVehicles(VEHICLES);
+      setFuelLogs(INITIAL_FUEL_LOGS);
+      setMaintenanceRecords(INITIAL_MAINTENANCE_RECORDS);
+      setUsers(SYSTEM_USERS);
+      setNotifications(INITIAL_NOTIFICATIONS);
+
+      saveLocalData(STORAGE_KEYS.BOOKINGS, INITIAL_BOOKINGS);
+      saveLocalData(STORAGE_KEYS.VEHICLES, VEHICLES);
+      saveLocalData(STORAGE_KEYS.FUEL_LOGS, INITIAL_FUEL_LOGS);
+      saveLocalData(STORAGE_KEYS.MAINTENANCE, INITIAL_MAINTENANCE_RECORDS);
+      saveLocalData(STORAGE_KEYS.USERS, SYSTEM_USERS);
+      saveLocalData(STORAGE_KEYS.NOTIFICATIONS, INITIAL_NOTIFICATIONS);
+
+      localStorage.removeItem('mculture_bookings_cleared_for_production');
+
+      await manualForceSyncAllToFirestore(
+        INITIAL_BOOKINGS,
+        VEHICLES,
+        INITIAL_FUEL_LOGS,
+        INITIAL_MAINTENANCE_RECORDS,
+        SYSTEM_USERS
+      );
+
+      playAppSound('success', soundEnabled);
+      showToast('ป้อนข้อมูลทดสอบ (Test Seed Data) สำเร็จเรียบร้อยแล้ว ทุกโมดูลพร้อมทดสอบ', 'success');
+    } catch (err: any) {
+      console.error('Seed test data error:', err);
+      showToast('เกิดข้อผิดพลาดในการป้อนข้อมูลทดสอบ: ' + (err.message || String(err)), 'error');
+      throw err;
+    }
+  };
+
   // Handle Force Push Local to Cloud Firestore
   const handleForceCloudSync = async () => {
     await manualForceSyncAllToFirestore(bookings, vehicles, fuelLogs, maintenanceRecords, users);
@@ -1966,6 +1990,7 @@ export default function App() {
             firestoreStatus={firestoreStatus}
             onForceCloudSync={handleForceCloudSync}
             onOpenClearAllBookings={() => setIsClearAllBookingsModalOpen(true)}
+            onSeedTestData={handleSeedTestData}
           />
         )}
 
