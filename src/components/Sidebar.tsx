@@ -947,9 +947,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     : uiStyle === 'aurora_glass'
                       ? `linear-gradient(155deg, rgba(15, 23, 42, ${Math.max(sidebarOpacity, 0.88)}) 0%, rgba(30, 41, 59, ${Math.max(sidebarOpacity * 0.92, 0.8)}) 48%, rgba(49, 46, 129, ${Math.max(sidebarOpacity * 0.9, 0.78)}) 100%)`
                       : undefined,
-                  backgroundColor: uiStyle === 'obsidian_prism' || uiStyle === 'aurora_glass'
-                    ? undefined
-                    : undefined,
                   backdropFilter: 'blur(20px)',
                   WebkitBackdropFilter: 'blur(20px)',
                   boxShadow: uiStyle === 'obsidian_prism' ? '0 0 55px rgba(168, 85, 247, 0.24)' : uiStyle === 'aurora_glass' ? '0 0 45px rgba(99, 102, 241, 0.18)' : undefined,

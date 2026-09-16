@@ -295,7 +295,6 @@ export const WebsiteCustomizerView: React.FC<WebsiteCustomizerViewProps> = ({
                     : localStyle === 'aurora_glass'
                     ? `linear-gradient(155deg, rgba(15, 23, 42, ${Math.max(localOpacity, 0.88)}) 0%, rgba(30, 41, 59, ${Math.max(localOpacity * 0.92, 0.8)}) 48%, rgba(49, 46, 129, ${Math.max(localOpacity * 0.9, 0.78)}) 100%)`
                     : undefined,
-                  backgroundColor: localStyle === 'obsidian_prism' || localStyle === 'aurora_glass' || localStyle === 'minimal_clean' || localStyle === 'neumorphism_soft' || localStyle === 'midnight_navy' ? undefined : `rgba(12, 16, 27, ${localOpacity})`,
                   backdropFilter: 'blur(14px)',
                   WebkitBackdropFilter: 'blur(14px)',
                 }}
