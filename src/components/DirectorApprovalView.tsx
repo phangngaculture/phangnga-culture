@@ -167,6 +167,22 @@ export const DirectorApprovalView: React.FC<DirectorApprovalViewProps> = ({
                       <span>วันที่เดินทาง: {formatThaiDate(b.date, 'short')}</span>
                       <span>{b.carName.split(' ')[0]}</span>
                     </div>
+
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onViewMemo(b);
+                      }}
+                      className={`w-full mt-1.5 px-2.5 py-1.5 rounded-xl text-[11px] font-semibold flex items-center justify-center space-x-1.5 transition cursor-pointer ${
+                        isSelected
+                          ? 'bg-teal-700 hover:bg-teal-600 text-white shadow-xs'
+                          : 'bg-orange-50 hover:bg-orange-100 text-orange-700 dark:bg-orange-950/40 dark:text-orange-300 border border-orange-200 dark:border-orange-800'
+                      }`}
+                    >
+                      <FileText className="w-3.5 h-3.5" />
+                      <span>เอกสารประกอบ: แบบฟอร์มขออนุมัติใช้รถยนต์ราชการ</span>
+                    </button>
                   </div>
                 );
               })
@@ -183,6 +199,31 @@ export const DirectorApprovalView: React.FC<DirectorApprovalViewProps> = ({
             </div>
           ) : (
             <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-xs space-y-6">
+              
+              {/* Attachment Document Form Banner */}
+              <div className="bg-gradient-to-r from-orange-50/80 via-amber-50/50 to-orange-50/80 dark:from-orange-950/30 dark:to-amber-950/20 border border-orange-200 dark:border-orange-800/60 rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xs">
+                <div className="flex items-start sm:items-center space-x-3">
+                  <div className="w-10 h-10 rounded-xl bg-orange-100 dark:bg-orange-900/60 text-orange-700 dark:text-orange-300 flex items-center justify-center shrink-0">
+                    <FileText className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-xs md:text-sm text-slate-900 dark:text-white">
+                      เอกสารประกอบ: แบบฟอร์มขออนุมัติใช้รถยนต์ราชการ
+                    </h4>
+                    <p className="text-[11px] text-slate-600 dark:text-slate-300 mt-0.5">
+                      บันทึกข้อความและแบบฟอร์มขออนุมัติใช้รถยนต์ราชการส่วนกลาง สำหรับประกอบการพิจารณาและลงนาม
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => onViewMemo(currentBooking)}
+                  className="px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-xl text-xs font-bold transition flex items-center space-x-1.5 shadow-sm shrink-0 cursor-pointer"
+                >
+                  <Printer className="w-4 h-4" />
+                  <span>เปิดดูแบบฟอร์มขออนุมัติ</span>
+                </button>
+              </div>
               
               {/* Reading Header */}
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-slate-100 pb-4">

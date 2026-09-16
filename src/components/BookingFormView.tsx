@@ -549,7 +549,7 @@ export const BookingFormView: React.FC<BookingFormViewProps> = ({
       passengerNames: selectedPassengers.length > 0
         ? selectedPassengers.map((p) => p.name).join(', ')
         : passengerNames,
-      attachmentName: '',
+      attachmentName: attachmentName || '',
       status: editingBooking?.status || 'pending',
       requesterSignature: attachSignature ? (requesterSignature || currentUser.signatureUrl || undefined) : undefined,
       requesterSignatureType: attachSignature ? requesterSignatureType : undefined,
@@ -698,6 +698,48 @@ export const BookingFormView: React.FC<BookingFormViewProps> = ({
                 placeholder="ระบุภารกิจ วาระงาน หรือรายละเอียดการเดินทาง..."
                 className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3.5 text-xs md:text-sm text-slate-800 focus:bg-white focus:ring-2 focus:ring-orange-500 focus:outline-none leading-relaxed"
               />
+            </div>
+
+            {/* Attachment Section (แนบไฟล์เอกสารประกอบ / แบบฟอร์มขออนุมัติ) */}
+            <div className="pt-2">
+              <label className="block font-medium text-slate-700 mb-1.5 text-xs md:text-sm flex items-center justify-between">
+                <span className="flex items-center space-x-1.5">
+                  <Paperclip className="w-4 h-4 text-orange-600" />
+                  <span>แนบไฟล์เอกสารประกอบ / แบบฟอร์มขออนุมัติใช้รถยนต์ราชการ (ถ้ามี)</span>
+                </span>
+                <span className="text-[11px] text-slate-400">รองรับ PDF, DOCX, JPG</span>
+              </label>
+              <div className="flex items-center space-x-3">
+                <label className="cursor-pointer px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-medium transition flex items-center space-x-2 border border-slate-200">
+                  <Paperclip className="w-4 h-4 text-orange-600" />
+                  <span>เลือกไฟล์เอกสาร...</span>
+                  <input
+                    type="file"
+                    onChange={(e) => {
+                      if (e.target.files && e.target.files[0]) {
+                        setAttachmentName(e.target.files[0].name);
+                      }
+                    }}
+                    className="hidden"
+                  />
+                </label>
+
+                {attachmentName ? (
+                  <div className="flex items-center space-x-2 bg-orange-50 border border-orange-200 px-3 py-1.5 rounded-xl text-xs text-orange-800">
+                    <FileText className="w-4 h-4 text-orange-600 shrink-0" />
+                    <span className="font-medium truncate max-w-xs">{attachmentName}</span>
+                    <button
+                      type="button"
+                      onClick={() => setAttachmentName('')}
+                      className="text-orange-400 hover:text-orange-700 ml-1 font-bold"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                ) : (
+                  <span className="text-xs text-slate-400 italic">ยังไม่ได้เลือกไฟล์เอกสารแนบ</span>
+                )}
+              </div>
             </div>
           </div>
         </div>
