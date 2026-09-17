@@ -552,8 +552,9 @@ export default function App() {
     saveLocalData(STORAGE_KEYS.SOUND_ENABLED, soundEnabled);
   }, [soundEnabled]);
 
-  // Global typing sound listener for all inputs/textareas
+  // Global typing sound listener for all inputs/textareas (throttled to avoid CPU spikes during fast typing)
   useEffect(() => {
+    let lastSoundTime = 0;
     const handleInput = (e: Event) => {
       const target = e.target as HTMLElement;
       if (
@@ -561,7 +562,11 @@ export default function App() {
         target.tagName === 'TEXTAREA' ||
         target.isContentEditable
       ) {
-        playAppSound('type', soundEnabled);
+        const now = Date.now();
+        if (now - lastSoundTime > 80) {
+          lastSoundTime = now;
+          playAppSound('type', soundEnabled);
+        }
       }
     };
 
@@ -2026,22 +2031,25 @@ export default function App() {
       </main>
 
       {/* Official Memorandum Modal (Full A4 Print & View) */}
-      <OfficialMemoModal
-        booking={selectedBookingForMemo}
-        onClose={() => {
-          setSelectedBookingForMemo(null);
-          setMemoJustSigned(false);
-        }}
-        justApproved={memoJustSigned}
-        onOpenSignatureModal={(b) => {
-          setSelectedBookingForMemo(null);
-          handleOpenSignatureModal(b);
-        }}
-        onOpenInspectionModal={(b) => {
-          setSelectedBookingForMemo(null);
-          handleOpenInspectionModal(b);
-        }}
-      />
+      <ErrorBoundary>
+        <OfficialMemoModal
+          booking={selectedBookingForMemo}
+          onClose={() => {
+            setSelectedBookingForMemo(null);
+            setMemoJustSigned(false);
+          }}
+          justApproved={memoJustSigned}
+          onOpenSignatureModal={(b) => {
+            setSelectedBookingForMemo(null);
+            handleOpenSignatureModal(b);
+          }}
+          onOpenInspectionModal={(b) => {
+            setSelectedBookingForMemo(null);
+            handleOpenInspectionModal(b);
+          }}
+          allBookings={bookings}
+        />
+      </ErrorBoundary>
 
       {/* Asset Inspection Sign-off Modal (Logistics Officer) */}
       <AssetInspectionModal

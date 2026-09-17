@@ -8,13 +8,48 @@ const THAI_MONTHS_SHORT = [
   "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."
 ];
 
+function parseDateSafe(val: any): Date | null {
+  if (!val) return null;
+  if (val instanceof Date) {
+    return isNaN(val.getTime()) ? null : val;
+  }
+  if (typeof val === 'object' && val !== null) {
+    if (typeof val.toDate === 'function') {
+      try {
+        const d = val.toDate();
+        return d && !isNaN(d.getTime()) ? d : null;
+      } catch {
+        // fallback
+      }
+    }
+    if ('seconds' in val && typeof val.seconds === 'number') {
+      const d = new Date(val.seconds * 1000);
+      return isNaN(d.getTime()) ? null : d;
+    }
+    if ('_seconds' in val && typeof val._seconds === 'number') {
+      const d = new Date(val._seconds * 1000);
+      return isNaN(d.getTime()) ? null : d;
+    }
+  }
+  if (typeof val === 'string') {
+    const clean = val.includes('T') ? val.split('T')[0] : val;
+    const d = new Date(clean);
+    return isNaN(d.getTime()) ? null : d;
+  }
+  try {
+    const d = new Date(val);
+    return isNaN(d.getTime()) ? null : d;
+  } catch {
+    return null;
+  }
+}
+
 export function formatThaiDate(
-  dateInput: string | Date | undefined,
+  dateInput: any,
   style: 'short' | 'medium' | 'long' | 'full' | 'official' = 'medium'
 ): string {
-  if (!dateInput) return '';
-  const d = typeof dateInput === 'string' ? new Date(dateInput) : dateInput;
-  if (isNaN(d.getTime())) return '';
+  const d = parseDateSafe(dateInput);
+  if (!d) return '';
   
   const date = d.getDate();
   const month = d.getMonth();
@@ -39,19 +74,14 @@ export function formatThaiDate(
 }
 
 export function formatThaiDateRange(
-  startDateStr: string | Date,
-  endDateStr: string | Date | undefined
+  startDateStr: any,
+  endDateStr: any
 ): string {
-  if (!startDateStr) return '';
-  const start = typeof startDateStr === 'string' ? new Date(startDateStr) : startDateStr;
-  if (isNaN(start.getTime())) return '';
+  const start = parseDateSafe(startDateStr);
+  if (!start) return '';
   
-  if (!endDateStr) {
-    return formatThaiDate(start, 'medium');
-  }
-  
-  const end = typeof endDateStr === 'string' ? new Date(endDateStr) : endDateStr;
-  if (isNaN(end.getTime())) {
+  const end = parseDateSafe(endDateStr);
+  if (!end) {
     return formatThaiDate(start, 'medium');
   }
   
@@ -96,12 +126,27 @@ export function toThaiNumerals(num: number | string): string {
   }).join('');
 }
 
+let sharedAudioCtx: AudioContext | null = null;
+
+function getSharedAudioContext(): AudioContext | null {
+  if (typeof window === 'undefined') return null;
+  if (!sharedAudioCtx) {
+    const AudioCtxClass = window.AudioContext || (window as any).webkitAudioContext;
+    if (AudioCtxClass) {
+      sharedAudioCtx = new AudioCtxClass();
+    }
+  }
+  if (sharedAudioCtx && sharedAudioCtx.state === 'suspended') {
+    sharedAudioCtx.resume().catch(() => {});
+  }
+  return sharedAudioCtx;
+}
+
 export function playAppSound(type: string, enabled: boolean = true) {
   if (!enabled) return;
   try {
-    const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
-    if (!AudioContext) return;
-    const ctx = new AudioContext();
+    const ctx = getSharedAudioContext();
+    if (!ctx) return;
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
     
@@ -145,6 +190,6 @@ export function playAppSound(type: string, enabled: boolean = true) {
       osc.stop(ctx.currentTime + 0.1);
     }
   } catch (e) {
-    console.warn('Audio play failed', e);
+    // Ignore silent audio errors
   }
 }

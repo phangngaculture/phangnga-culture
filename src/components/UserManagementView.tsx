@@ -37,7 +37,8 @@ import {
   FileSpreadsheet,
   MessageSquare,
   Send,
-  Bell
+  Bell,
+  BookOpen
 } from 'lucide-react';
 import { User, UserRole, MenuKey, MenuDefinition, BookingRequest } from '../types';
 import { APP_MENUS, DEFAULT_ROLE_MENUS, DEPARTMENTS, getUserAllowedMenus } from '../data/mockData';

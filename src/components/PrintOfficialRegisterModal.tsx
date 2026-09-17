@@ -1110,6 +1110,7 @@ export const PrintOfficialRegisterModal: React.FC<PrintOfficialRegisterModalProp
         <OfficialMemoModal
           booking={floatingMemoBooking}
           onClose={() => setFloatingMemoBooking(null)}
+          allBookings={bookings}
         />
       )}
     </div>
