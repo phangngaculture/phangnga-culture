@@ -611,7 +611,14 @@ export const AttachmentPreviewModal: React.FC<AttachmentPreviewModalProps> = ({
                   </h4>
                   <div className="pl-3.5 text-slate-700 space-y-0.5">
                     <p>• ยานพาหนะ: <span className="font-semibold text-slate-900">{booking.carName || 'รถยนต์ส่วนกลางสำนักงาน'}</span></p>
-                    <p>• พนักงานขับรถ: <span className="font-semibold text-slate-900">{booking.driverName || 'พนักงานขับรถยนต์ประจำสำนักงาน'}</span> ({booking.driverType === 'self' ? 'ผู้ขอขับรถยนต์ด้วยตนเอง' : 'พนักงานขับรถยนต์ส่วนกลาง'})</p>
+                    <p>
+                      • พนักงานขับรถ: <span className="font-semibold text-slate-900">{booking.driverName || 'พนักงานขับรถยนต์ประจำสำนักงาน'}</span> ({booking.driverType === 'self' ? 'ผู้ขอขับรถยนต์ด้วยตนเอง' : 'พนักงานขับรถยนต์ส่วนกลาง'})
+                      {booking.secondaryDriverName && (
+                        <span className="text-orange-700 font-medium ml-1">
+                          (ผู้ช่วยขับขี่: {booking.secondaryDriverName})
+                        </span>
+                      )}
+                    </p>
                   </div>
                 </div>
               </div>

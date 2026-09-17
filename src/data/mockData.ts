@@ -1,4 +1,4 @@
-import { User, Vehicle, BookingRequest, FuelLog, NotificationItem, MaintenanceRecord, MenuKey, MenuDefinition, PassengerDirectoryItem } from '../types';
+import { User, Vehicle, BookingRequest, FuelLog, NotificationItem, MaintenanceRecord, MenuKey, MenuDefinition, PassengerDirectoryItem, DriverDirectoryItem } from '../types';
 
 export const APP_MENUS: MenuDefinition[] = [
   {
@@ -571,6 +571,38 @@ export const DEFAULT_PASSENGER_DIRECTORY: PassengerDirectoryItem[] = [
   }
 ];
 
+export const DEFAULT_DRIVERS: DriverDirectoryItem[] = [
+  {
+    id: 'drv-1',
+    name: 'นายศราวุธ เกตุรักษ์',
+    position: 'พนักงานขับรถยนต์ประจำสำนักงาน',
+    department: 'ฝ่ายบริหารทั่วไป',
+    phone: '086-112-2334',
+    role: 'driver',
+    isDefault: true
+  },
+  {
+    id: 'drv-2',
+    name: 'นายเรวัติ แสงสว่าง',
+    position: 'พนักงานขับรถยนต์ประจำสำนักงาน',
+    department: 'ฝ่ายบริหารทั่วไป',
+    phone: '082-334-4556',
+    role: 'driver',
+    isDefault: true
+  },
+  {
+    id: 'drv-3',
+    name: 'นายสมคิด ขับขี่ปลอดภัย',
+    position: 'พนักงานขับรถยนต์ราชการ',
+    department: 'ฝ่ายบริหารทั่วไป',
+    phone: '081-234-5678',
+    role: 'driver',
+    userId: 'u-driver',
+    username: 'driver',
+    isDefault: true
+  }
+];
+
 export const INITIAL_BOOKINGS: BookingRequest[] = [
   {
     id: 'CAR-69001',
@@ -1066,6 +1098,7 @@ export const STORAGE_KEYS = {
   FUEL_LOGS: 'mculture_fleet_fuel_v2',
   MAINTENANCE: 'mculture_fleet_maintenance_v2',
   PASSENGERS: 'mculture_fleet_passengers_v2',
+  DRIVERS: 'mculture_fleet_drivers_v2',
   CURRENT_USER: 'mculture_fleet_user_v2',
   NOTIFICATIONS: 'mculture_fleet_notifs_v2',
   SOUND_ENABLED: 'mculture_fleet_sound_v2',

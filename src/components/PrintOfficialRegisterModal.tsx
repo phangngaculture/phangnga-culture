@@ -888,7 +888,7 @@ export const PrintOfficialRegisterModal: React.FC<PrintOfficialRegisterModalProp
                               </p>
 
                               <p style={{ textIndent: '2.5cm' }}>
-                                ในการปฏิบัติหน้าที่ครั้งนี้ มีผู้ร่วมเดินทางปฏิบัติราชการรวมจำนวน <span className="font-bold">{num(b.passengerCount || 1)}</span> คน (รวมผู้ประสานงาน) โดยขออนุมัติใช้รถยนต์ส่วนกลางของสำนักงานวัฒนธรรมจังหวัดพังงา หมายเลขทะเบียนคุม <span className="font-bold">{b.carName}</span> มอบหมายให้ <span className="font-bold">{b.driverName || 'พนักงานขับรถส่วนกลาง'}</span> เป็นผู้ควบคุมขับยานพาหนะในภารกิจนี้
+                                ในการปฏิบัติหน้าที่ครั้งนี้ มีผู้ร่วมเดินทางปฏิบัติราชการรวมจำนวน <span className="font-bold">{num(b.passengerCount || 1)}</span> คน (รวมผู้ประสานงาน) โดยขออนุมัติใช้รถยนต์ส่วนกลางของสำนักงานวัฒนธรรมจังหวัดพังงา หมายเลขทะเบียนคุม <span className="font-bold">{b.carName}</span> มอบหมายให้ <span className="font-bold">{b.driverName || 'พนักงานขับรถส่วนกลาง'}</span>{b.secondaryDriverName ? ` และมอบหมายให้ ${b.secondaryDriverName} (เจ้าหน้าที่ผู้ช่วยขับขี่)` : ''} เป็นผู้ควบคุมขับยานพาหนะในภารกิจนี้
                               </p>
 
                               <p>จึงเรียนมาเพื่อโปรดพิจารณาอนุมัติให้ใช้รถยนต์ส่วนกลางตามความจำเป็นต่อไป</p>
@@ -1028,7 +1028,7 @@ export const PrintOfficialRegisterModal: React.FC<PrintOfficialRegisterModalProp
                           </p>
 
                           <p style={{ textIndent: '2.5cm' }}>
-                            ในการปฏิบัติหน้าที่ครั้งนี้ มีผู้ร่วมเดินทางปฏิบัติราชการรวมจำนวน <span className="font-bold">{num(activeRequestBooking.passengerCount || 1)}</span> คน (รวมผู้ประสานงาน) โดยขออนุมัติใช้รถยนต์ส่วนกลางของสำนักงานวัฒนธรรมจังหวัดพังงา หมายเลขทะเบียนคุม <span className="font-bold">{activeRequestBooking.carName}</span> มอบหมายให้ <span className="font-bold">{activeRequestBooking.driverName || 'พนักงานขับรถส่วนกลาง'}</span> เป็นผู้ควบคุมขับยานพาหนะในภารกิจนี้
+                            ในการปฏิบัติหน้าที่ครั้งนี้ มีผู้ร่วมเดินทางปฏิบัติราชการรวมจำนวน <span className="font-bold">{num(activeRequestBooking.passengerCount || 1)}</span> คน (รวมผู้ประสานงาน) โดยขออนุมัติใช้รถยนต์ส่วนกลางของสำนักงานวัฒนธรรมจังหวัดพังงา หมายเลขทะเบียนคุม <span className="font-bold">{activeRequestBooking.carName}</span> มอบหมายให้ <span className="font-bold">{activeRequestBooking.driverName || 'พนักงานขับรถส่วนกลาง'}</span>{activeRequestBooking.secondaryDriverName ? ` และมอบหมายให้ ${activeRequestBooking.secondaryDriverName} (เจ้าหน้าที่ผู้ช่วยขับขี่)` : ''} เป็นผู้ควบคุมขับยานพาหนะในภารกิจนี้
                           </p>
 
                           <p>จึงเรียนมาเพื่อโปรดพิจารณาอนุมัติให้ใช้รถยนต์ส่วนกลางตามความจำเป็นต่อไป</p>

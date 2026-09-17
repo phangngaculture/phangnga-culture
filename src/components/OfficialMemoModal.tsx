@@ -1114,6 +1114,7 @@ export const OfficialMemoModal: React.FC<OfficialMemoModalProps> = ({
                         {booking.passengerNames && <span>(ได้แก่ {booking.passengerNames})</span>} โดยขออนุมัติใช้ยานพาหนะของทางราชการ คือ{' '}
                         {booking.carName} โดยมีพนักงานขับรถหรือผู้ควบคุมยานพาหนะคือ{' '}
                         {booking.driverType === 'self' ? `${booking.name} (ผู้ขอขับขี่ด้วยตนเอง)` : booking.driverName}
+                        {booking.secondaryDriverName ? ` และมี ${booking.secondaryDriverName}${booking.secondaryDriverPosition ? ` (${booking.secondaryDriverPosition})` : ''} เป็นผู้ช่วยขับขี่/ผู้ขับขี่เสริม` : ''}
                       </p>
 
 
@@ -1638,7 +1639,8 @@ export const OfficialMemoModal: React.FC<OfficialMemoModalProps> = ({
                     <div className="space-y-2.5 text-justify text-[11.5pt] leading-[1.4] font-normal" style={{ textIndent: '2.5cm' }}>
                       <p>
                         อนุญาตให้ {booking.driverName || booking.name} ตำแหน่ง{' '}
-                        {booking.driverType === 'self' ? booking.position : 'พนักงานขับรถยนต์ประจำสำนักงาน'}{' '}
+                        {booking.driverType === 'self' ? booking.position : 'พนักงานขับรถยนต์ประจำสำนักงาน'}
+                        {booking.secondaryDriverName ? ` และ ${booking.secondaryDriverName} (ผู้ช่วยขับขี่)` : ''}{' '}
                         นำรถยนต์ส่วนกลางของสำนักงานวัฒนธรรมจังหวัดพังงา หมายเลขทะเบียน {booking.carName} ออกนอกเขตจังหวัดพังงา ไปยัง{' '}
                         {booking.destination} (จังหวัด{booking.destProvince || 'ปลายทาง'})
                       </p>

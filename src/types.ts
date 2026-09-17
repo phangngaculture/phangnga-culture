@@ -118,6 +118,11 @@ export interface BookingRequest {
   driverName: string;
   driverId?: string;       // User ID ของพนักงานขับรถ หรือผู้ขอขับเอง
   driverUsername?: string; // Username ของพนักงานขับรถ หรือผู้ขอขับเอง
+  hasSecondaryDriver?: boolean;     // มีผู้ขับขี่เสริม / ผู้ช่วยขับขี่ (เจ้าหน้าที่ในกลุ่มช่วยขับ)
+  secondaryDriverName?: string;     // ชื่อผู้ขับขี่เสริม / ผู้ช่วยขับขี่
+  secondaryDriverId?: string;       // User ID ของผู้ช่วยขับขี่
+  secondaryDriverUsername?: string; // Username ของผู้ช่วยขับขี่
+  secondaryDriverPosition?: string; // ตำแหน่งของผู้ช่วยขับขี่
   passengerCount: number;
   passengerNames?: string;
   attachmentName?: string;
@@ -265,6 +270,19 @@ export interface PassengerDirectoryItem {
   department: string;
   phone?: string;
   isDefault?: boolean;
+  addedAt?: string;
+}
+
+export interface DriverDirectoryItem {
+  id: string;
+  name: string;
+  position?: string;
+  department?: string;
+  phone?: string;
+  isDefault?: boolean;
+  role?: string;
+  userId?: string;
+  username?: string;
   addedAt?: string;
 }
 

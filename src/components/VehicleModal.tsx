@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Vehicle, User } from '../types';
+import { Vehicle, User, DriverDirectoryItem } from '../types';
+import { DEFAULT_DRIVERS, STORAGE_KEYS } from '../data/mockData';
 import {
   Car,
   X,
@@ -80,7 +81,16 @@ export const VehicleModal: React.FC<VehicleModalProps> = ({
 
   const [errorMsg, setErrorMsg] = useState('');
 
-  // Extract list of potential drivers
+  // Extract list of potential drivers from system users and directory
+  const [driverDirectory] = useState<DriverDirectoryItem[]>(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEYS.DRIVERS);
+      return saved ? JSON.parse(saved) : DEFAULT_DRIVERS;
+    } catch {
+      return DEFAULT_DRIVERS;
+    }
+  });
+
   const driverList = users.filter((u) => u.role === 'driver' || u.roleTitle.includes('ขับรถ'));
 
   useEffect(() => {
@@ -367,11 +377,12 @@ export const VehicleModal: React.FC<VehicleModalProps> = ({
                   className="w-full text-xs px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-indigo-500 focus:outline-none transition"
                 />
                 <datalist id="drivers-list">
-                  {driverList.map((d) => (
+                  {driverDirectory.map((d) => (
                     <option key={d.id} value={d.name} />
                   ))}
-                  <option value="นายศราวุธ เกตุรักษ์" />
-                  <option value="นายเรวัติ แสงสว่าง" />
+                  {users.map((u) => (
+                    <option key={u.id} value={u.name} />
+                  ))}
                 </datalist>
               </div>
 

@@ -171,7 +171,7 @@ export const formatApprovedBookingMessage = (
     `🚗 รถยนต์: ${booking.carName}`,
     `📅 วันที่เดินทาง: ${booking.date} (${booking.startTime || '08:30'} - ${booking.endTime || '16:30'} น.)`,
     `📍 ปลายทาง: ${booking.destination}`,
-    `👔 ผู้ขับ: ${booking.driverName || (booking.driverType === 'self' ? 'ผู้ขอขับขี่ด้วยตนเอง' : 'พนักงานขับรถ')}`,
+    `👔 ผู้ขับ: ${booking.driverName || (booking.driverType === 'self' ? 'ผู้ขอขับขี่ด้วยตนเอง' : 'พนักงานขับรถ')}${booking.secondaryDriverName ? ` (ผู้ช่วยขับ: ${booking.secondaryDriverName})` : ''}`,
     `✍️ อนุมัติโดย: ${approverName}`,
     `💬 ความเห็น: "${booking.directorComment || 'อนุมัติ ให้เดินทางโดยสวัสดิภาพและปฏิบัติตามระเบียบราชการ'}"`,
     `━━━━━━━━━━━━━━`,

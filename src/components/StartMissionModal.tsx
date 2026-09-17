@@ -158,7 +158,13 @@ export const StartMissionModal: React.FC<StartMissionModalProps> = ({
             </div>
           </div>
           <div className="text-[11px] text-slate-500">
-            พนักงานขับรถ: <strong className="text-slate-700">{booking.driverName}</strong> | ผู้ขอ: <strong className="text-slate-700">{booking.name}</strong> ({booking.department})
+            พนักงานขับรถ: <strong className="text-slate-700">{booking.driverName}</strong>
+            {booking.secondaryDriverName && (
+              <span className="ml-1 text-orange-700">
+                | ผู้ช่วยขับขี่: <strong className="font-semibold">{booking.secondaryDriverName}</strong>
+              </span>
+            )}
+            {' '}| ผู้ขอ: <strong className="text-slate-700">{booking.name}</strong> ({booking.department})
           </div>
         </div>
 

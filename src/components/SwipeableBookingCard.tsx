@@ -18,7 +18,8 @@ import {
   FileSpreadsheet,
   FileText,
   Globe,
-  Image as ImageIcon
+  Image as ImageIcon,
+  UserCheck
 } from 'lucide-react';
 import { canUserExecuteMission } from '../utils/driverPermissions';
 
@@ -343,6 +344,17 @@ export const SwipeableBookingCard: React.FC<SwipeableBookingCardProps> = ({
             <span className="flex items-center space-x-1">
               <Car className="w-3.5 h-3.5 text-slate-400" />
               <span>{b.carName}</span>
+            </span>
+            <span className="flex items-center space-x-1">
+              <UserCheck className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400" />
+              <span>
+                ผู้ขับ: {b.driverType === 'self' ? `${b.name} (ขับเอง)` : b.driverName}
+                {b.secondaryDriverName && (
+                  <span className="text-orange-700 dark:text-orange-300 font-medium ml-1">
+                    (+ผู้ช่วยขับ: {b.secondaryDriverName})
+                  </span>
+                )}
+              </span>
             </span>
             <span className="flex items-center space-x-1 text-orange-700 dark:text-orange-400 font-medium">
               <Calendar className="w-3.5 h-3.5 text-orange-500" />

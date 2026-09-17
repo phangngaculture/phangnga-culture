@@ -924,8 +924,6 @@ export default function App() {
       const newMemoNo = `พง ๐๐๓๒(พิเศษ)/ว ${memoSeq}`;
 
       const newBooking: BookingRequest = {
-        id: newId,
-        memoNo: newMemoNo,
         date: data.date || '2026-09-05',
         endDate: data.endDate || data.date,
         startTime: data.startTime || '08:30',
@@ -950,6 +948,9 @@ export default function App() {
         passengerCount: data.passengerCount || 1,
         passengerNames: data.passengerNames || '',
         attachmentName: data.attachmentName || '',
+        ...data,
+        id: newId,
+        memoNo: newMemoNo,
         status: 'pending',
         createdAt: new Date().toISOString()
       };

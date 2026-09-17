@@ -25,6 +25,12 @@ export function canUserExecuteMission(
     if (booking.driverId === currentUser.id || booking.driverUsername === currentUser.username) return true;
     if (isThaiNameMatch(booking.driverName, currentUser.name)) return true;
   }
+
+  // Check co-driver / assistant driver (เจ้าหน้าที่ในกลุ่มที่มาช่วยขับ)
+  if (booking.secondaryDriverName) {
+    if (booking.secondaryDriverId === currentUser.id || booking.secondaryDriverUsername === currentUser.username) return true;
+    if (isThaiNameMatch(booking.secondaryDriverName, currentUser.name)) return true;
+  }
   
   return false;
 }
@@ -40,15 +46,19 @@ export function getMissionPermissionDetails(
   isSelfDrive: boolean;
 } {
   const isSelfDrive = isSelfDriveBooking(booking);
-  const driverDisplayName = isSelfDrive ? booking.name : booking.driverName;
+  let driverDisplayName = isSelfDrive ? booking.name : booking.driverName;
+  if (booking.secondaryDriverName) {
+    driverDisplayName += ` (และผู้ช่วยขับ: ${booking.secondaryDriverName})`;
+  }
   const canExecute = canUserExecuteMission(booking, currentUser, allUsers);
   let reason: string | undefined = undefined;
   
   if (!canExecute) {
+    const assistantNote = booking.secondaryDriverName ? ` หรือผู้ช่วยขับ (${booking.secondaryDriverName})` : '';
     if (isSelfDrive) {
-      reason = `สงวนสิทธิ์เฉพาะผู้ขอใช้รถที่ระบุขับขี่เอง (${booking.name}) เท่านั้น`;
+      reason = `สงวนสิทธิ์เฉพาะผู้ขอใช้รถที่ระบุขับขี่เอง (${booking.name})${assistantNote} เท่านั้น`;
     } else {
-      reason = `สงวนสิทธิ์เฉพาะพนักงานขับรถที่ได้รับมอบหมาย (${booking.driverName}) เท่านั้น`;
+      reason = `สงวนสิทธิ์เฉพาะพนักงานขับรถที่ได้รับมอบหมาย (${booking.driverName})${assistantNote} เท่านั้น`;
     }
   }
   
@@ -88,9 +98,10 @@ export function validateCanStartMission(
   if (!canUserExecuteMission(booking, currentUser, allUsers)) {
     const isSelfDrive = isSelfDriveBooking(booking);
     const expectedName = isSelfDrive ? booking.name : booking.driverName;
+    const secondaryNote = booking.secondaryDriverName ? ` หรือผู้ช่วยขับ (${booking.secondaryDriverName})` : '';
     return {
       canStart: false,
-      reason: `ท่านไม่มีสิทธิ์ขับรถในคำขอนี้ (ระบุให้ ${expectedName} เป็นผู้ขับขี่)`
+      reason: `ท่านไม่มีสิทธิ์ขับรถในคำขอนี้ (ระบุให้ ${expectedName}${secondaryNote} เป็นผู้ขับขี่)`
     };
   }
   

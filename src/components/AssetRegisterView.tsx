@@ -1,7 +1,8 @@
 import React, { useState, useMemo } from 'react';
-import { BookingRequest, Vehicle, User } from '../types';
+import { BookingRequest, Vehicle, User, FuelLog, MaintenanceRecord } from '../types';
 import { formatThaiDate } from '../utils/thaiDate';
 import { PrintOfficialRegisterModal } from './PrintOfficialRegisterModal';
+import { MonthlyVehicleControlModal } from './MonthlyVehicleControlModal';
 import {
   FileSpreadsheet,
   Printer,
@@ -19,13 +20,17 @@ import {
   Layers,
   Fuel,
   TrendingUp,
-  RotateCcw
+  RotateCcw,
+  Sparkles
 } from 'lucide-react';
 
 interface AssetRegisterViewProps {
   bookings: BookingRequest[];
   vehicles: Vehicle[];
   currentUser: User;
+  fuelLogs?: FuelLog[];
+  maintenanceRecords?: MaintenanceRecord[];
+  users?: User[];
   onViewMemo?: (booking: BookingRequest) => void;
 }
 
@@ -33,6 +38,9 @@ export const AssetRegisterView: React.FC<AssetRegisterViewProps> = ({
   bookings,
   vehicles,
   currentUser,
+  fuelLogs = [],
+  maintenanceRecords = [],
+  users = [],
   onViewMemo
 }) => {
   const [vehicleFilter, setVehicleFilter] = useState<string>('all');
@@ -41,6 +49,7 @@ export const AssetRegisterView: React.FC<AssetRegisterViewProps> = ({
   const [dateFrom, setDateFrom] = useState<string>('');
   const [dateTo, setDateTo] = useState<string>('');
   const [isPrintRegisterOpen, setIsPrintRegisterOpen] = useState(false);
+  const [isMonthlyControlOpen, setIsMonthlyControlOpen] = useState(false);
   const [successToast, setSuccessToast] = useState<string | null>(null);
 
   // Eligible records: completed missions or in-progress missions with start mileage
@@ -233,11 +242,21 @@ export const AssetRegisterView: React.FC<AssetRegisterViewProps> = ({
           <div className="flex flex-wrap items-center gap-2.5 w-full lg:w-auto">
             <button
               type="button"
+              onClick={() => setIsMonthlyControlOpen(true)}
+              className="flex-1 sm:flex-none px-4 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 active:scale-95 text-white rounded-2xl text-xs font-bold transition shadow-lg shadow-emerald-950/40 flex items-center justify-center space-x-2 cursor-pointer border border-emerald-300/40"
+              title="เปิดบัญชีคุมการใช้รถยนต์และน้ำมันเชื้อเพลิงประจำเดือน (แบบฟอร์ม สตง./กระทรวงการคลัง)"
+            >
+              <FileSpreadsheet className="w-4 h-4 text-emerald-100" />
+              <span>บัญชีคุม สตง. (ประจำเดือน)</span>
+            </button>
+
+            <button
+              type="button"
               onClick={() => setIsPrintRegisterOpen(true)}
-              className="flex-1 sm:flex-none px-4 py-2.5 bg-teal-600 hover:bg-teal-500 active:scale-95 text-white rounded-2xl text-xs font-bold transition shadow-lg shadow-teal-900/40 flex items-center justify-center space-x-2 cursor-pointer border border-teal-400/40"
+              className="flex-1 sm:flex-none px-4 py-2.5 bg-teal-700/80 hover:bg-teal-600 active:scale-95 text-white rounded-2xl text-xs font-bold transition shadow-md flex items-center justify-center space-x-2 cursor-pointer border border-teal-500/30"
             >
               <Printer className="w-4 h-4 text-teal-100" />
-              <span>พิมพ์สมุดทะเบียนคุม (ราชการ)</span>
+              <span>พิมพ์สมุดทะเบียนคุม</span>
             </button>
 
             <button
@@ -246,7 +265,7 @@ export const AssetRegisterView: React.FC<AssetRegisterViewProps> = ({
               className="flex-1 sm:flex-none px-4 py-2.5 bg-white/10 hover:bg-white/20 active:scale-95 text-white rounded-2xl text-xs font-bold transition flex items-center justify-center space-x-2 cursor-pointer border border-white/20"
             >
               <Download className="w-4 h-4 text-emerald-300" />
-              <span>ส่งออก Excel/CSV</span>
+              <span>ส่งออก Excel</span>
             </button>
           </div>
         </div>
@@ -701,6 +720,19 @@ export const AssetRegisterView: React.FC<AssetRegisterViewProps> = ({
           vehicles={vehicles}
           filterCarPlate={vehicleFilter}
           onClose={() => setIsPrintRegisterOpen(false)}
+        />
+      )}
+
+      {/* Monthly Vehicle & Fuel Control Modal (แบบฟอร์ม สตง./กระทรวงการคลัง) */}
+      {isMonthlyControlOpen && (
+        <MonthlyVehicleControlModal
+          vehicles={vehicles}
+          bookings={bookings}
+          fuelLogs={fuelLogs}
+          maintenanceRecords={maintenanceRecords}
+          users={users}
+          initialVehicleId={vehicleFilter !== 'all' ? vehicleFilter : undefined}
+          onClose={() => setIsMonthlyControlOpen(false)}
         />
       )}
     </div>

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { BookingRequest, Vehicle, User, PassengerDirectoryItem } from '../types';
+import { BookingRequest, Vehicle, User, PassengerDirectoryItem, DriverDirectoryItem } from '../types';
+import { MultiStopRouteVisualizer } from './MultiStopRouteVisualizer';
 import {
   DEPARTMENTS,
   POSITIONS,
@@ -8,6 +9,7 @@ import {
   FREQUENT_DESTINATIONS,
   FrequentDestination,
   DEFAULT_PASSENGER_DIRECTORY,
+  DEFAULT_DRIVERS,
   STORAGE_KEYS,
   loadSavedData,
   saveLocalData
@@ -64,7 +66,8 @@ import {
   Globe,
   ExternalLink,
   FileCheck2,
-  FileBox
+  FileBox,
+  Search
 } from 'lucide-react';
 import { UserSignatureModal } from './UserSignatureModal';
 
@@ -147,6 +150,51 @@ export const BookingFormView: React.FC<BookingFormViewProps> = ({
   const [carId, setCarId] = useState(editingBooking?.carId || vehicles[0]?.id || '');
   const [driverType, setDriverType] = useState<'driver' | 'self'>(editingBooking?.driverType || 'driver');
   const [driverName, setDriverName] = useState(editingBooking?.driverName || vehicles[0]?.driverName || 'นายศราวุธ เกตุรักษ์');
+
+  // Driver Directory (ทำเนียบพนักงานขับรถ บันทึกเพิ่มและดึงจากระบบ)
+  const [driverDirectory, setDriverDirectory] = useState<DriverDirectoryItem[]>(() => {
+    const saved = loadSavedData<DriverDirectoryItem[]>(STORAGE_KEYS.DRIVERS, DEFAULT_DRIVERS);
+    const vehicleDrivers: DriverDirectoryItem[] = vehicles
+      .filter((v) => v.driverName && !saved.some((d) => d.name === v.driverName))
+      .map((v, idx) => ({
+        id: `veh-drv-${idx}`,
+        name: v.driverName,
+        position: 'พนักงานขับรถประจำคัน',
+        department: 'ฝ่ายบริหารทั่วไป',
+        role: 'driver'
+      }));
+    return [...saved, ...vehicleDrivers];
+  });
+
+  // Modal: Add new driver into directory
+  const [showAddDriverModal, setShowAddDriverModal] = useState(false);
+  const [newDrvName, setNewDrvName] = useState('');
+  const [newDrvPosition, setNewDrvPosition] = useState('พนักงานขับรถยนต์ประจำสำนักงาน');
+  const [newDrvDepartment, setNewDrvDepartment] = useState('ฝ่ายบริหารทั่วไป');
+  const [newDrvPhone, setNewDrvPhone] = useState('');
+  const [addDriverTarget, setAddDriverTarget] = useState<'primary' | 'secondary'>('primary');
+
+  // Modal: Pick user from system
+  const [showUserPickerModal, setShowUserPickerModal] = useState(false);
+  const [userPickerSearch, setUserPickerSearch] = useState('');
+  const [userPickerTarget, setUserPickerTarget] = useState<'primary' | 'secondary'>('primary');
+
+  // Manual custom text toggle for driver name
+  const [isCustomDriverInput, setIsCustomDriverInput] = useState(false);
+
+  // Additional / Assistant Driver (เจ้าหน้าที่ในกลุ่มมาช่วยขับ)
+  const [hasSecondaryDriver, setHasSecondaryDriver] = useState<boolean>(
+    !!editingBooking?.hasSecondaryDriver || !!editingBooking?.secondaryDriverName
+  );
+  const [secondaryDriverName, setSecondaryDriverName] = useState<string>(
+    editingBooking?.secondaryDriverName || ''
+  );
+  const [secondaryDriverId, setSecondaryDriverId] = useState<string>(
+    editingBooking?.secondaryDriverId || ''
+  );
+  const [secondaryDriverPosition, setSecondaryDriverPosition] = useState<string>(
+    editingBooking?.secondaryDriverPosition || ''
+  );
 
   // Passenger Directory and Selection
   const [passengerDirectory, setPassengerDirectory] = useState<PassengerDirectoryItem[]>(() => {
@@ -538,6 +586,72 @@ export const BookingFormView: React.FC<BookingFormViewProps> = ({
     setShowAddPassengerModal(false);
   };
 
+  // Save new driver to directory in localStorage & system
+  const handleSaveNewDriver = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    const trimmed = newDrvName.trim();
+    if (!trimmed) return;
+
+    const existing = driverDirectory.find((d) => d.name.trim() === trimmed);
+    let updated = driverDirectory;
+    if (!existing) {
+      const newDrv: DriverDirectoryItem = {
+        id: `drv-${Date.now()}`,
+        name: trimmed,
+        position: newDrvPosition.trim() || 'พนักงานขับรถยนต์ราชการ',
+        department: newDrvDepartment.trim() || 'ฝ่ายบริหารทั่วไป',
+        phone: newDrvPhone.trim() || undefined,
+        role: 'driver',
+        addedAt: new Date().toISOString()
+      };
+      updated = [...driverDirectory, newDrv];
+      setDriverDirectory(updated);
+      saveLocalData(STORAGE_KEYS.DRIVERS, updated);
+    }
+
+    if (addDriverTarget === 'primary') {
+      setDriverName(trimmed);
+      setIsCustomDriverInput(false);
+    } else {
+      setSecondaryDriverName(trimmed);
+      setSecondaryDriverPosition(newDrvPosition.trim() || 'ผู้ช่วยขับขี่');
+      setHasSecondaryDriver(true);
+    }
+
+    setShowAddDriverModal(false);
+    setNewDrvName('');
+    setNewDrvPosition('พนักงานขับรถยนต์ประจำสำนักงาน');
+    setNewDrvDepartment('ฝ่ายบริหารทั่วไป');
+    setNewDrvPhone('');
+  };
+
+  // Select a user from system (ทำเนียบบุคลากร) as driver
+  const handleSelectSystemUserAsDriver = (user: User) => {
+    if (userPickerTarget === 'primary') {
+      setDriverName(user.name);
+      setIsCustomDriverInput(false);
+    } else {
+      setSecondaryDriverName(user.name);
+      setSecondaryDriverId(user.id);
+      setSecondaryDriverPosition(user.position || user.roleTitle || '');
+      setHasSecondaryDriver(true);
+    }
+    setShowUserPickerModal(false);
+  };
+
+  // Filtered system users for picker modal
+  const filteredSystemUsers = useMemo(() => {
+    if (!userPickerSearch.trim()) return users;
+    const q = userPickerSearch.toLowerCase().trim();
+    return users.filter(
+      (u) =>
+        u.name.toLowerCase().includes(q) ||
+        (u.position && u.position.toLowerCase().includes(q)) ||
+        (u.department && u.department.toLowerCase().includes(q)) ||
+        (u.roleTitle && u.roleTitle.toLowerCase().includes(q))
+    );
+  }, [users, userPickerSearch]);
+
   // Assemble full destination string
   const assembleDestination = () => {
     const allStops = destinations.length > 0 ? destinations : (destDetail ? [destDetail] : []);
@@ -606,6 +720,16 @@ export const BookingFormView: React.FC<BookingFormViewProps> = ({
       carName: chosenCar ? `${chosenCar.name} (${chosenCar.plate})` : 'รถยนต์ราชการ',
       driverType,
       driverName: driverType === 'self' ? `${name} (ผู้ขอขับขี่ด้วยตนเอง)` : driverName,
+      driverId: driverType === 'self'
+        ? currentUser.id
+        : (users.find((u) => u.name === driverName)?.id || driverDirectory.find((d) => d.name === driverName)?.userId || editingBooking?.driverId),
+      driverUsername: driverType === 'self'
+        ? currentUser.username
+        : (users.find((u) => u.name === driverName)?.username || driverDirectory.find((d) => d.name === driverName)?.username || editingBooking?.driverUsername),
+      hasSecondaryDriver: hasSecondaryDriver && !!secondaryDriverName.trim(),
+      secondaryDriverName: hasSecondaryDriver && secondaryDriverName.trim() ? secondaryDriverName.trim() : undefined,
+      secondaryDriverId: hasSecondaryDriver && secondaryDriverName.trim() && secondaryDriverId ? secondaryDriverId : undefined,
+      secondaryDriverPosition: hasSecondaryDriver && secondaryDriverName.trim() && secondaryDriverPosition.trim() ? secondaryDriverPosition.trim() : undefined,
       passengerCount: Number(passengerCount),
       passengerNames: selectedPassengers.length > 0
         ? selectedPassengers.map((p) => p.name).join(', ')
@@ -1264,6 +1388,18 @@ export const BookingFormView: React.FC<BookingFormViewProps> = ({
                     </div>
                   ))}
                 </div>
+
+                {/* Interactive Multi-Stop Waypoint & Weather Visualizer */}
+                <div className="pt-2">
+                  <MultiStopRouteVisualizer
+                    origin="สำนักงานวัฒนธรรมจังหวัดพังงา"
+                    destinations={destinations}
+                    destProvince={destProvince}
+                    destDetail={destDetail}
+                    onRemoveStop={(idx) => handleRemoveDestination(idx)}
+                    onReorderStops={(newStops) => setDestinations(newStops)}
+                  />
+                </div>
               </div>
             )}
 
@@ -1806,18 +1942,166 @@ export const BookingFormView: React.FC<BookingFormViewProps> = ({
                 </div>
 
                 {driverType === 'driver' ? (
-                  <select
-                    value={driverName}
-                    onChange={(e) => setDriverName(e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800"
-                  >
-                    <option value="นายศราวุธ เกตุรักษ์ (พนักงานขับรถประจำ)">
-                      นายศราวุธ เกตุรักษ์ (พนักงานขับรถประจำ)
-                    </option>
-                    <option value="นายเรวัติ แสงสว่าง (พนักงานขับรถประจำ)">
-                      นายเรวัติ แสงสว่าง (พนักงานขับรถประจำ)
-                    </option>
-                  </select>
+                  <div className="space-y-2">
+                    {/* Driver Selector & Actions */}
+                    <div className="flex flex-col sm:flex-row gap-2 items-stretch sm:items-center">
+                      <div className="relative flex-1">
+                        {!isCustomDriverInput ? (
+                          <select
+                            id="driver-selection-dropdown"
+                            value={driverName}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              if (val === '__browse_system__') {
+                                setUserPickerTarget('primary');
+                                setShowUserPickerModal(true);
+                                return;
+                              }
+                              if (val === '__add_new__') {
+                                setAddDriverTarget('primary');
+                                setShowAddDriverModal(true);
+                                return;
+                              }
+                              if (val === '__custom_input__') {
+                                setIsCustomDriverInput(true);
+                                return;
+                              }
+                              setDriverName(val);
+                            }}
+                            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:bg-white focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 font-medium"
+                          >
+                            <optgroup label="👔 พนักงานขับรถในระบบ / ทำเนียบผู้ขับขี่">
+                              {driverDirectory.map((d) => (
+                                <option key={d.id} value={d.name}>
+                                  {d.name} {d.position ? `(${d.position})` : ''} {d.phone ? `• โทร ${d.phone}` : ''}
+                                </option>
+                              ))}
+                            </optgroup>
+
+                            {users.length > 0 && (
+                              <optgroup label="🏛️ ดึงรายชื่อจากบุคลากรในระบบ (Users)">
+                                {users.map((u) => (
+                                  <option key={u.id} value={u.name}>
+                                    {u.name} ({u.position || u.roleTitle})
+                                  </option>
+                                ))}
+                              </optgroup>
+                            )}
+
+                            <optgroup label="⚙️ จัดการ / ตัวเลือกเพิ่มเติม">
+                              <option value="__browse_system__">👥 ค้นหาและดึงรายชื่อจากระบบ...</option>
+                              <option value="__add_new__">+ เพิ่มรายชื่อพนักงานขับรถใหม่...</option>
+                              <option value="__custom_input__">✏️ พิมพ์ระบุชื่อคนขับเอง...</option>
+                            </optgroup>
+                          </select>
+                        ) : (
+                          <div className="flex items-center space-x-1.5">
+                            <input
+                              type="text"
+                              id="custom-driver-input"
+                              value={driverName}
+                              onChange={(e) => setDriverName(e.target.value)}
+                              placeholder="พิมพ์ชื่อ-นามสกุล พนักงานขับรถ"
+                              className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 font-medium"
+                              autoFocus
+                            />
+                            <button
+                              type="button"
+                              onClick={() => setIsCustomDriverInput(false)}
+                              className="px-2.5 py-2 text-xs text-slate-600 hover:text-slate-800 bg-slate-100 hover:bg-slate-200 rounded-xl whitespace-nowrap transition cursor-pointer"
+                              title="กลับไปเลือกจากรายชื่อ"
+                            >
+                              กลับไปเลือก
+                            </button>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Quick Action Buttons */}
+                      <div className="flex items-center space-x-1.5 shrink-0">
+                        <button
+                          type="button"
+                          id="btn-open-user-picker-primary"
+                          onClick={() => {
+                            setUserPickerTarget('primary');
+                            setUserPickerSearch('');
+                            setShowUserPickerModal(true);
+                          }}
+                          className="inline-flex items-center space-x-1 px-3 py-2 rounded-xl border border-blue-200 bg-blue-50/80 hover:bg-blue-100 text-blue-800 text-xs font-medium transition cursor-pointer active:scale-95 shadow-2xs"
+                          title="ดึงรายชื่อจากทำเนียบบุคลากรในระบบ"
+                        >
+                          <Users className="w-3.5 h-3.5 text-blue-600" />
+                          <span>ดึงจากระบบ</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          id="btn-open-add-driver-modal-primary"
+                          onClick={() => {
+                            setAddDriverTarget('primary');
+                            setShowAddDriverModal(true);
+                          }}
+                          className="inline-flex items-center space-x-1 px-3 py-2 rounded-xl border border-emerald-200 bg-emerald-50/80 hover:bg-emerald-100 text-emerald-800 text-xs font-semibold transition cursor-pointer active:scale-95 shadow-2xs"
+                          title="เพิ่มรายชื่อพนักงานขับรถคนใหม่"
+                        >
+                          <UserPlus className="w-3.5 h-3.5 text-emerald-600" />
+                          <span>+ เพิ่มคนขับใหม่</span>
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Driver Card Badge */}
+                    <div className="p-2.5 bg-slate-50/90 rounded-xl border border-slate-200 flex items-center justify-between text-xs">
+                      <div className="flex items-center space-x-2.5 min-w-0">
+                        <div className="w-7 h-7 rounded-lg bg-orange-100 text-orange-700 flex items-center justify-center font-bold text-xs shrink-0">
+                          <UserCheck className="w-4 h-4" />
+                        </div>
+                        <div className="min-w-0">
+                          <div className="font-semibold text-slate-800 flex items-center space-x-1.5">
+                            <span className="truncate">{driverName || 'ยังไม่ได้เลือกผู้ขับขี่'}</span>
+                            {users.some((u) => u.name === driverName) && (
+                              <span className="text-[10px] px-1.5 py-0.5 bg-blue-100 text-blue-800 rounded font-medium shrink-0">
+                                บุคลากรในระบบ
+                              </span>
+                            )}
+                            {driverDirectory.some((d) => d.name === driverName) && !users.some((u) => u.name === driverName) && (
+                              <span className="text-[10px] px-1.5 py-0.5 bg-orange-100 text-orange-800 rounded font-medium shrink-0">
+                                พนักงานขับรถ
+                              </span>
+                            )}
+                          </div>
+                          <div className="text-[11px] text-slate-500 truncate">
+                            {(() => {
+                              const foundDir = driverDirectory.find((d) => d.name === driverName);
+                              const foundUsr = users.find((u) => u.name === driverName);
+                              return (
+                                foundDir?.position ||
+                                foundUsr?.position ||
+                                foundUsr?.roleTitle ||
+                                (isCustomDriverInput ? 'ระบุชื่อโดยผู้ยื่นคำขอ' : 'พนักงานขับรถยนต์ประจำสำนักงาน')
+                              );
+                            })()}
+                            {(() => {
+                              const foundDir = driverDirectory.find((d) => d.name === driverName);
+                              const foundUsr = users.find((u) => u.name === driverName);
+                              const phone = foundDir?.phone || foundUsr?.phone;
+                              return phone ? ` • โทร ${phone}` : '';
+                            })()}
+                          </div>
+                        </div>
+                      </div>
+
+                      {!isCustomDriverInput && (
+                        <button
+                          type="button"
+                          onClick={() => setIsCustomDriverInput(true)}
+                          className="text-[11px] text-slate-400 hover:text-slate-600 px-2 py-1 rounded hover:bg-slate-200/60 transition whitespace-nowrap ml-2"
+                        >
+                          พิมพ์ชื่อเอง
+                        </button>
+                      )}
+                    </div>
+                  </div>
                 ) : (
                   <input
                     type="text"
@@ -1825,6 +2109,225 @@ export const BookingFormView: React.FC<BookingFormViewProps> = ({
                     value={`${name} (ผู้ขอขับขี่ด้วยตนเอง)`}
                     className="w-full bg-slate-100 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-600"
                   />
+                )}
+
+                {/* Additional / Assistant Driver Section */}
+                {!hasSecondaryDriver ? (
+                  <div className="pt-2">
+                    <button
+                      type="button"
+                      id="btn-add-secondary-driver"
+                      onClick={() => {
+                        setHasSecondaryDriver(true);
+                        // Auto-fill from first selected passenger or first available colleague if available
+                        if (selectedPassengers.length > 0) {
+                          setSecondaryDriverName(selectedPassengers[0].name);
+                          setSecondaryDriverPosition(selectedPassengers[0].position || 'ผู้ร่วมเดินทาง/ผู้ช่วยขับขี่');
+                        } else {
+                          const candidate = users.find((u) => u.name !== name && !u.name.includes('พนักงานขับรถ'));
+                          if (candidate) {
+                            setSecondaryDriverName(candidate.name);
+                            setSecondaryDriverId(candidate.id);
+                            setSecondaryDriverPosition(candidate.position || candidate.roleTitle || '');
+                          }
+                        }
+                      }}
+                      className="w-full sm:w-auto inline-flex items-center justify-center space-x-1.5 px-3.5 py-2 rounded-xl border border-dashed border-orange-300 dark:border-orange-700/60 bg-orange-50/70 hover:bg-orange-100/70 text-orange-800 text-xs font-semibold transition cursor-pointer active:scale-95 shadow-2xs"
+                    >
+                      <UserPlus className="w-3.5 h-3.5 text-orange-600" />
+                      <span>+ เพิ่มผู้ขับขี่เสริม / ผู้ช่วยขับขี่ (เจ้าหน้าที่ในกลุ่มช่วยขับ)</span>
+                    </button>
+                  </div>
+                ) : (
+                  <div className="mt-2.5 p-3.5 bg-orange-50/70 border border-orange-200/80 rounded-xl space-y-2.5 shadow-2xs">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-2">
+                        <div className="w-6 h-6 rounded-lg bg-orange-100 text-orange-700 flex items-center justify-center font-bold text-xs">
+                          <UserPlus className="w-3.5 h-3.5 text-orange-600" />
+                        </div>
+                        <div className="flex items-center flex-wrap gap-1.5">
+                          <span className="text-xs font-bold text-slate-800">
+                            ผู้ขับขี่เสริม / ผู้ช่วยขับขี่
+                          </span>
+                          <span className="text-[10px] text-orange-700 bg-orange-100/90 px-2 py-0.5 rounded-full font-medium border border-orange-200">
+                            เจ้าหน้าที่ในกลุ่มช่วยขับ
+                          </span>
+                        </div>
+                      </div>
+
+                      <button
+                        type="button"
+                        id="btn-remove-secondary-driver"
+                        onClick={() => {
+                          setHasSecondaryDriver(false);
+                          setSecondaryDriverName('');
+                          setSecondaryDriverId('');
+                          setSecondaryDriverPosition('');
+                        }}
+                        className="inline-flex items-center space-x-1 text-xs text-slate-400 hover:text-rose-600 transition px-2 py-1 rounded-lg hover:bg-rose-50 cursor-pointer"
+                        title="ลบผู้ช่วยขับขี่ออก"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                        <span>ลบออก</span>
+                      </button>
+                    </div>
+
+                    <div className="space-y-2">
+                      <div>
+                        <div className="flex items-center justify-between mb-1">
+                          <label className="block text-[11px] font-medium text-slate-600">
+                            เลือกจากรายชื่อเจ้าหน้าที่ในระบบ หรือ ผู้ร่วมเดินทาง:
+                          </label>
+                          <div className="flex items-center space-x-1.5">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setUserPickerTarget('secondary');
+                                setUserPickerSearch('');
+                                setShowUserPickerModal(true);
+                              }}
+                              className="text-[10px] text-blue-700 bg-blue-50 hover:bg-blue-100 px-2 py-0.5 rounded-md font-medium inline-flex items-center space-x-1 border border-blue-200 cursor-pointer"
+                              title="ค้นหาจากทำเนียบบุคลากร"
+                            >
+                              <Users className="w-3 h-3 text-blue-600" />
+                              <span>ดึงจากระบบ</span>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setAddDriverTarget('secondary');
+                                setShowAddDriverModal(true);
+                              }}
+                              className="text-[10px] text-emerald-700 bg-emerald-50 hover:bg-emerald-100 px-2 py-0.5 rounded-md font-medium inline-flex items-center space-x-1 border border-emerald-200 cursor-pointer"
+                              title="เพิ่มรายชื่อคนใหม่"
+                            >
+                              <UserPlus className="w-3 h-3 text-emerald-600" />
+                              <span>+ เพิ่มคนใหม่</span>
+                            </button>
+                          </div>
+                        </div>
+
+                        <select
+                          value={secondaryDriverName}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            if (val === '__browse_system__') {
+                              setUserPickerTarget('secondary');
+                              setUserPickerSearch('');
+                              setShowUserPickerModal(true);
+                              return;
+                            }
+                            if (val === '__add_new__') {
+                              setAddDriverTarget('secondary');
+                              setShowAddDriverModal(true);
+                              return;
+                            }
+                            if (val === 'custom') {
+                              setSecondaryDriverName('');
+                              setSecondaryDriverId('');
+                              setSecondaryDriverPosition('');
+                              return;
+                            }
+                            // Check if selected passenger
+                            const psg = selectedPassengers.find((p) => p.name === val);
+                            if (psg) {
+                              setSecondaryDriverName(psg.name);
+                              setSecondaryDriverPosition(psg.position || 'ผู้ร่วมเดินทาง/ผู้ช่วยขับขี่');
+                              setSecondaryDriverId('');
+                              return;
+                            }
+                            // Check if user in system
+                            const usr = users.find((u) => u.name === val || u.id === val);
+                            if (usr) {
+                              setSecondaryDriverName(usr.name);
+                              setSecondaryDriverId(usr.id);
+                              setSecondaryDriverPosition(usr.position || usr.roleTitle || '');
+                              return;
+                            }
+                            // Check if driver directory
+                            const drv = driverDirectory.find((d) => d.name === val);
+                            if (drv) {
+                              setSecondaryDriverName(drv.name);
+                              setSecondaryDriverPosition(drv.position || 'พนักงานขับรถยนต์ประจำสำนักงาน');
+                              setSecondaryDriverId(drv.userId || '');
+                              return;
+                            }
+                            // Fallback
+                            setSecondaryDriverName(val);
+                          }}
+                          className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-hidden focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500"
+                        >
+                          <option value="">-- กรุณาเลือกเจ้าหน้าที่ผู้ช่วยขับขี่ --</option>
+                          {selectedPassengers.length > 0 && (
+                            <optgroup label="👥 ผู้ร่วมเดินทางในคำขอนี้">
+                              {selectedPassengers.map((psg, idx) => (
+                                <option key={`psg-${idx}`} value={psg.name}>
+                                  {psg.name} ({psg.position || 'ผู้ร่วมเดินทาง'})
+                                </option>
+                              ))}
+                            </optgroup>
+                          )}
+                          {users.length > 0 && (
+                            <optgroup label="🏛️ ข้าราชการ/เจ้าหน้าที่ในสำนักงานวัฒนธรรมฯ">
+                              {users
+                                .filter((u) => u.name !== name && u.name !== driverName)
+                                .map((u) => (
+                                  <option key={u.id} value={u.name}>
+                                    {u.name} ({u.position || u.roleTitle})
+                                  </option>
+                                ))}
+                            </optgroup>
+                          )}
+                          <optgroup label="👔 พนักงานขับรถในระบบ">
+                            {driverDirectory.map((d) => (
+                              <option key={d.id} value={d.name}>
+                                {d.name} {d.position ? `(${d.position})` : ''}
+                              </option>
+                            ))}
+                          </optgroup>
+                          <optgroup label="⚙️ จัดการเพิ่มเติม">
+                            <option value="__browse_system__">👥 ค้นหา/ดึงรายชื่อจากระบบ...</option>
+                            <option value="__add_new__">+ เพิ่มรายชื่อคนขับใหม่เข้าระบบ...</option>
+                            <option value="custom">✏️ พิมพ์ระบุชื่อเจ้าหน้าที่เอง...</option>
+                          </optgroup>
+                        </select>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <div>
+                          <label className="block text-[11px] font-medium text-slate-600 mb-1">
+                            ชื่อ-นามสกุล เจ้าหน้าที่ผู้ช่วยขับขี่:
+                          </label>
+                          <input
+                            type="text"
+                            value={secondaryDriverName}
+                            onChange={(e) => setSecondaryDriverName(e.target.value)}
+                            placeholder="ระบุชื่อ-นามสกุล เจ้าหน้าที่"
+                            className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-hidden focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[11px] font-medium text-slate-600 mb-1">
+                            ตำแหน่ง (ถ้ามี):
+                          </label>
+                          <input
+                            type="text"
+                            value={secondaryDriverPosition}
+                            onChange={(e) => setSecondaryDriverPosition(e.target.value)}
+                            placeholder="เช่น นักวิชาการวัฒนธรรมปฏิบัติการ"
+                            className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-hidden focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="flex items-start space-x-1.5 text-[11px] text-amber-800 bg-amber-100/50 p-2 rounded-lg border border-amber-200/60">
+                        <Info className="w-3.5 h-3.5 text-amber-600 shrink-0 mt-0.5" />
+                        <span>
+                          เจ้าหน้าที่ที่ระบุเป็นผู้ช่วยขับขี่ จะได้รับสิทธิ์ควบคุมยานพาหนะและสามารถเข้าสู่ระบบเพื่อกดเริ่มภารกิจ / บันทึกเลขไมล์เดินทางได้
+                        </span>
+                      </div>
+                    </div>
+                  </div>
                 )}
               </div>
             </div>
@@ -2115,6 +2618,230 @@ export const BookingFormView: React.FC<BookingFormViewProps> = ({
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal: Add New Driver to Directory */}
+      {showAddDriverModal && (
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-xl border border-slate-200 w-full max-w-md overflow-hidden animate-in fade-in duration-150">
+            <div className="px-6 py-4 bg-gradient-to-r from-orange-600 to-amber-600 text-white flex items-center justify-between">
+              <div className="flex items-center space-x-2.5">
+                <UserPlus className="w-5 h-5" />
+                <div>
+                  <h3 className="font-bold text-sm">เพิ่มรายชื่อพนักงานขับรถใหม่เข้าระบบ</h3>
+                  <p className="text-[10px] text-orange-100">
+                    {addDriverTarget === 'primary' ? 'สำหรับผู้ขับขี่หลัก' : 'สำหรับผู้ขับขี่เสริม / ผู้ช่วยขับขี่'}
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowAddDriverModal(false)}
+                className="text-white/80 hover:text-white p-1 rounded-lg hover:bg-white/10"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveNewDriver} className="p-6 space-y-4">
+              <p className="text-xs text-slate-500">
+                ข้อมูลพนักงานขับรถที่บันทึกจะถูกเก็บลงในระบบทำเนียบผู้ขับขี่ของสำนักงาน เพื่อให้สามารถเลือกใช้ได้ตลอดเวลาในทุกคำขอ
+              </p>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  ชื่อ-นามสกุล ผู้ขับขี่ *
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={newDrvName}
+                  onChange={(e) => setNewDrvName(e.target.value)}
+                  placeholder="เช่น นายมานพ จงเจริญ"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-slate-800 focus:bg-white focus:ring-2 focus:ring-orange-500 focus:outline-none"
+                  autoFocus
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  ตำแหน่ง / สิทธิการขับขี่
+                </label>
+                <input
+                  type="text"
+                  value={newDrvPosition}
+                  onChange={(e) => setNewDrvPosition(e.target.value)}
+                  placeholder="เช่น พนักงานขับรถยนต์ประจำสำนักงาน, พนักงานขับรถจ้างเหมา"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-slate-800 focus:bg-white focus:ring-2 focus:ring-orange-500 focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  กลุ่มงาน / ฝ่าย
+                </label>
+                <input
+                  type="text"
+                  value={newDrvDepartment}
+                  onChange={(e) => setNewDrvDepartment(e.target.value)}
+                  placeholder="เช่น ฝ่ายบริหารทั่วไป"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-slate-800 focus:bg-white focus:ring-2 focus:ring-orange-500 focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  เบอร์โทรศัพท์ติดต่อ (ถ้ามี)
+                </label>
+                <input
+                  type="tel"
+                  value={newDrvPhone}
+                  onChange={(e) => setNewDrvPhone(e.target.value)}
+                  placeholder="เช่น 089-123-4567"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-slate-800 focus:bg-white focus:ring-2 focus:ring-orange-500 focus:outline-none"
+                />
+              </div>
+
+              <div className="flex justify-end space-x-2 pt-2 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => setShowAddDriverModal(false)}
+                  className="px-4 py-2 border border-slate-200 text-slate-600 rounded-xl text-xs font-medium hover:bg-slate-50 transition"
+                >
+                  ยกเลิก
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-xl text-xs font-bold transition shadow-xs flex items-center space-x-1.5"
+                >
+                  <Check className="w-3.5 h-3.5" />
+                  <span>บันทึกและเลือกคนนี้</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal: Pick User from System Directory */}
+      {showUserPickerModal && (
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-xl border border-slate-200 w-full max-w-lg overflow-hidden animate-in fade-in duration-150 flex flex-col max-h-[85vh]">
+            <div className="px-6 py-4 bg-gradient-to-r from-blue-700 to-indigo-700 text-white flex items-center justify-between shrink-0">
+              <div className="flex items-center space-x-2.5">
+                <Users className="w-5 h-5" />
+                <div>
+                  <h3 className="font-bold text-sm">ดึงรายชื่อจากบุคลากรในระบบ ({users.length} คน)</h3>
+                  <p className="text-[10px] text-blue-100">
+                    {userPickerTarget === 'primary' ? 'เลือกเป็นผู้ขับขี่หลัก' : 'เลือกเป็นผู้ขับขี่เสริม / ผู้ช่วยขับขี่'}
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowUserPickerModal(false)}
+                className="text-white/80 hover:text-white p-1 rounded-lg hover:bg-white/10"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="p-4 border-b border-slate-100 bg-slate-50 shrink-0">
+              <div className="relative">
+                <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
+                <input
+                  type="text"
+                  value={userPickerSearch}
+                  onChange={(e) => setUserPickerSearch(e.target.value)}
+                  placeholder="พิมพ์ค้นหาชื่อ, ตำแหน่ง, สังกัด หรือเบอร์โทร..."
+                  className="w-full bg-white border border-slate-200 rounded-xl pl-9 pr-3.5 py-2 text-xs text-slate-800 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  autoFocus
+                />
+              </div>
+            </div>
+
+            <div className="p-4 overflow-y-auto divide-y divide-slate-100 flex-1">
+              {filteredSystemUsers.length === 0 ? (
+                <div className="py-8 text-center text-slate-400 text-xs">
+                  ไม่พบรายชื่อบุคลากรที่ตรงกับคำค้นหา
+                </div>
+              ) : (
+                filteredSystemUsers.map((u) => {
+                  const isCurrentSelected =
+                    userPickerTarget === 'primary' ? driverName === u.name : secondaryDriverName === u.name;
+                  const isDriverRole = u.role === 'driver' || u.roleTitle?.includes('ขับรถ');
+                  return (
+                    <div
+                      key={u.id}
+                      className={`py-3 px-3 rounded-xl flex items-center justify-between hover:bg-slate-50 transition ${
+                        isCurrentSelected ? 'bg-orange-50/60 ring-1 ring-orange-300' : ''
+                      }`}
+                    >
+                      <div className="flex items-center space-x-3 min-w-0 pr-2">
+                        <div
+                          className={`w-9 h-9 rounded-full flex items-center justify-center font-bold text-xs shrink-0 ${
+                            isDriverRole ? 'bg-orange-100 text-orange-700' : 'bg-blue-100 text-blue-700'
+                          }`}
+                        >
+                          {u.name.slice(0, 1)}
+                        </div>
+                        <div className="min-w-0">
+                          <div className="flex items-center space-x-2">
+                            <span className="font-semibold text-xs text-slate-800 truncate">{u.name}</span>
+                            {isDriverRole && (
+                              <span className="text-[9px] px-1.5 py-0.5 bg-orange-100 text-orange-700 font-bold rounded">
+                                พนักงานขับรถ
+                              </span>
+                            )}
+                            {u.role === 'admin' && (
+                              <span className="text-[9px] px-1.5 py-0.5 bg-purple-100 text-purple-700 font-medium rounded">
+                                ผู้ดูแลระบบ
+                              </span>
+                            )}
+                          </div>
+                          <div className="text-[11px] text-slate-500 truncate">
+                            {u.position || u.roleTitle} {u.department ? `• ${u.department}` : ''}
+                          </div>
+                          {u.phone && (
+                            <div className="text-[10px] text-slate-400">
+                              โทร: {u.phone}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => handleSelectSystemUserAsDriver(u)}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition flex items-center space-x-1 shrink-0 ${
+                          isCurrentSelected
+                            ? 'bg-orange-600 text-white'
+                            : 'bg-blue-50 text-blue-700 hover:bg-blue-600 hover:text-white border border-blue-200 hover:border-transparent'
+                        }`}
+                      >
+                        <UserCheck className="w-3.5 h-3.5" />
+                        <span>{isCurrentSelected ? 'เลือกอยู่' : 'เลือกคนนี้'}</span>
+                      </button>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+
+            <div className="p-3 bg-slate-50 border-t border-slate-100 flex items-center justify-between text-xs shrink-0">
+              <span className="text-slate-500 text-[11px]">
+                แสดง {filteredSystemUsers.length} จากทั้งหมด {users.length} รายชื่อ
+              </span>
+              <button
+                type="button"
+                onClick={() => setShowUserPickerModal(false)}
+                className="px-4 py-1.5 border border-slate-200 text-slate-600 rounded-lg hover:bg-slate-100 text-xs font-medium transition"
+              >
+                ปิดหน้าต่าง
+              </button>
+            </div>
           </div>
         </div>
       )}
