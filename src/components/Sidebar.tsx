@@ -1250,7 +1250,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             )}
           </div>
 
-          {/* Drag-n-Drop Google Sync upload box mockup */}
+          {/* Cloud Database Status & Backup widget */}
           {onOpenGoogleSync && (
             <div className={`px-4 py-2 shrink-0 border-t ${
               uiStyle === 'classic'
@@ -1262,29 +1262,30 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   onClose();
                   onOpenGoogleSync();
                 }}
-                className={`p-3.5 rounded-2xl border-2 border-dashed transition cursor-pointer text-center space-y-1.5 group ${
-                  isGoogleConnected
-                    ? 'border-emerald-500/40 bg-emerald-500/5 hover:bg-emerald-500/10'
-                    : uiStyle === 'classic'
-                      ? 'border-amber-800/30 bg-amber-50/20 hover:bg-amber-100/50'
-                      : darkMode
-                        ? 'border-slate-800 bg-[#121824]/30 hover:bg-[#121824]/50'
-                        : 'border-slate-200 bg-slate-50 hover:bg-slate-100'
+                className={`p-3.5 rounded-2xl border transition cursor-pointer text-center space-y-1.5 group ${
+                  uiStyle === 'classic'
+                    ? 'border-amber-800/30 bg-amber-50/40 hover:bg-amber-100/50'
+                    : darkMode
+                      ? 'border-emerald-500/30 bg-emerald-950/20 hover:bg-emerald-950/30'
+                      : 'border-emerald-200 bg-emerald-50/60 hover:bg-emerald-100/60'
                 }`}
               >
-                <div className="w-7 h-7 rounded-full bg-blue-500/10 text-blue-500 flex items-center justify-center mx-auto transition-transform group-hover:scale-110">
-                  <FileSpreadsheet className="w-4 h-4" />
+                <div className="w-7 h-7 rounded-full bg-emerald-500/15 text-emerald-600 flex items-center justify-center mx-auto transition-transform group-hover:scale-110">
+                  <Database className="w-4 h-4 text-emerald-500" />
                 </div>
                 <div>
-                  <h4 className={`text-xs font-bold ${
-                    uiStyle === 'classic' ? 'text-amber-900 font-serif' : darkMode ? 'text-slate-200' : 'text-slate-700'
-                  }`}>
-                    {isGoogleConnected ? 'Google Sheets เชื่อมต่อแล้ว' : 'ซิงค์ข้อมูล Google Sheets'}
-                  </h4>
+                  <div className="flex items-center justify-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                    <h4 className={`text-xs font-bold ${
+                      uiStyle === 'classic' ? 'text-amber-900 font-serif' : darkMode ? 'text-emerald-300' : 'text-emerald-800'
+                    }`}>
+                      Cloud Database เชื่อมต่อแล้ว
+                    </h4>
+                  </div>
                   <p className={`text-[9px] mt-0.5 ${
-                    uiStyle === 'classic' ? 'text-amber-800/60' : darkMode ? 'text-slate-500' : 'text-slate-400'
+                    uiStyle === 'classic' ? 'text-amber-800/60' : darkMode ? 'text-slate-400' : 'text-slate-500'
                   }`}>
-                    e-Fleet Database Cloud Synchronization
+                    Firestore & Vercel Realtime Database
                   </p>
                 </div>
               </div>

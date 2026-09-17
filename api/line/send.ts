@@ -32,9 +32,9 @@ export default async function handler(req: RequestLike, res: ResponseLike) {
     return res.status(503).json({ error: 'LINE token is not configured' });
   }
 
-  const to = typeof body.to === 'string' ? body.to.trim() : '';
-  const message = typeof body.message === 'string' ? body.message.trim() : '';
-  const title = typeof body.title === 'string' ? body.title.trim() : '';
+  const to = typeof body.to === 'string' ? body.to.trim().slice(0, 100) : '';
+  const message = typeof body.message === 'string' ? body.message.trim().slice(0, 5000) : '';
+  const title = typeof body.title === 'string' ? body.title.trim().slice(0, 200) : '';
 
   if (!message) {
     return res.status(400).json({ error: 'Message is required' });
@@ -81,7 +81,11 @@ export default async function handler(req: RequestLike, res: ResponseLike) {
       if (!lineResponse.ok) {
         const detail = await lineResponse.text();
         console.error('[LINE] Push failed', lineResponse.status, detail);
-        return res.status(400).json({ error: 'LINE push failed', detail: detail.slice(0, 500) });
+        const errorMsg =
+          lineResponse.status === 401
+            ? 'LINE Channel Access Token ไม่ถูกต้องหรือหมดอายุ (Error 401 Unauthorized)'
+            : `LINE push failed: ${detail.slice(0, 500)}`;
+        return res.status(lineResponse.status === 401 ? 401 : 400).json({ error: errorMsg, detail: detail.slice(0, 500) });
       }
 
       return res.status(200).json({ success: true, mode: 'messaging_api' });

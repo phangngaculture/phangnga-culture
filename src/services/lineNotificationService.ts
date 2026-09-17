@@ -622,6 +622,27 @@ export const sendLineNotification = async (
 
       const errorMsg = data?.message || data?.error || `HTTP ${resp.status}`;
       console.warn('[LINE] Server push notification error:', errorMsg);
+
+      if (resp.status === 401 || data?.status === 401 || data?.error === 'unauthorized') {
+        const log: LineNotificationLog = {
+          id: `line-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+          timestamp,
+          recipient: payload.recipientName,
+          lineUserId: lineUserId || 'NOTIFY-TOKEN',
+          title: payload.title,
+          message: payload.message,
+          status: 'failed',
+          mode: 'messaging_api',
+          eventType: payload.eventType,
+          details: 'ข้อผิดพลาด Error 401 Unauthorized: LINE Channel Access Token ไม่ถูกต้องหรือหมดอายุ'
+        };
+        saveLineNotificationLog(log);
+        return {
+          success: false,
+          mode: 'messaging_api',
+          message: 'LINE Channel Access Token ไม่ถูกต้องหรือหมดอายุ (Error 401 Unauthorized) กรุณาตรวจสอบหรืออัปเดต Token ในเมนูตั้งค่า LINE'
+        };
+      }
     } catch (err) {
       console.warn('[LINE] Server notification request failed:', err);
     }

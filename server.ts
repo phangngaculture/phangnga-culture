@@ -11,7 +11,33 @@ async function startServer() {
   const app = express();
   const PORT = 3000;
 
-  app.use(express.json({ limit: '10mb' }));
+  app.use(express.json({ limit: '5mb' }));
+
+  // In-memory rate limiting map for API endpoints
+  const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
+  const apiRateLimiter: express.RequestHandler = (req, res, next) => {
+    const clientIp = (req.headers['x-forwarded-for'] as string) || req.socket.remoteAddress || 'unknown';
+    const now = Date.now();
+    const windowMs = 60 * 1000; // 1 minute
+    const maxRequests = 60; // 60 requests per minute
+
+    const record = rateLimitMap.get(clientIp);
+    if (!record || now > record.resetTime) {
+      rateLimitMap.set(clientIp, { count: 1, resetTime: now + windowMs });
+      return next();
+    }
+
+    if (record.count >= maxRequests) {
+      return res.status(429).json({
+        success: false,
+        error: 'rate_limit_exceeded',
+        message: 'คำขอถี่เกินไป กรุณารอสักครู่ก่อนทำรายการใหม่'
+      });
+    }
+
+    record.count += 1;
+    next();
+  };
 
   // =========================================================================
   // API ROUTES
@@ -23,7 +49,7 @@ async function startServer() {
   });
 
   // Check LINE integration status
-  app.get('/api/line/status', (_req, res) => {
+  app.get('/api/line/status', apiRateLimiter, (_req, res) => {
     const hasEnvToken = Boolean(process.env.LINE_CHANNEL_ACCESS_TOKEN?.trim());
     const hasSecret = Boolean(process.env.LINE_CHANNEL_SECRET?.trim());
 
@@ -38,18 +64,18 @@ async function startServer() {
   });
 
   // Send LINE Push Notification (Text or Flex Message)
-  app.post('/api/line/send', async (req, res) => {
+  app.post('/api/line/send', apiRateLimiter, async (req, res) => {
     const { to, message, flex, title, token: clientToken } = req.body || {};
 
     const targetTo = typeof to === 'string' ? to.trim() : '';
-    const fallbackMessage = typeof message === 'string' ? message.trim() : '';
+    const fallbackMessage = typeof message === 'string' ? message.trim().slice(0, 5000) : '';
     const activeToken = (typeof clientToken === 'string' && clientToken.trim()) || process.env.LINE_CHANNEL_ACCESS_TOKEN?.trim() || '';
 
-    if (!targetTo) {
+    if (!targetTo || targetTo.length > 100) {
       return res.status(400).json({
         success: false,
         error: 'target_required',
-        message: 'กรุณาระบุ LINE User ID (ขึ้นต้นด้วย U...)'
+        message: 'กรุณาระบุ LINE User ID ที่ถูกต้อง'
       });
     }
 
@@ -107,11 +133,18 @@ async function startServer() {
           // keep as raw text
         }
 
+        let userFriendlyMessage = parsedError?.message || errorText || 'เกิดข้อผิดพลาดในการส่งข้อความผ่าน LINE API';
+        if (lineRes.status === 401) {
+          userFriendlyMessage = 'LINE Channel Access Token ไม่ถูกต้องหรือหมดอายุ (Error 401 Unauthorized) กรุณาตรวจสอบหรืออัปเดต Token ใน LINE Developers Console';
+        } else if (lineRes.status === 400) {
+          userFriendlyMessage = `ข้อมูลไม่ถูกต้อง (Error 400): ${parsedError?.message || 'รูปแบบ LINE User ID หรือข้อความไม่ถูกต้อง'}`;
+        }
+
         return res.status(lineRes.status >= 400 && lineRes.status < 500 ? 400 : 502).json({
           success: false,
           status: lineRes.status,
-          error: 'line_api_error',
-          message: parsedError?.message || errorText || 'เกิดข้อผิดพลาดในการส่งข้อความผ่าน LINE API'
+          error: lineRes.status === 401 ? 'unauthorized' : 'line_api_error',
+          message: userFriendlyMessage
         });
       }
 

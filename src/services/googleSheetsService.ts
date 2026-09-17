@@ -73,6 +73,20 @@ const translateStatus = (status: BookingRequest['status']) => {
   }
 };
 
+// Helper to check Google API response and throw friendly error messages
+const checkGoogleApiResponse = async (res: Response, operationName: string) => {
+  if (res.status === 401) {
+    throw new Error('เซสชันการเชื่อมต่อ Google หมดอายุ (Error 401 Unauthorized) กรุณากด "ออกจากระบบ" แล้ว "เข้าสู่ระบบ Google" ใหม่อีกครั้ง');
+  }
+  if (res.status === 403) {
+    throw new Error('บัญชี Google นี้ไม่มีสิทธิ์เข้าถึงหรือแก้ไขไฟล์ Google Sheets นี้ (Error 403 Forbidden)');
+  }
+  if (!res.ok) {
+    const errText = await res.text().catch(() => '');
+    throw new Error(`${operationName} ไม่สำเร็จ (${res.status}): ${errText.slice(0, 300)}`);
+  }
+};
+
 /**
  * Find existing spreadsheet on Google Drive or create a new one
  */
@@ -88,17 +102,17 @@ export const findOrCreateSpreadsheet = async (accessToken: string): Promise<Spre
       headers: { Authorization: `Bearer ${accessToken}` }
     });
 
-    if (searchRes.ok) {
-      const searchData = await searchRes.json();
-      if (searchData.files && searchData.files.length > 0) {
-        const found = searchData.files[0];
-        return {
-          spreadsheetId: found.id,
-          spreadsheetUrl:
-            found.webViewLink || `https://docs.google.com/spreadsheets/d/${found.id}/edit`,
-          name: found.name
-        };
-      }
+    await checkGoogleApiResponse(searchRes, 'ค้นหาไฟล์ Google Sheets บน Google Drive');
+
+    const searchData = await searchRes.json();
+    if (searchData.files && searchData.files.length > 0) {
+      const found = searchData.files[0];
+      return {
+        spreadsheetId: found.id,
+        spreadsheetUrl:
+          found.webViewLink || `https://docs.google.com/spreadsheets/d/${found.id}/edit`,
+        name: found.name
+      };
     }
 
     // 2. If not found, create a new spreadsheet with 3 tabs
@@ -138,10 +152,7 @@ export const findOrCreateSpreadsheet = async (accessToken: string): Promise<Spre
       body: JSON.stringify(createBody)
     });
 
-    if (!createRes.ok) {
-      const errText = await createRes.text();
-      throw new Error(`สร้าง Google Sheets ไม่สำเร็จ: ${errText}`);
-    }
+    await checkGoogleApiResponse(createRes, 'สร้างตาราง Google Sheets ใหม่');
 
     const createdData = await createRes.json();
     const spreadsheetId = createdData.spreadsheetId;
@@ -253,10 +264,7 @@ export const syncBookings = async (
     })
   });
 
-  if (!res.ok) {
-    const err = await res.text();
-    throw new Error(`บันทึกข้อมูลคำขอไม่สำเร็จ: ${err}`);
-  }
+  await checkGoogleApiResponse(res, 'บันทึกข้อมูลคำขอใช้รถยนต์');
 };
 
 /**
@@ -305,10 +313,7 @@ export const syncFuelLogs = async (
     })
   });
 
-  if (!res.ok) {
-    const err = await res.text();
-    throw new Error(`บันทึกข้อมูลน้ำมันไม่สำเร็จ: ${err}`);
-  }
+  await checkGoogleApiResponse(res, 'บันทึกข้อมูลการใช้น้ำมัน');
 };
 
 /**
@@ -358,10 +363,7 @@ export const syncMaintenanceRecords = async (
     })
   });
 
-  if (!res.ok) {
-    const err = await res.text();
-    throw new Error(`บันทึกงานซ่อมบำรุงไม่สำเร็จ: ${err}`);
-  }
+  await checkGoogleApiResponse(res, 'บันทึกงานซ่อมบำรุงและทะเบียน');
 };
 
 /**

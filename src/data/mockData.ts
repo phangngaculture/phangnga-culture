@@ -110,15 +110,13 @@ export const DEFAULT_ROLE_MENUS: Record<string, MenuKey[]> = {
 
 export function getUserAllowedMenus(user?: User | null): MenuKey[] {
   if (!user) return ['dashboard', 'calendar', 'booking'];
-  if (user.role === 'admin') {
-    const menus = user.allowedMenus && user.allowedMenus.length > 0 ? user.allowedMenus : DEFAULT_ROLE_MENUS.admin;
-    // ensure both users and website_customizer are present
-    let finalMenus = [...menus];
-    if (!finalMenus.includes('users')) finalMenus.push('users');
-    if (!finalMenus.includes('website_customizer')) finalMenus.push('website_customizer');
-    return finalMenus;
-  }
-  if (user.allowedMenus && user.allowedMenus.length > 0) {
+  if (Array.isArray(user.allowedMenus)) {
+    if (user.role === 'admin') {
+      const finalMenus = [...user.allowedMenus];
+      if (!finalMenus.includes('users')) finalMenus.push('users');
+      if (!finalMenus.includes('website_customizer')) finalMenus.push('website_customizer');
+      return finalMenus;
+    }
     return user.allowedMenus;
   }
   return DEFAULT_ROLE_MENUS[user.role] || ['dashboard', 'calendar', 'booking'];

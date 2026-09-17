@@ -46,6 +46,7 @@ import { BulkAddUsersModal } from './BulkAddUsersModal';
 import { UserSignatureModal } from './UserSignatureModal';
 import { LineSimulatorModal } from './LineSimulatorModal';
 import { sendTestNotification } from '../services/lineNotificationService';
+import { hashPassword } from '../utils/security';
 
 interface UserManagementViewProps {
   users: User[];
@@ -295,7 +296,7 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({
   };
 
   // Save Add/Edit
-  const handleSubmitForm = (e: React.FormEvent) => {
+  const handleSubmitForm = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.name.trim() || !formData.username.trim()) {
       alert('กรุณากรอกชื่อ-นามสกุล และชื่อผู้ใช้งาน (Username)');
@@ -303,11 +304,13 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({
     }
 
     const roleInfo = ROLE_LABELS[formData.role];
+    const rawPassword = formData.password.trim() || (formData.username.trim() === 'admin' ? 'dekcom2537' : `${formData.username.trim()}123`);
+    const securedPassword = await hashPassword(rawPassword);
 
     if (editingUserId) {
       onUpdateUser(editingUserId, {
         username: formData.username.trim(),
-        password: formData.password.trim() || (formData.username.trim() === 'admin' ? 'dekcom2537' : `${formData.username.trim()}123`),
+        password: securedPassword,
         name: formData.name.trim(),
         position: formData.position.trim(),
         department: formData.department,
@@ -332,7 +335,7 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({
 
       onAddUser({
         username: formData.username.trim(),
-        password: formData.password.trim() || `${formData.username.trim()}123`,
+        password: securedPassword,
         name: formData.name.trim(),
         position: formData.position.trim(),
         department: formData.department,

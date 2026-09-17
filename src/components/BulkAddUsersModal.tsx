@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { User, UserRole, MenuKey } from '../types';
 import { DEPARTMENTS, DEFAULT_ROLE_MENUS } from '../data/mockData';
+import { hashPassword } from '../utils/security';
 
 interface BulkAddUsersModalProps {
   isOpen: boolean;
@@ -224,7 +225,7 @@ export const BulkAddUsersModal: React.FC<BulkAddUsersModalProps> = ({
   };
 
   // Submit bulk creation
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     const sourceRows = activeTab === 'text' ? parsedRows : manualRows;
     const validRows = sourceRows.filter((r) => r.name.trim() && r.username.trim() && !r.error);
 
@@ -233,22 +234,26 @@ export const BulkAddUsersModal: React.FC<BulkAddUsersModalProps> = ({
       return;
     }
 
-    const newUsers: Omit<User, 'id'>[] = validRows.map((r) => {
-      const allowedMenus = [...(DEFAULT_ROLE_MENUS[r.role] || DEFAULT_ROLE_MENUS.officer)];
-      return {
-        name: r.name.trim(),
-        username: r.username.trim().toLowerCase(),
-        password: r.password?.trim() || `${r.username.trim().toLowerCase()}123`,
-        position: r.position.trim() || 'นักวิชาการวัฒนธรรมปฏิบัติการ',
-        department: r.department || DEPARTMENTS[0],
-        role: r.role,
-        roleTitle: r.role === 'admin' ? 'ผู้ดูแลระบบและยานพาหนะ (Admin)' : r.role === 'director' ? 'ผู้อำนวยการสำนักงาน' : r.role === 'driver' ? 'พนักงานขับรถยนต์' : 'เจ้าหน้าที่ผู้ขอใช้รถ',
-        phone: r.phone?.trim() || '',
-        email: r.email?.trim() || '',
-        status: 'active',
-        allowedMenus
-      };
-    });
+    const newUsers: Omit<User, 'id'>[] = await Promise.all(
+      validRows.map(async (r) => {
+        const allowedMenus = [...(DEFAULT_ROLE_MENUS[r.role] || DEFAULT_ROLE_MENUS.officer)];
+        const rawPassword = r.password?.trim() || `${r.username.trim().toLowerCase()}123`;
+        const securedPassword = await hashPassword(rawPassword);
+        return {
+          name: r.name.trim(),
+          username: r.username.trim().toLowerCase(),
+          password: securedPassword,
+          position: r.position.trim() || 'นักวิชาการวัฒนธรรมปฏิบัติการ',
+          department: r.department || DEPARTMENTS[0],
+          role: r.role,
+          roleTitle: r.role === 'admin' ? 'ผู้ดูแลระบบและยานพาหนะ (Admin)' : r.role === 'director' ? 'ผู้อำนวยการสำนักงาน' : r.role === 'driver' ? 'พนักงานขับรถยนต์' : 'เจ้าหน้าที่ผู้ขอใช้รถ',
+          phone: r.phone?.trim() || '',
+          email: r.email?.trim() || '',
+          status: 'active',
+          allowedMenus
+        };
+      })
+    );
 
     onBulkAdd(newUsers);
     onClose();

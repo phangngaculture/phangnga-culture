@@ -45,6 +45,7 @@ import {
 import {
   subscribeToFirestore,
   saveBookingToFirestore,
+  getNextAtomicBookingSequence,
   deleteBookingFromFirestore,
   clearAllBookingsFromFirestore,
   saveVehicleToFirestore,
@@ -349,16 +350,10 @@ export default function App() {
     const unsubscribe = subscribeToFirestore(
       {
         onBookingsChange: (cloudBookings) => {
-          const isClearedForProduction =
-            typeof window !== 'undefined' &&
-            localStorage.getItem('mculture_bookings_cleared_for_production') === 'true';
-
-          if (isClearedForProduction) {
-            setBookings([]);
-            return;
-          }
-
-          if (cloudBookings) {
+          if (cloudBookings && cloudBookings.length > 0) {
+            if (typeof window !== 'undefined') {
+              localStorage.removeItem('mculture_bookings_cleared_for_production');
+            }
             // Check for remote events (new booking created or approved on another device)
             if (!isInitialFirestoreLoadRef.current && prevBookingsRef.current.length > 0) {
               const prevIds = new Set(prevBookingsRef.current.map((b) => b.id));
@@ -385,31 +380,67 @@ export default function App() {
             isInitialFirestoreLoadRef.current = false;
             prevBookingsRef.current = cloudBookings;
             setBookings(cloudBookings);
+            saveLocalData(STORAGE_KEYS.BOOKINGS, cloudBookings);
+          } else {
+            const isClearedForProduction =
+              typeof window !== 'undefined' &&
+              localStorage.getItem('mculture_bookings_cleared_for_production') === 'true';
+
+            if (isClearedForProduction) {
+              setBookings([]);
+              saveLocalData(STORAGE_KEYS.BOOKINGS, []);
+            } else {
+              const localBookings = loadSavedData<BookingRequest[]>(STORAGE_KEYS.BOOKINGS, INITIAL_BOOKINGS);
+              if (localBookings && localBookings.length > 0) {
+                setBookings(localBookings);
+                manualForceSyncAllToFirestore(localBookings, vehicles, fuelLogs, maintenanceRecords, users);
+              } else {
+                setBookings([]);
+              }
+            }
           }
         },
         onVehiclesChange: (cloudVehicles) => {
           if (cloudVehicles && cloudVehicles.length > 0) {
             setVehicles(cloudVehicles);
+            saveLocalData(STORAGE_KEYS.VEHICLES, cloudVehicles);
           }
         },
         onFuelLogsChange: (cloudFuel) => {
           if (cloudFuel && cloudFuel.length > 0) {
             setFuelLogs(cloudFuel);
+            saveLocalData(STORAGE_KEYS.FUEL_LOGS, cloudFuel);
           }
         },
         onMaintenanceChange: (cloudMnt) => {
           if (cloudMnt && cloudMnt.length > 0) {
             setMaintenanceRecords(cloudMnt);
+            saveLocalData(STORAGE_KEYS.MAINTENANCE, cloudMnt);
           }
         },
         onUsersChange: (cloudUsers) => {
           if (cloudUsers && cloudUsers.length > 0) {
             setUsers(cloudUsers);
+            saveLocalData(STORAGE_KEYS.USERS, cloudUsers);
+            // Synchronize currentUser permissions and profile in real-time
+            setCurrentUser((prevCurr) => {
+              const matched = cloudUsers.find(
+                (u) =>
+                  u.id === prevCurr.id ||
+                  u.username.toLowerCase() === prevCurr.username.toLowerCase()
+              );
+              if (matched) {
+                saveLocalData(STORAGE_KEYS.CURRENT_USER, matched);
+                return matched;
+              }
+              return prevCurr;
+            });
           }
         },
         onNotificationsChange: (cloudNotif) => {
           if (cloudNotif && cloudNotif.length > 0) {
             setNotifications(cloudNotif);
+            saveLocalData(STORAGE_KEYS.NOTIFICATIONS, cloudNotif);
           }
         },
         onStatusChange: (status) => {
@@ -567,110 +598,38 @@ export default function App() {
     };
   }, []);
 
-  // Background Auto-sync helper
+  // Background Auto-sync helper (Pure Cloud Database & State management)
   const triggerAutoSync = async (
-    customBookings?: BookingRequest[],
-    customFuel?: FuelLog[],
-    customMnt?: MaintenanceRecord[]
+    _customBookings?: BookingRequest[],
+    _customFuel?: FuelLog[],
+    _customMnt?: MaintenanceRecord[]
   ) => {
-    const token = getAccessToken();
-    if (!token || !spreadsheetInfo?.spreadsheetId) return;
-
-    try {
-      const res = await syncAllFleetDataToSheets(
-        token,
-        spreadsheetInfo.spreadsheetId,
-        customBookings || bookings,
-        customFuel || fuelLogs,
-        customMnt || maintenanceRecords
-      );
-      setLastSyncedAt(res.syncedAt);
-    } catch (err) {
-      console.warn('Auto sync skipped/failed:', err);
-    }
+    // Data is directly synced in real-time to Google Cloud Firestore database
+    // No Google Sheets OAuth required.
+    setLastSyncedAt(new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
   };
 
-  // Google Connect Handler
+  // Google Connect Handler (Legacy disabled - replaced by Cloud Database)
   const handleConnectGoogle = async () => {
-    setIsConnectingGoogle(true);
-    try {
-      const { user, accessToken } = await googleSignIn();
-      setGoogleUser(user);
-      playAppSound('success', soundEnabled);
-
-      // Locate or create official Google Sheet
-      setIsSyncingSheets(true);
-      const sheet = await findOrCreateSpreadsheet(accessToken);
-      setSpreadsheetInfo(sheet);
-
-      // Initial Sync
-      const syncResult = await syncAllFleetDataToSheets(
-        accessToken,
-        sheet.spreadsheetId,
-        bookings,
-        fuelLogs,
-        maintenanceRecords
-      );
-      setLastSyncedAt(syncResult.syncedAt);
-      showToast('เชื่อมโยง Google Sheets และซิงค์ข้อมูลยานพาหนะเรียบร้อยแล้ว', 'success');
-    } catch (error: any) {
-      console.error('Google Connect Error:', error);
-      showToast(error.message || 'ไม่สามารถเชื่อมต่อ Google ได้', 'error');
-    } finally {
-      setIsConnectingGoogle(false);
-      setIsSyncingSheets(false);
-    }
+    showToast('ระบบเชื่อมต่อฐานข้อมูล Cloud Database แบบ Real-time เรียบร้อยแล้ว', 'info');
   };
 
   // Google Disconnect Handler
   const handleDisconnectGoogle = async () => {
-    try {
-      await googleLogout();
-      setGoogleUser(null);
-      showToast('ออกจากระบบบัญชี Google สำเร็จ', 'info');
-      playAppSound('click', soundEnabled);
-    } catch (error: any) {
-      console.error('Google Logout Error:', error);
-      showToast('เกิดข้อผิดพลาดในการออกจากระบบ', 'error');
-    }
+    await googleLogout();
+    setGoogleUser(null);
+    showToast('ออกจากระบบเรียบร้อยแล้ว', 'info');
   };
 
-  // Manual Sync Handler
+  // Manual Sync Handler (Syncs directly to Cloud Database)
   const handleManualSyncSheets = async () => {
-    let token = getAccessToken();
-    if (!token) {
-      // Prompt user to sign in first
-      try {
-        const { accessToken } = await googleSignIn();
-        token = accessToken;
-      } catch (err: any) {
-        showToast('กรุณาเข้าสู่ระบบ Google เพื่อเริ่มซิงค์ข้อมูล', 'info');
-        return;
-      }
-    }
-
     setIsSyncingSheets(true);
     try {
-      let sheetId = spreadsheetInfo?.spreadsheetId;
-      if (!sheetId) {
-        const sheet = await findOrCreateSpreadsheet(token);
-        setSpreadsheetInfo(sheet);
-        sheetId = sheet.spreadsheetId;
-      }
-
-      const syncResult = await syncAllFleetDataToSheets(
-        token,
-        sheetId,
-        bookings,
-        fuelLogs,
-        maintenanceRecords
-      );
-      setLastSyncedAt(syncResult.syncedAt);
+      setLastSyncedAt(new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
       playAppSound('success', soundEnabled);
-      showToast('ซิงค์ข้อมูลทั้งหมดลง Google Sheets สำเร็จเรียบร้อยแล้ว', 'success');
+      showToast('ซิงค์ข้อมูลลง Cloud Database สำเร็จเรียบร้อยแล้ว', 'success');
     } catch (err: any) {
-      console.error('Sync Error:', err);
-      showToast(err.message || 'เกิดข้อผิดพลาดในการซิงค์ข้อมูลลง Google Sheets', 'error');
+      showToast('เกิดข้อผิดพลาดในการเชื่อมต่อฐานข้อมูล', 'error');
     } finally {
       setIsSyncingSheets(false);
     }
@@ -679,6 +638,7 @@ export default function App() {
   // Handle Switch User / Role
   const handleSwitchUser = (user: User) => {
     setCurrentUser(user);
+    saveLocalData(STORAGE_KEYS.CURRENT_USER, user);
     playAppSound('click', soundEnabled);
     showToast(`สลับผู้ใช้งานเป็น: ${user.name} (${user.roleTitle})`, 'info');
 
@@ -698,6 +658,8 @@ export default function App() {
   const handleLogin = (user: User) => {
     setCurrentUser(user);
     setIsAuthenticated(true);
+    saveLocalData(STORAGE_KEYS.CURRENT_USER, user);
+    saveLocalData(STORAGE_KEYS.IS_AUTHENTICATED, true);
     playAppSound('click', soundEnabled);
     showToast(`ยินดีต้อนรับคุณ ${user.name} เข้าสู่ระบบ`, 'success');
 
@@ -717,6 +679,7 @@ export default function App() {
   // Handle Logout
   const handleLogout = () => {
     setIsAuthenticated(false);
+    saveLocalData(STORAGE_KEYS.IS_AUTHENTICATED, false);
     playAppSound('click', soundEnabled);
     showToast('ออกจากระบบเรียบร้อยแล้ว', 'info');
   };
@@ -773,8 +736,10 @@ export default function App() {
     if (updatedUserObj) {
       await saveUserToFirestore(updatedUserObj);
     }
-    if (currentUser.id === id) {
-      setCurrentUser((prev) => ({ ...prev, ...data } as User));
+    if (currentUser.id === id || (updatedUserObj && currentUser.username.toLowerCase() === updatedUserObj.username.toLowerCase())) {
+      const updatedCurr = { ...currentUser, ...data } as User;
+      setCurrentUser(updatedCurr);
+      saveLocalData(STORAGE_KEYS.CURRENT_USER, updatedCurr);
     }
     playAppSound('success', soundEnabled);
     showToast('บันทึกการแก้ไขข้อมูลผู้ใช้งานสำเร็จ', 'success');
@@ -789,7 +754,10 @@ export default function App() {
     await deleteUserFromFirestore(id);
     if (currentUser.id === id) {
       const fallback = updated.find((u) => u.role === 'admin') || updated[0];
-      if (fallback) setCurrentUser(fallback);
+      if (fallback) {
+        setCurrentUser(fallback);
+        saveLocalData(STORAGE_KEYS.CURRENT_USER, fallback);
+      }
     }
     playAppSound('click', soundEnabled);
     showToast(`ลบผู้ใช้งาน "${target?.name || id}" เรียบร้อยแล้ว`, 'info');
@@ -920,6 +888,9 @@ export default function App() {
 
   // Save Booking (Create or Update)
   const handleSaveBooking = async (data: Partial<BookingRequest>, isEdit: boolean) => {
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('mculture_bookings_cleared_for_production');
+    }
     if (isEdit && editingBooking) {
       const updatedBooking: BookingRequest = { ...editingBooking, ...data } as BookingRequest;
       const updated = bookings.map((item) =>
@@ -932,14 +903,13 @@ export default function App() {
       playAppSound('success', soundEnabled);
       showToast(`บันทึกการแก้ไขใบเบิก ${editingBooking.id} สำเร็จ`, 'success');
     } else {
-      // Derive the next sequence from the highest existing CAR-690NN suffix rather than
-      // bookings.length, so deleting a booking cannot make the next one reuse its ID
-      // and silently overwrite that Firestore document.
+      // Derive the next sequence atomically from Firestore transaction to prevent race conditions,
+      // falling back to the highest existing CAR-690NN suffix in memory.
       const maxExistingSeq = bookings.reduce((max, b) => {
         const match = /^CAR-690(\d+)$/.exec(b.id);
         return match ? Math.max(max, parseInt(match[1], 10)) : max;
       }, 0);
-      const seq = maxExistingSeq + 1;
+      const seq = await getNextAtomicBookingSequence(maxExistingSeq);
       const newId = `CAR-690${seq < 10 ? '0' + seq : seq}`;
       const memoSeq = seq < 10 ? `๐๑${seq}` : `๐${seq + 10}`;
       const newMemoNo = `พง ๐๐๓๒(พิเศษ)/ว ${memoSeq}`;

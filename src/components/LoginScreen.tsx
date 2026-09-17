@@ -12,6 +12,7 @@ import {
   AlertCircle,
   KeyRound
 } from 'lucide-react';
+import { verifyPassword } from '../utils/security';
 
 interface LoginScreenProps {
   users: User[];
@@ -47,7 +48,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ users, onLogin, landin
     setIsSubmitting(true);
 
     // Simulate authenticating against registered users
-    setTimeout(() => {
+    setTimeout(async () => {
       const foundUser = users.find(
         (u) =>
           u.username.toLowerCase() === trimmedUsername ||
@@ -67,9 +68,9 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ users, onLogin, landin
         return;
       }
 
-      // Check password
-      const expectedPassword = foundUser.password || 'dekcom2537';
-      if (trimmedPassword !== expectedPassword) {
+      // Check password securely
+      const isMatch = await verifyPassword(trimmedPassword, foundUser.password);
+      if (!isMatch) {
         setErrorMsg('รหัสผ่านไม่ถูกต้อง กรุณาลองใหม่อีกครั้ง');
         setIsSubmitting(false);
         return;

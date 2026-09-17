@@ -11,6 +11,7 @@ import {
   writeBatch,
   getDocs,
   getDoc,
+  runTransaction,
   setLogLevel,
   Firestore
 } from 'firebase/firestore';
@@ -327,6 +328,27 @@ export const seedCollection = async (collectionName: string, items: any[]) => {
 };
 
 // Individual write helpers
+export const getNextAtomicBookingSequence = async (fallbackMaxSeq: number = 0): Promise<number> => {
+  try {
+    const counterRef = doc(db, 'systemSettings', 'booking_counter');
+    const nextSeq = await runTransaction(db, async (transaction) => {
+      const counterDoc = await transaction.get(counterRef);
+      let currentSeq = fallbackMaxSeq;
+      if (counterDoc.exists()) {
+        const data = counterDoc.data();
+        currentSeq = Math.max(Number(data?.lastSeq) || 0, fallbackMaxSeq);
+      }
+      const newSeq = currentSeq + 1;
+      transaction.set(counterRef, { lastSeq: newSeq, updatedAt: new Date().toISOString() }, { merge: true });
+      return newSeq;
+    });
+    return nextSeq;
+  } catch (err) {
+    console.warn('[Firestore] Transaction counter fallback to local sequence:', err);
+    return fallbackMaxSeq + 1;
+  }
+};
+
 export const saveBookingToFirestore = async (booking: BookingRequest): Promise<boolean> => {
   try {
     const docRef = doc(db, 'bookings', booking.id);
