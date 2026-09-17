@@ -266,9 +266,7 @@ export const SwipeableBookingCard: React.FC<SwipeableBookingCardProps> = ({
             type="button"
             onClick={(e) => {
               e.stopPropagation();
-              if (window.confirm(`ยืนยันการลบใบคำขอใช้รถยนต์เลขที่ ${b.id}?`)) {
-                onDeleteBooking(b.id);
-              }
+              onDeleteBooking(b.id);
               closeSwipe();
             }}
             className="h-full flex-1 bg-gradient-to-b from-rose-500 to-red-600 hover:from-rose-600 hover:to-red-700 active:scale-95 text-white flex flex-col items-center justify-center gap-1.5 cursor-pointer transition-all px-2 text-center border-l border-white/10"

@@ -8,7 +8,6 @@ import {
   Plus,
   Trash2,
   Download,
-  Info,
   ShieldCheck,
   Sparkles
 } from 'lucide-react';
@@ -340,19 +339,6 @@ export const BulkAddUsersModal: React.FC<BulkAddUsersModalProps> = ({
         <div className="flex-1 overflow-y-auto p-6 space-y-4">
           {activeTab === 'text' ? (
             <div className="space-y-4">
-              <div className="bg-amber-50/70 border border-amber-200 rounded-xl p-3.5 text-xs text-amber-900 flex items-start space-x-2.5">
-                <Info className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
-                <div className="space-y-1 leading-relaxed">
-                  <span className="font-bold">วิธีใช้งาน:</span>
-                  <p>
-                    คัดลอก (Copy) ข้อมูลจากไฟล์ Excel หรือ Google Sheets แล้วนำมาวาง (Paste) ลงในช่องด้านล่างได้ทันที โดยจัดเรียงคอลัมน์ตามลำดับ:
-                  </p>
-                  <code className="block bg-amber-100/70 px-2 py-1 rounded text-amber-950 font-mono text-[11px]">
-                    ชื่อ-นามสกุล [Tab] ชื่อผู้ใช้ (Username) [Tab] รหัสผ่าน [Tab] ตำแหน่ง [Tab] กลุ่มงาน [Tab] บทบาท (officer/driver/director/admin) [Tab] เบอร์โทร [Tab] อีเมล
-                  </code>
-                </div>
-              </div>
-
               <div>
                 <div className="flex items-center justify-between mb-1.5">
                   <label className="text-xs font-bold text-slate-700">วางข้อความจาก Excel / CSV ที่นี่:</label>

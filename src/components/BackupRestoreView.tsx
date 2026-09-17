@@ -465,27 +465,15 @@ export const BackupRestoreView: React.FC<BackupRestoreViewProps> = ({
           </div>
         </div>
 
-        {/* Box 2: Disaster Recovery & Restore Guide */}
+        {/* Box 2: Restore from Backup */}
         <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-xs space-y-4">
           <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center border border-amber-100">
-              <ShieldAlert className="w-5 h-5" />
+            <div className="w-10 h-10 rounded-xl bg-sky-50 text-sky-600 flex items-center justify-center border border-sky-100">
+              <Upload className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="font-bold text-sm text-slate-900">คำแนะนำในการกู้คืนข้อมูล (Restore)</h3>
-              <p className="text-xs text-slate-500">ข้อควรระวังในการนำเข้าไฟล์แบ๊คอัพ</p>
-            </div>
-          </div>
-
-          <div className="space-y-2.5 text-xs text-slate-600 leading-relaxed">
-            <div className="p-3 bg-amber-50/60 rounded-xl border border-amber-100 text-amber-950">
-              <strong className="text-amber-900">⚠️ สำคัญมาก:</strong> การกู้คืนข้อมูลจะนำข้อมูลจากไฟล์มาแทนที่และอัปเดตลงในระบบ รวมถึงซิงก์ต่อไปยัง Cloud Firestore เพื่อให้ทุกเครื่องแสดงข้อมูลตรงกัน
-            </div>
-            <div className="p-3 bg-slate-50 rounded-xl border border-slate-100 flex items-start space-x-2.5">
-              <Clock className="w-4 h-4 text-slate-400 shrink-0 mt-0.5" />
-              <div>
-                <strong className="text-slate-900">แนะนำ:</strong> ควรกดดาวน์โหลดไฟล์แบ๊คอัพปัจจุบันไว้ก่อนทำการกู้คืนข้อมูลทุกครั้ง เพื่อป้องกันการสูญหายของข้อมูลล่าสุด
-              </div>
+              <h3 className="font-bold text-sm text-slate-900">กู้คืนข้อมูล (Restore)</h3>
+              <p className="text-xs text-slate-500">นำเข้าไฟล์ JSON เพื่อกู้คืนข้อมูลและซิงก์สู่ระบบ</p>
             </div>
           </div>
 

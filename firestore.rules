@@ -2,51 +2,80 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Helper functions for validating statuses and integrity
-    function isValidStatus(status) {
-      return status in ['pending', 'pending_director', 'pending_admin', 'approved', 'in_progress', 'completed', 'rejected', 'cancelled'];
+    // Helper functions for validating data integrity and preventing corruption
+    function isValidBooking(data) {
+      return data.id is string &&
+             data.memoNo is string &&
+             data.date is string &&
+             data.status in ['pending', 'pending_director', 'pending_admin', 'approved', 'in_progress', 'completed', 'rejected', 'cancelled'] &&
+             data.name is string;
+    }
+
+    function isValidVehicle(data) {
+      return data.name is string &&
+             data.plate is string &&
+             data.status in ['available', 'in_mission', 'maintenance'];
+    }
+
+    function isValidFuelLog(data) {
+      return data.carPlate is string &&
+             data.cost is number &&
+             data.cost >= 0;
+    }
+
+    function isValidMaintenance(data) {
+      return data.carId is string &&
+             data.title is string &&
+             data.cost is number &&
+             data.cost >= 0;
+    }
+
+    function isValidUser(data) {
+      return data.username is string &&
+             data.name is string &&
+             data.role in ['admin', 'director', 'user', 'driver'];
     }
 
     // Official vehicle management collections - Phangnga Provincial Cultural Office
     match /bookings/{bookingId} {
       allow read: if true;
-      allow create, update: if true;
+      allow create, update: if isValidBooking(request.resource.data);
       allow delete: if true;
     }
 
     match /vehicles/{vehicleId} {
       allow read: if true;
-      allow create, update: if true;
+      allow create, update: if isValidVehicle(request.resource.data);
       allow delete: if true;
     }
 
     match /fuelLogs/{logId} {
       allow read: if true;
-      allow create, update: if true;
+      allow create, update: if isValidFuelLog(request.resource.data);
       allow delete: if true;
     }
 
     match /maintenanceRecords/{recordId} {
       allow read: if true;
-      allow create, update: if true;
+      allow create, update: if isValidMaintenance(request.resource.data);
       allow delete: if true;
     }
 
     match /users/{userId} {
       allow read: if true;
-      allow create, update: if true;
+      allow create, update: if isValidUser(request.resource.data);
       allow delete: if true;
     }
 
     match /passengers/{passengerId} {
       allow read: if true;
-      allow create, update: if true;
+      allow create, update: if request.resource.data.name is string;
       allow delete: if true;
     }
 
     match /notifications/{notificationId} {
       allow read: if true;
-      allow create, update: if true;
+      allow create, update: if request.resource.data.title is string;
       allow delete: if true;
     }
 
@@ -61,11 +90,12 @@ service cloud.firestore {
       allow read, write: if true;
     }
 
-    // Catch-all for subcollections or future entities
+    // Explicitly lock down any unspecified collections
     match /{document=**} {
-      allow read, write: if true;
+      allow read, write: if false;
     }
   }
 }
+
 
 

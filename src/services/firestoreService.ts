@@ -11,6 +11,8 @@ import {
   writeBatch,
   getDocs,
   getDoc,
+  query,
+  where,
   runTransaction,
   setLogLevel,
   Firestore
@@ -25,6 +27,47 @@ import {
   User,
   NotificationItem
 } from '../types';
+
+// Storage keys for deleted items tombstones
+export const DELETED_BOOKING_IDS_KEY = 'mculture_deleted_booking_ids';
+export const DELETED_VEHICLE_IDS_KEY = 'mculture_deleted_vehicle_ids';
+export const DELETED_FUEL_IDS_KEY = 'mculture_deleted_fuel_ids';
+export const DELETED_MNT_IDS_KEY = 'mculture_deleted_mnt_ids';
+export const DELETED_USER_IDS_KEY = 'mculture_deleted_user_ids';
+
+export const getDeletedIds = (key: string): Set<string> => {
+  if (typeof window === 'undefined') return new Set();
+  try {
+    const raw = localStorage.getItem(key);
+    if (!raw) return new Set();
+    const arr = JSON.parse(raw);
+    return new Set(Array.isArray(arr) ? arr : []);
+  } catch {
+    return new Set();
+  }
+};
+
+export const addDeletedId = (key: string, id: string) => {
+  if (typeof window === 'undefined' || !id) return;
+  try {
+    const set = getDeletedIds(key);
+    set.add(id);
+    localStorage.setItem(key, JSON.stringify(Array.from(set)));
+  } catch {
+    // Ignore storage errors
+  }
+};
+
+export const removeDeletedId = (key: string, id: string) => {
+  if (typeof window === 'undefined' || !id) return;
+  try {
+    const set = getDeletedIds(key);
+    set.delete(id);
+    localStorage.setItem(key, JSON.stringify(Array.from(set)));
+  } catch {
+    // Ignore storage errors
+  }
+};
 
 // Silence Firestore logs to reduce console noise and connection retry spam.
 // Valid LogLevelString values are 'debug' | 'error' | 'silent' | 'warn' — 'warning' is not one
@@ -197,8 +240,27 @@ export const subscribeToFirestore = (
     const unsubBookings = onSnapshot(
       bookingsCol,
       (snapshot) => {
+        const deletedIds = getDeletedIds(DELETED_BOOKING_IDS_KEY);
         if (!snapshot.empty) {
-          const items = snapshot.docs.map((d) => d.data() as BookingRequest);
+          const items: BookingRequest[] = [];
+          snapshot.docs.forEach((d) => {
+            const data = d.data();
+            const id = data.id || d.id;
+            const docId = d.id;
+
+            // If marked as deleted by user, purge from Firestore and exclude from state
+            if (deletedIds.has(id) || deletedIds.has(docId) || (data.memoNo && deletedIds.has(data.memoNo))) {
+              deleteDoc(d.ref).catch(() => {});
+              return;
+            }
+
+            items.push({
+              ...data,
+              id,
+              _docId: docId
+            } as unknown as BookingRequest);
+          });
+
           // Sort latest first
           items.sort((a, b) => new Date(b.createdAt || b.date).getTime() - new Date(a.createdAt || a.date).getTime());
           callbacks.onBookingsChange?.(items);
@@ -216,8 +278,18 @@ export const subscribeToFirestore = (
     const unsubVehicles = onSnapshot(
       vehiclesCol,
       (snapshot) => {
+        const deletedIds = getDeletedIds(DELETED_VEHICLE_IDS_KEY);
         if (!snapshot.empty) {
-          const items = snapshot.docs.map((d) => d.data() as Vehicle);
+          const items: Vehicle[] = [];
+          snapshot.docs.forEach((d) => {
+            const data = d.data();
+            const id = data.id || d.id;
+            if (deletedIds.has(id) || deletedIds.has(d.id)) {
+              deleteDoc(d.ref).catch(() => {});
+              return;
+            }
+            items.push({ ...data, id } as Vehicle);
+          });
           callbacks.onVehiclesChange?.(items);
         } else {
           callbacks.onVehiclesChange?.([]);
@@ -232,8 +304,18 @@ export const subscribeToFirestore = (
     const unsubFuel = onSnapshot(
       fuelCol,
       (snapshot) => {
+        const deletedIds = getDeletedIds(DELETED_FUEL_IDS_KEY);
         if (!snapshot.empty) {
-          const items = snapshot.docs.map((d) => d.data() as FuelLog);
+          const items: FuelLog[] = [];
+          snapshot.docs.forEach((d) => {
+            const data = d.data();
+            const id = data.id || d.id;
+            if (deletedIds.has(id) || deletedIds.has(d.id)) {
+              deleteDoc(d.ref).catch(() => {});
+              return;
+            }
+            items.push({ ...data, id } as FuelLog);
+          });
           items.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
           callbacks.onFuelLogsChange?.(items);
         } else {
@@ -249,8 +331,18 @@ export const subscribeToFirestore = (
     const unsubMnt = onSnapshot(
       mntCol,
       (snapshot) => {
+        const deletedIds = getDeletedIds(DELETED_MNT_IDS_KEY);
         if (!snapshot.empty) {
-          const items = snapshot.docs.map((d) => d.data() as MaintenanceRecord);
+          const items: MaintenanceRecord[] = [];
+          snapshot.docs.forEach((d) => {
+            const data = d.data();
+            const id = data.id || d.id;
+            if (deletedIds.has(id) || deletedIds.has(d.id)) {
+              deleteDoc(d.ref).catch(() => {});
+              return;
+            }
+            items.push({ ...data, id } as MaintenanceRecord);
+          });
           items.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
           callbacks.onMaintenanceChange?.(items);
         } else {
@@ -266,8 +358,18 @@ export const subscribeToFirestore = (
     const unsubUsers = onSnapshot(
       usersCol,
       (snapshot) => {
+        const deletedIds = getDeletedIds(DELETED_USER_IDS_KEY);
         if (!snapshot.empty) {
-          const items = snapshot.docs.map((d) => d.data() as User);
+          const items: User[] = [];
+          snapshot.docs.forEach((d) => {
+            const data = d.data();
+            const id = data.id || d.id;
+            if (deletedIds.has(id) || deletedIds.has(d.id)) {
+              deleteDoc(d.ref).catch(() => {});
+              return;
+            }
+            items.push({ ...data, id } as User);
+          });
           callbacks.onUsersChange?.(items);
         } else {
           callbacks.onUsersChange?.([]);
@@ -351,30 +453,88 @@ export const getNextAtomicBookingSequence = async (fallbackMaxSeq: number = 0): 
 
 export const saveBookingToFirestore = async (booking: BookingRequest): Promise<boolean> => {
   try {
+    if (!booking || !booking.id) return false;
+    // Unmark any tombstone so newly created or edited bookings are visible
+    removeDeletedId(DELETED_BOOKING_IDS_KEY, booking.id);
+    if ((booking as any)._docId) {
+      removeDeletedId(DELETED_BOOKING_IDS_KEY, (booking as any)._docId);
+    }
     const docRef = doc(db, 'bookings', booking.id);
     await setDoc(docRef, cleanForFirestore(booking), { merge: true });
     console.log(`[Firestore] Successfully saved booking: ${booking.id}`);
     return true;
   } catch (err) {
-    handleFirestoreError(err, OperationType.WRITE, `bookings/${booking.id}`);
+    handleFirestoreError(err, OperationType.WRITE, `bookings/${booking?.id}`);
     return false;
   }
 };
 
-export const deleteBookingFromFirestore = async (bookingId: string): Promise<boolean> => {
+export const deleteBookingFromFirestore = async (bookingId: string, docId?: string): Promise<boolean> => {
+  if (!bookingId) return false;
+
+  // 1. Immediately record in persistent deleted tombstones to prevent race condition resurrection
+  addDeletedId(DELETED_BOOKING_IDS_KEY, bookingId);
+  if (docId) addDeletedId(DELETED_BOOKING_IDS_KEY, docId);
+
+  let anyDeleted = false;
+
+  // 2. Direct document deletion by booking ID
   try {
     const docRef = doc(db, 'bookings', bookingId);
     await deleteDoc(docRef);
-    console.log(`[Firestore] Successfully deleted booking: ${bookingId}`);
-    return true;
+    anyDeleted = true;
   } catch (err) {
-    handleFirestoreError(err, OperationType.DELETE, `bookings/${bookingId}`);
-    return false;
+    console.warn(`[Firestore] Direct deleteDoc for ${bookingId} warned:`, err);
   }
+
+  // 3. Delete docId if provided and different
+  if (docId && docId !== bookingId) {
+    try {
+      await deleteDoc(doc(db, 'bookings', docId));
+      anyDeleted = true;
+    } catch (err) {
+      console.warn(`[Firestore] Direct deleteDoc for docId ${docId} warned:`, err);
+    }
+  }
+
+  // 4. Query collection for any docs matching id field
+  try {
+    const qId = query(collection(db, 'bookings'), where('id', '==', bookingId));
+    const snapsId = await getDocs(qId);
+    if (!snapsId.empty) {
+      const batch = writeBatch(db);
+      snapsId.docs.forEach((d) => batch.delete(d.ref));
+      await batch.commit();
+      anyDeleted = true;
+    }
+  } catch (err) {
+    console.warn(`[Firestore] Query delete by id for ${bookingId} warned:`, err);
+  }
+
+  // 5. Query collection for any docs matching memoNo field
+  try {
+    const qMemo = query(collection(db, 'bookings'), where('memoNo', '==', bookingId));
+    const snapsMemo = await getDocs(qMemo);
+    if (!snapsMemo.empty) {
+      const batch = writeBatch(db);
+      snapsMemo.docs.forEach((d) => batch.delete(d.ref));
+      await batch.commit();
+      anyDeleted = true;
+    }
+  } catch (err) {
+    // Optional memo query
+  }
+
+  console.log(`[Firestore] Successfully eradicated booking: ${bookingId}`);
+  return true;
 };
 
 export const clearAllBookingsFromFirestore = async (): Promise<boolean> => {
   try {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('mculture_bookings_cleared_for_production', 'true');
+      localStorage.removeItem(DELETED_BOOKING_IDS_KEY);
+    }
     const colRef = collection(db, 'bookings');
     const snapshot = await getDocs(colRef);
     if (!snapshot.empty) {
@@ -394,20 +554,32 @@ export const clearAllBookingsFromFirestore = async (): Promise<boolean> => {
 
 export const saveVehicleToFirestore = async (vehicle: Vehicle): Promise<boolean> => {
   try {
+    if (!vehicle || !vehicle.id) return false;
+    removeDeletedId(DELETED_VEHICLE_IDS_KEY, vehicle.id);
     const docRef = doc(db, 'vehicles', vehicle.id);
     await setDoc(docRef, cleanForFirestore(vehicle), { merge: true });
     console.log(`[Firestore] Successfully saved vehicle: ${vehicle.id}`);
     return true;
   } catch (err) {
-    handleFirestoreError(err, OperationType.WRITE, `vehicles/${vehicle.id}`);
+    handleFirestoreError(err, OperationType.WRITE, `vehicles/${vehicle?.id}`);
     return false;
   }
 };
 
 export const deleteVehicleFromFirestore = async (vehicleId: string): Promise<boolean> => {
+  if (!vehicleId) return false;
+  addDeletedId(DELETED_VEHICLE_IDS_KEY, vehicleId);
   try {
     const docRef = doc(db, 'vehicles', vehicleId);
     await deleteDoc(docRef);
+
+    const q = query(collection(db, 'vehicles'), where('id', '==', vehicleId));
+    const snaps = await getDocs(q);
+    if (!snaps.empty) {
+      const batch = writeBatch(db);
+      snaps.docs.forEach((d) => batch.delete(d.ref));
+      await batch.commit();
+    }
     console.log(`[Firestore] Successfully deleted vehicle: ${vehicleId}`);
     return true;
   } catch (err) {
@@ -418,20 +590,32 @@ export const deleteVehicleFromFirestore = async (vehicleId: string): Promise<boo
 
 export const saveFuelLogToFirestore = async (log: FuelLog): Promise<boolean> => {
   try {
+    if (!log || !log.id) return false;
+    removeDeletedId(DELETED_FUEL_IDS_KEY, log.id);
     const docRef = doc(db, 'fuelLogs', log.id);
     await setDoc(docRef, cleanForFirestore(log), { merge: true });
     console.log(`[Firestore] Successfully saved fuel log: ${log.id}`);
     return true;
   } catch (err) {
-    handleFirestoreError(err, OperationType.WRITE, `fuelLogs/${log.id}`);
+    handleFirestoreError(err, OperationType.WRITE, `fuelLogs/${log?.id}`);
     return false;
   }
 };
 
 export const deleteFuelLogFromFirestore = async (fuelLogId: string): Promise<boolean> => {
+  if (!fuelLogId) return false;
+  addDeletedId(DELETED_FUEL_IDS_KEY, fuelLogId);
   try {
     const docRef = doc(db, 'fuelLogs', fuelLogId);
     await deleteDoc(docRef);
+
+    const q = query(collection(db, 'fuelLogs'), where('id', '==', fuelLogId));
+    const snaps = await getDocs(q);
+    if (!snaps.empty) {
+      const batch = writeBatch(db);
+      snaps.docs.forEach((d) => batch.delete(d.ref));
+      await batch.commit();
+    }
     console.log(`[Firestore] Successfully deleted fuel log: ${fuelLogId}`);
     return true;
   } catch (err) {
@@ -442,20 +626,32 @@ export const deleteFuelLogFromFirestore = async (fuelLogId: string): Promise<boo
 
 export const saveMaintenanceToFirestore = async (record: MaintenanceRecord): Promise<boolean> => {
   try {
+    if (!record || !record.id) return false;
+    removeDeletedId(DELETED_MNT_IDS_KEY, record.id);
     const docRef = doc(db, 'maintenanceRecords', record.id);
     await setDoc(docRef, cleanForFirestore(record), { merge: true });
     console.log(`[Firestore] Successfully saved maintenance record: ${record.id}`);
     return true;
   } catch (err) {
-    handleFirestoreError(err, OperationType.WRITE, `maintenanceRecords/${record.id}`);
+    handleFirestoreError(err, OperationType.WRITE, `maintenanceRecords/${record?.id}`);
     return false;
   }
 };
 
 export const deleteMaintenanceFromFirestore = async (recordId: string): Promise<boolean> => {
+  if (!recordId) return false;
+  addDeletedId(DELETED_MNT_IDS_KEY, recordId);
   try {
     const docRef = doc(db, 'maintenanceRecords', recordId);
     await deleteDoc(docRef);
+
+    const q = query(collection(db, 'maintenanceRecords'), where('id', '==', recordId));
+    const snaps = await getDocs(q);
+    if (!snaps.empty) {
+      const batch = writeBatch(db);
+      snaps.docs.forEach((d) => batch.delete(d.ref));
+      await batch.commit();
+    }
     console.log(`[Firestore] Successfully deleted maintenance record: ${recordId}`);
     return true;
   } catch (err) {
@@ -466,20 +662,32 @@ export const deleteMaintenanceFromFirestore = async (recordId: string): Promise<
 
 export const saveUserToFirestore = async (user: User): Promise<boolean> => {
   try {
+    if (!user || !user.id) return false;
+    removeDeletedId(DELETED_USER_IDS_KEY, user.id);
     const docRef = doc(db, 'users', user.id);
     await setDoc(docRef, cleanForFirestore(user), { merge: true });
     console.log(`[Firestore] Successfully saved user: ${user.id}`);
     return true;
   } catch (err) {
-    handleFirestoreError(err, OperationType.WRITE, `users/${user.id}`);
+    handleFirestoreError(err, OperationType.WRITE, `users/${user?.id}`);
     return false;
   }
 };
 
 export const deleteUserFromFirestore = async (userId: string): Promise<boolean> => {
+  if (!userId) return false;
+  addDeletedId(DELETED_USER_IDS_KEY, userId);
   try {
     const docRef = doc(db, 'users', userId);
     await deleteDoc(docRef);
+
+    const q = query(collection(db, 'users'), where('id', '==', userId));
+    const snaps = await getDocs(q);
+    if (!snaps.empty) {
+      const batch = writeBatch(db);
+      snaps.docs.forEach((d) => batch.delete(d.ref));
+      await batch.commit();
+    }
     console.log(`[Firestore] Successfully deleted user: ${userId}`);
     return true;
   } catch (err) {
