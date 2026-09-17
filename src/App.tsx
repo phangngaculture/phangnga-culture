@@ -382,22 +382,14 @@ export default function App() {
             setBookings(cloudBookings);
             saveLocalData(STORAGE_KEYS.BOOKINGS, cloudBookings);
           } else {
-            const isClearedForProduction =
-              typeof window !== 'undefined' &&
-              localStorage.getItem('mculture_bookings_cleared_for_production') === 'true';
-
-            if (isClearedForProduction) {
-              setBookings([]);
-              saveLocalData(STORAGE_KEYS.BOOKINGS, []);
-            } else {
-              const localBookings = loadSavedData<BookingRequest[]>(STORAGE_KEYS.BOOKINGS, INITIAL_BOOKINGS);
-              if (localBookings && localBookings.length > 0) {
-                setBookings(localBookings);
-                manualForceSyncAllToFirestore(localBookings, vehicles, fuelLogs, maintenanceRecords, users);
-              } else {
-                setBookings([]);
-              }
-            }
+            // Firestore collection is empty.
+            // IMPORTANT: never push the local cache back up to Firestore here.
+            // Doing so resurrected demo/mock bookings (and deleted bookings) on the cloud
+            // whenever any single client still had stale data in localStorage.
+            // Demo data can be injected explicitly via "ป้อนข้อมูลทดสอบ" in the Backup view.
+            const localBookings = loadSavedData<BookingRequest[]>(STORAGE_KEYS.BOOKINGS, []);
+            const safeLocalBookings = Array.isArray(localBookings) ? localBookings : [];
+            setBookings(safeLocalBookings);
           }
         },
         onVehiclesChange: (cloudVehicles) => {
