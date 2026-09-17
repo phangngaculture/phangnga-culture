@@ -15,7 +15,8 @@ import {
   Sparkles,
   MessageSquare,
   PenTool,
-  Stamp
+  Stamp,
+  Paperclip
 } from 'lucide-react';
 
 interface DirectorApprovalViewProps {
@@ -224,6 +225,36 @@ export const DirectorApprovalView: React.FC<DirectorApprovalViewProps> = ({
                   <span>เปิดดูแบบฟอร์มขออนุมัติ</span>
                 </button>
               </div>
+
+              {/* Optional User Attachment Document Banner (Only shown if attachmentName exists) */}
+              {currentBooking.attachmentName && currentBooking.attachmentName.trim() !== '' && (
+                <div className="bg-gradient-to-r from-indigo-50/90 via-blue-50/60 to-indigo-50/90 dark:from-indigo-950/40 dark:to-blue-950/30 border border-indigo-200 dark:border-indigo-800/60 rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xs">
+                  <div className="flex items-start sm:items-center space-x-3">
+                    <div className="w-10 h-10 rounded-xl bg-indigo-100 dark:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300 flex items-center justify-center shrink-0">
+                      <Paperclip className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-xs md:text-sm text-slate-900 dark:text-white flex items-center space-x-1.5">
+                        <span>เอกสารแนบเพิ่มเติมจากผู้ขอ:</span>
+                        <span className="text-indigo-700 dark:text-indigo-300 underline">{currentBooking.attachmentName}</span>
+                      </h4>
+                      <p className="text-[11px] text-slate-600 dark:text-slate-300 mt-0.5">
+                        เอกสารประกอบภารกิจ / คำสั่ง / หนังสือเชิญประชุมที่แนบมาพร้อมกับคำขอนี้
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      window.alert(`เอกสารแนบสำหรับคำขอนี้:\n📁 ${currentBooking.attachmentName}\n\n(คลิกตกลงเพื่อเปิดดูหรือดาวน์โหลดเอกสารแนบ)`);
+                    }}
+                    className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition flex items-center space-x-1.5 shadow-sm shrink-0 cursor-pointer"
+                  >
+                    <Paperclip className="w-4 h-4" />
+                    <span>เปิดดูเอกสารแนบ</span>
+                  </button>
+                </div>
+              )}
               
               {/* Reading Header */}
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-slate-100 pb-4">

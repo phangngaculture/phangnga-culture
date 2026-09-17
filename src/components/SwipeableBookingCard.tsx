@@ -13,7 +13,8 @@ import {
   MapPin,
   User as UserIcon,
   Gauge,
-  ChevronLeft
+  ChevronLeft,
+  Paperclip
 } from 'lucide-react';
 import { canUserExecuteMission } from '../utils/driverPermissions';
 
@@ -348,6 +349,21 @@ export const SwipeableBookingCard: React.FC<SwipeableBookingCardProps> = ({
 
         {/* Desktop / Non-swiped direct buttons */}
         <div className="w-full sm:w-auto flex flex-wrap items-center gap-2 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-200/60 dark:border-slate-800 shrink-0">
+          {b.attachmentName && b.attachmentName.trim() !== '' && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                window.alert(`เอกสารแนบสำหรับคำขอนี้:\n📁 ${b.attachmentName}\n\n(คลิกตกลงเพื่อเปิดดูหรือดาวน์โหลดเอกสารแนบ)`);
+              }}
+              className="flex-1 sm:flex-none px-3.5 py-2 bg-indigo-50 hover:bg-indigo-100 active:scale-95 text-indigo-700 dark:bg-indigo-950/40 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 rounded-xl text-xs font-semibold transition shadow-2xs flex items-center justify-center space-x-1.5 cursor-pointer"
+              title={`เอกสารแนบ: ${b.attachmentName}`}
+            >
+              <Paperclip className="w-3.5 h-3.5 text-indigo-600" />
+              <span>เอกสารแนบ</span>
+            </button>
+          )}
+
           <button
             type="button"
             onClick={(e) => {
