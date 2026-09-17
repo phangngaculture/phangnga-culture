@@ -4,3 +4,9 @@ coverage/
 *.log
 .env*
 !.env.example
+
+# Build output (สร้างใหม่ทุกครั้งที่ build บน Vercel)
+dist/
+
+# โปรเจกต์นี้ใช้ bun.lock เป็น lockfile หลัก (package-lock.json จาก npm ในเครื่องไม่ต้อง commit)
+package-lock.json

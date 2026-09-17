@@ -1,0 +1,4 @@
+# ไฟล์นี้เป็น Express dev server สำหรับรันในเครื่องเท่านั้น
+# ไม่ใช่ Vercel Serverless Function จึงไม่ต้องอัปโหลดขึ้น production
+# (ไม่งั้นจะเกิด endpoint /api/server ที่ error 500)
+api/server.ts
