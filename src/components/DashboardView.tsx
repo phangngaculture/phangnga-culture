@@ -52,6 +52,7 @@ interface DashboardViewProps {
   onOpenDriverMissions?: (booking?: BookingRequest) => void;
   onOpenAssetInspection?: () => void;
   onViewMemo: (booking: BookingRequest) => void;
+  onViewAttachment?: (booking: BookingRequest) => void;
   onEditBooking: (booking: BookingRequest) => void;
   onDeleteBooking: (bookingId: string) => void;
   onOpenDirectorApproval: () => void;
@@ -74,6 +75,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   onOpenUsers,
   onOpenDriverMissions,
   onViewMemo,
+  onViewAttachment,
   onEditBooking,
   onDeleteBooking,
   onOpenDirectorApproval,
@@ -1002,6 +1004,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                   currentUser={currentUser}
                   allUsers={allUsers}
                   onViewMemo={onViewMemo}
+                  onViewAttachment={onViewAttachment}
                   onDeleteBooking={onDeleteBooking}
                   onEditBooking={onEditBooking}
                   onOpenDriverMissions={onOpenDriverMissions}

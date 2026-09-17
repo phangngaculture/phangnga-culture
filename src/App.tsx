@@ -87,6 +87,7 @@ import {
   notifyMissionToDriver
 } from './services/lineNotificationService';
 import { UiCustomizerModal } from './components/UiCustomizerModal';
+import { AttachmentPreviewModal } from './components/AttachmentPreviewModal';
 
 // ── Code Splitting: แต่ละเมนู (view) ถูกแบ่งเป็น chunk แยก แล้วโหลดเมื่อเปิดใช้งานครั้งแรก ──
 const DashboardView = lazy(() => import('./components/DashboardView').then((m) => ({ default: m.DashboardView })));
@@ -312,6 +313,7 @@ export default function App() {
 
   // Modals & sub-views
   const [selectedBookingForMemo, setSelectedBookingForMemo] = useState<BookingRequest | null>(null);
+  const [viewingAttachmentBooking, setViewingAttachmentBooking] = useState<BookingRequest | null>(null);
   const [signingBooking, setSigningBooking] = useState<BookingRequest | null>(null);
   const [isSignatureModalOpen, setIsSignatureModalOpen] = useState<boolean>(false);
   const [signatureInitialComment, setSignatureInitialComment] = useState<string>('');
@@ -1805,6 +1807,7 @@ export default function App() {
             onOpenAnalytics={() => setActiveTab('analytics')}
             onOpenFleet={() => setActiveTab('fleet')}
             onViewMemo={(b) => setSelectedBookingForMemo(b)}
+            onViewAttachment={(b) => setViewingAttachmentBooking(b)}
             onEditBooking={handleEditBooking}
             onDeleteBooking={handleDeleteBooking}
             onOpenDirectorApproval={() => setActiveTab('director')}
@@ -1898,6 +1901,7 @@ export default function App() {
             onOpenSignatureModal={handleOpenSignatureModal}
             onReject={handleRejectBooking}
             onViewMemo={(b) => setSelectedBookingForMemo(b)}
+            onViewAttachment={(b) => setViewingAttachmentBooking(b)}
           />
         )}
 
@@ -2179,6 +2183,13 @@ export default function App() {
         fontSize={fontSize}
         onSetFontSize={setFontSize}
         soundEnabled={soundEnabled}
+      />
+
+      {/* Attachment Preview Modal */}
+      <AttachmentPreviewModal
+        isOpen={!!viewingAttachmentBooking}
+        booking={viewingAttachmentBooking}
+        onClose={() => setViewingAttachmentBooking(null)}
       />
 
     </div>

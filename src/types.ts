@@ -121,6 +121,7 @@ export interface BookingRequest {
   passengerCount: number;
   passengerNames?: string;
   attachmentName?: string;
+  attachmentUrl?: string;
   status: BookingStatus;
   missionStatus?: MissionSubStatus; // สถานะย่อยของภารกิจงานขับรถ
   directorComment?: string;

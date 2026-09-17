@@ -23,6 +23,7 @@ interface SwipeableBookingCardProps {
   currentUser: User;
   allUsers?: User[];
   onViewMemo: (booking: BookingRequest) => void;
+  onViewAttachment?: (booking: BookingRequest) => void;
   onDeleteBooking: (bookingId: string) => void;
   onEditBooking: (booking: BookingRequest) => void;
   onOpenDriverMissions?: (booking: BookingRequest) => void;
@@ -35,6 +36,7 @@ export const SwipeableBookingCard: React.FC<SwipeableBookingCardProps> = ({
   currentUser,
   allUsers,
   onViewMemo,
+  onViewAttachment,
   onDeleteBooking,
   onEditBooking,
   onOpenDriverMissions,
@@ -354,7 +356,13 @@ export const SwipeableBookingCard: React.FC<SwipeableBookingCardProps> = ({
               type="button"
               onClick={(e) => {
                 e.stopPropagation();
-                window.alert(`เอกสารแนบสำหรับคำขอนี้:\n📁 ${b.attachmentName}\n\n(คลิกตกลงเพื่อเปิดดูหรือดาวน์โหลดเอกสารแนบ)`);
+                if (onViewAttachment) {
+                  onViewAttachment(b);
+                } else if (b.attachmentUrl) {
+                  window.open(b.attachmentUrl, '_blank');
+                } else {
+                  window.alert(`เอกสารแนบสำหรับคำขอนี้:\n📁 ${b.attachmentName}`);
+                }
               }}
               className="flex-1 sm:flex-none px-3.5 py-2 bg-indigo-50 hover:bg-indigo-100 active:scale-95 text-indigo-700 dark:bg-indigo-950/40 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 rounded-xl text-xs font-semibold transition shadow-2xs flex items-center justify-center space-x-1.5 cursor-pointer"
               title={`เอกสารแนบ: ${b.attachmentName}`}

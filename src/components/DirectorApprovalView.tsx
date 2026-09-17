@@ -26,6 +26,7 @@ interface DirectorApprovalViewProps {
   onOpenSignatureModal?: (booking: BookingRequest, initialComment?: string) => void;
   onReject: (bookingId: string, comment: string) => void;
   onViewMemo: (booking: BookingRequest) => void;
+  onViewAttachment?: (booking: BookingRequest) => void;
 }
 
 const PRESET_DIRECTOR_COMMENTS = [
@@ -41,7 +42,8 @@ export const DirectorApprovalView: React.FC<DirectorApprovalViewProps> = ({
   onApprove,
   onOpenSignatureModal,
   onReject,
-  onViewMemo
+  onViewMemo,
+  onViewAttachment
 }) => {
   const pendingBookings = bookings.filter((b) => b.status === 'pending');
   const [selectedBookingId, setSelectedBookingId] = useState<string>(
@@ -190,7 +192,13 @@ export const DirectorApprovalView: React.FC<DirectorApprovalViewProps> = ({
                         type="button"
                         onClick={(e) => {
                           e.stopPropagation();
-                          window.alert(`เอกสารแนบสำหรับคำขอนี้:\n📁 ${b.attachmentName}\n\n(คลิกตกลงเพื่อเปิดดูหรือดาวน์โหลดเอกสารแนบ)`);
+                          if (onViewAttachment) {
+                            onViewAttachment(b);
+                          } else if (b.attachmentUrl) {
+                            window.open(b.attachmentUrl, '_blank');
+                          } else {
+                            window.alert(`เอกสารแนบสำหรับคำขอนี้:\n📁 ${b.attachmentName}`);
+                          }
                         }}
                         className={`w-full px-2.5 py-1 rounded-xl text-[10px] font-semibold flex items-center justify-center space-x-1 transition cursor-pointer ${
                           isSelected
@@ -265,7 +273,13 @@ export const DirectorApprovalView: React.FC<DirectorApprovalViewProps> = ({
                   <button
                     type="button"
                     onClick={() => {
-                      window.alert(`เอกสารแนบสำหรับคำขอนี้:\n📁 ${currentBooking.attachmentName}\n\n(คลิกตกลงเพื่อเปิดดูหรือดาวน์โหลดเอกสารแนบ)`);
+                      if (onViewAttachment) {
+                        onViewAttachment(currentBooking);
+                      } else if (currentBooking.attachmentUrl) {
+                        window.open(currentBooking.attachmentUrl, '_blank');
+                      } else {
+                        window.alert(`เอกสารแนบสำหรับคำขอนี้:\n📁 ${currentBooking.attachmentName}`);
+                      }
                     }}
                     className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition flex items-center space-x-1.5 shadow-sm shrink-0 cursor-pointer"
                   >

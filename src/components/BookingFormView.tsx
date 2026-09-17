@@ -171,6 +171,7 @@ export const BookingFormView: React.FC<BookingFormViewProps> = ({
 
   // Attachment
   const [attachmentName, setAttachmentName] = useState(editingBooking?.attachmentName || '');
+  const [attachmentUrl, setAttachmentUrl] = useState(editingBooking?.attachmentUrl || '');
 
   // Helper location objects
   const currentProvinceObj = useMemo(() => {
@@ -235,6 +236,7 @@ export const BookingFormView: React.FC<BookingFormViewProps> = ({
       setPassengerCount(editingBooking.passengerCount);
       setPassengerNames(editingBooking.passengerNames || '');
       setAttachmentName(editingBooking.attachmentName || '');
+      setAttachmentUrl(editingBooking.attachmentUrl || '');
     }
   }, [editingBooking]);
 
@@ -559,6 +561,7 @@ export const BookingFormView: React.FC<BookingFormViewProps> = ({
         ? selectedPassengers.map((p) => p.name).join(', ')
         : passengerNames,
       attachmentName: attachmentName || '',
+      attachmentUrl: attachmentUrl || '',
       status: editingBooking?.status || 'pending',
       requesterSignature: attachSignature ? (requesterSignature || currentUser.signatureUrl || undefined) : undefined,
       requesterSignatureType: attachSignature ? requesterSignatureType : undefined,
@@ -706,7 +709,15 @@ export const BookingFormView: React.FC<BookingFormViewProps> = ({
                     type="file"
                     onChange={(e) => {
                       if (e.target.files && e.target.files[0]) {
-                        setAttachmentName(e.target.files[0].name);
+                        const file = e.target.files[0];
+                        setAttachmentName(file.name);
+                        const reader = new FileReader();
+                        reader.onload = (uploadEvent) => {
+                          if (uploadEvent.target?.result) {
+                            setAttachmentUrl(uploadEvent.target.result as string);
+                          }
+                        };
+                        reader.readAsDataURL(file);
                       }
                     }}
                     className="hidden"
@@ -719,8 +730,8 @@ export const BookingFormView: React.FC<BookingFormViewProps> = ({
                     <span className="font-medium truncate max-w-xs">{attachmentName}</span>
                     <button
                       type="button"
-                      onClick={() => setAttachmentName('')}
-                      className="text-orange-400 hover:text-orange-700 ml-1 font-bold"
+                      onClick={() => { setAttachmentName(''); setAttachmentUrl(''); }}
+                      className="text-orange-400 hover:text-orange-700 ml-1 font-bold cursor-pointer"
                     >
                       ✕
                     </button>
