@@ -947,7 +947,7 @@ export default function App() {
         driverName: data.driverName || vehicles[0].driverName,
         passengerCount: data.passengerCount || 1,
         passengerNames: data.passengerNames || '',
-        attachmentName: data.attachmentName || 'คำสั่งปฏิบัติราชการ.pdf',
+        attachmentName: data.attachmentName || '',
         status: 'pending',
         createdAt: new Date().toISOString()
       };

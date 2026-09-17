@@ -184,6 +184,25 @@ export const DirectorApprovalView: React.FC<DirectorApprovalViewProps> = ({
                       <FileText className="w-3.5 h-3.5" />
                       <span>เอกสารประกอบ: แบบฟอร์มขออนุมัติใช้รถยนต์ราชการ</span>
                     </button>
+
+                    {b.attachmentName && b.attachmentName.trim() !== '' && (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          window.alert(`เอกสารแนบสำหรับคำขอนี้:\n📁 ${b.attachmentName}\n\n(คลิกตกลงเพื่อเปิดดูหรือดาวน์โหลดเอกสารแนบ)`);
+                        }}
+                        className={`w-full px-2.5 py-1 rounded-xl text-[10px] font-semibold flex items-center justify-center space-x-1 transition cursor-pointer ${
+                          isSelected
+                            ? 'bg-teal-800/80 hover:bg-teal-800 text-teal-100 border border-teal-600'
+                            : 'bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200'
+                        }`}
+                        title={`เอกสารแนบ: ${b.attachmentName}`}
+                      >
+                        <Paperclip className="w-3 h-3" />
+                        <span className="truncate max-w-[200px]">เอกสารแนบ: {b.attachmentName}</span>
+                      </button>
+                    )}
                   </div>
                 );
               })
