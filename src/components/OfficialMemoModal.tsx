@@ -1058,8 +1058,8 @@ export const OfficialMemoModal: React.FC<OfficialMemoModalProps> = ({
                     paddingBottom: '2.0cm',
                     paddingLeft: '3.0cm',
                     overflow: 'hidden',
-                    fontSize: '13pt',
-                    lineHeight: 1.45,
+                    fontSize: '11.5pt',
+                    lineHeight: 1.4,
                     fontFamily: "'TH Sarabun PSK', 'TH Sarabun New', 'Sarabun', Tahoma, sans-serif",
                     color: '#000000',
                     backgroundColor: '#ffffff'
@@ -1068,12 +1068,12 @@ export const OfficialMemoModal: React.FC<OfficialMemoModalProps> = ({
                   {/* Top and Body Section */}
                   <div className="flex flex-col">
                     {/* Heading */}
-                    <div className="text-center font-bold text-[18pt] leading-tight mb-3">
+                    <div className="text-center font-bold text-[16pt] leading-tight mb-2">
                       ใบคำขอขอใช้รถยนต์ส่วนกลาง
                     </div>
 
                     {/* Office & Memo Reference Block */}
-                    <div className="border-b border-black pb-1.5 mb-2.5 text-[13pt] leading-[1.35]">
+                    <div className="border-b border-black pb-1 mb-2 text-[11.5pt] leading-[1.3]">
                       <div className="mb-0.5">
                         <p>
                           <span className="font-bold">ส่วนราชการ:</span> สำนักงานวัฒนธรรมจังหวัดพังงา โทร. {phoneDisplay}
@@ -1090,7 +1090,7 @@ export const OfficialMemoModal: React.FC<OfficialMemoModalProps> = ({
                     </div>
 
                     {/* Subject & Recipient */}
-                    <div className="space-y-1 mb-3 text-[13pt] leading-[1.35]">
+                    <div className="space-y-0.5 mb-2 text-[11.5pt] leading-[1.3]">
                       <p>
                         <span className="font-bold">เรื่อง:</span> ขออนุมัติใช้รถยนต์ราชการเพื่อปฏิบัติภารกิจราชการ
                       </p>
@@ -1100,7 +1100,7 @@ export const OfficialMemoModal: React.FC<OfficialMemoModalProps> = ({
                     </div>
 
                     {/* Body Text */}
-                    <div className="space-y-2.5 text-justify text-[13pt] leading-[1.45] font-normal" style={{ textIndent: '2.5cm' }}>
+                    <div className="space-y-2 text-justify text-[11.5pt] leading-[1.4] font-normal" style={{ textIndent: '2.5cm' }}>
                       <p>
                         ด้วยข้าพเจ้า {booking.name} ตำแหน่ง {booking.position} ฝ่าย/กลุ่มงาน {booking.department} มีความจำเป็นต้องเดินทางไปปฏิบัติภารกิจราชการเพื่อ {booking.purpose} ณ สถานที่ {booking.destination} ในวันที่ {memoDateDisplay}{' '}
                         {booking.startTime && (
@@ -1124,22 +1124,22 @@ export const OfficialMemoModal: React.FC<OfficialMemoModalProps> = ({
                     </div>
 
                     {/* Requester Signature */}
-                    <div className="pt-2 flex justify-end text-center text-[13pt] leading-[1.35]">
+                    <div className="pt-2 flex justify-end text-center text-[11.5pt] leading-[1.3]">
                       <div className="w-[50%] flex flex-col items-center">
-                        <div className="relative flex flex-col items-center justify-end h-13">
+                        <div className="relative flex flex-col items-center justify-end h-22">
                           {booking.requesterSignature ? (
                             <img
                               src={booking.requesterSignature}
                               alt={`ลายเซ็น ${booking.name}`}
-                              className="h-11 max-w-[170px] object-contain -mb-1.5 z-10"
+                              className="h-18 max-w-[240px] object-contain -mb-2 z-10"
                             />
                           ) : null}
-                          <p className="font-normal text-[12pt] text-black leading-none">
+                          <p className="font-normal text-[11pt] text-black leading-none">
                             (ลงชื่อ).......................................................
                           </p>
                         </div>
                         <p className="font-normal mt-0.5">({booking.name})</p>
-                        <p className="text-[12pt] text-black/90">{booking.position}</p>
+                        <p className="text-[11pt] text-black/90">{booking.position}</p>
                       </div>
                     </div>
                   </div>
@@ -1183,23 +1183,23 @@ export const OfficialMemoModal: React.FC<OfficialMemoModalProps> = ({
                       )}
 
                       {/* Director Signature Box */}
-                      <div className="pt-1 flex justify-end text-center text-[12pt] leading-[1.3]">
+                      <div className="pt-1 flex justify-end text-center text-[11.5pt] leading-[1.3]">
                         <div className="w-[50%] flex flex-col items-center">
                           {booking.status === 'approved' ? (
                             <div className="flex flex-col items-center">
-                              <div className="relative flex flex-col items-center justify-end h-13">
+                              <div className="relative flex flex-col items-center justify-end h-22">
                                 {booking.signatureData ? (
                                   <img
                                     src={booking.signatureData}
                                     alt="ลายมือชื่อผู้อนุมัติ"
-                                    className="h-11 max-w-[170px] object-contain -mb-1.5 z-10"
+                                    className="h-18 max-w-[240px] object-contain -mb-2 z-10"
                                   />
                                 ) : (
-                                  <div className="font-serif italic text-blue-900 font-bold text-[13pt] tracking-wider px-2 -mb-1 z-10">
+                                  <div className="font-serif italic text-blue-900 font-bold text-[12pt] tracking-wider px-2 -mb-1 z-10">
                                     (อุไรวรรณ แดงงาม)
                                   </div>
                                 )}
-                                <p className="font-normal text-[11.5pt] text-black leading-none">
+                                <p className="font-normal text-[11pt] text-black leading-none">
                                   (ลงชื่อ).......................................................
                                 </p>
                               </div>
@@ -1211,8 +1211,8 @@ export const OfficialMemoModal: React.FC<OfficialMemoModalProps> = ({
                             </div>
                           ) : (
                             <div className="flex flex-col items-center">
-                              <div className="flex flex-col items-center justify-end h-13">
-                                <p className="font-normal text-[11.5pt] text-black mb-1">
+                              <div className="flex flex-col items-center justify-end h-22">
+                                <p className="font-normal text-[11pt] text-black mb-1">
                                   (ลงชื่อ).......................................................
                                 </p>
                               </div>
@@ -1307,25 +1307,25 @@ export const OfficialMemoModal: React.FC<OfficialMemoModalProps> = ({
                         </div>
 
                         <div className="pt-1 flex flex-col items-center">
-                          <div className="relative flex flex-col items-center justify-end h-11">
+                          <div className="relative flex flex-col items-center justify-end h-22">
                             {booking.assetInspectionSignature ? (
                               <img
                                 src={booking.assetInspectionSignature}
                                 alt="ลายเซ็นผู้ตรวจรับ"
-                                className="h-10 max-w-[140px] object-contain -mb-1.5 z-10"
+                                className="h-18 max-w-[220px] object-contain -mb-2 z-10"
                               />
                             ) : null}
-                            <p className="font-normal text-[10.5pt] text-black leading-none">
+                            <p className="font-normal text-[11pt] text-black leading-none">
                               (ลงชื่อ).......................................................
                             </p>
                           </div>
-                          <p className="font-bold text-[10.5pt] mt-0.5">
+                          <p className="font-bold text-[11pt] mt-0.5">
                             ({booking.assetInspectorName || '..........................................................'})
                           </p>
-                          <p className="text-[9.5pt] text-black/80">
+                          <p className="text-[10pt] text-black/80">
                             {booking.assetInspectorPosition || 'เจ้าหน้าที่พัสดุ / ผู้ตรวจรับ'}
                           </p>
-                          <p className="text-[9pt] text-black/60">
+                          <p className="text-[9.5pt] text-black/60">
                             วันที่ {booking.assetInspectedAt ? formatThaiDate(booking.assetInspectedAt.split('T')[0], 'short') : '......./......./.......'}
                           </p>
                         </div>
@@ -1587,7 +1587,7 @@ export const OfficialMemoModal: React.FC<OfficialMemoModalProps> = ({
               )}
 
               {/* Document 3: ใบอนุญาตนำรถยนต์ราชการออกนอกเขตจังหวัด */}
-              {activeDocType === 'out_province' && (
+               {activeDocType === 'out_province' && (
                 <div
                   id="printPermitArea"
                   className="bg-white text-black font-sarabun shadow-2xl rounded-sm border border-slate-300 box-border flex flex-col justify-between shrink-0 select-text"
@@ -1604,24 +1604,24 @@ export const OfficialMemoModal: React.FC<OfficialMemoModalProps> = ({
                     paddingBottom: '2.0cm',
                     paddingLeft: '3.0cm',
                     overflow: 'hidden',
-                    fontSize: '13pt',
-                    lineHeight: 1.45,
+                    fontSize: '11.5pt',
+                    lineHeight: 1.4,
                     fontFamily: "'TH Sarabun PSK', 'TH Sarabun New', 'Sarabun', Tahoma, sans-serif",
                     color: '#000000',
                     backgroundColor: '#ffffff'
                   }}
                 >
                   <div className="flex flex-col">
-                    <div className="flex flex-col items-center justify-center mb-4">
-                      <h2 className="font-bold text-[18pt] leading-tight text-center">
+                    <div className="flex flex-col items-center justify-center mb-3">
+                      <h2 className="font-bold text-[16pt] leading-tight text-center">
                         ใบอนุญาตนำรถยนต์ส่วนกลางออกนอกเขตจังหวัด
                       </h2>
-                      <p className="text-[12pt] text-black/80 text-center">
+                      <p className="text-[11pt] text-black/80 text-center">
                         ตามระเบียบสำนักนายกรัฐมนตรีว่าด้วยการใช้รถยนต์ราชการ พ.ศ. ๒๕๒๓ และที่แก้ไขเพิ่มเติม
                       </p>
                     </div>
 
-                    <div className="border-b border-black pb-1.5 mb-3 text-[13pt] leading-[1.35]">
+                    <div className="border-b border-black pb-1 mb-2 text-[11.5pt] leading-[1.3]">
                       <div className="mb-0.5">
                         <p>
                           <span className="font-bold">ส่วนราชการ:</span> สำนักงานวัฒนธรรมจังหวัดพังงา โทร. {phoneDisplay}
@@ -1637,7 +1637,7 @@ export const OfficialMemoModal: React.FC<OfficialMemoModalProps> = ({
                       </div>
                     </div>
 
-                    <div className="space-y-3 text-justify text-[13pt] leading-[1.45] font-normal" style={{ textIndent: '2.5cm' }}>
+                    <div className="space-y-2.5 text-justify text-[11.5pt] leading-[1.4] font-normal" style={{ textIndent: '2.5cm' }}>
                       <p>
                         อนุญาตให้ {booking.driverName || booking.name} ตำแหน่ง{' '}
                         {booking.driverType === 'self' ? booking.position : 'พนักงานขับรถยนต์ประจำสำนักงาน'}{' '}
@@ -1664,38 +1664,38 @@ export const OfficialMemoModal: React.FC<OfficialMemoModalProps> = ({
                     </div>
                   </div>
 
-                  <div className="pt-4 flex justify-end text-center text-[13pt] leading-[1.35]">
+                  <div className="pt-2 flex justify-end text-center text-[11.5pt] leading-[1.3]">
                     <div className="w-[50%] flex flex-col items-center">
                       {booking.status === 'approved' ? (
                         <div className="flex flex-col items-center">
-                          <div className="relative flex flex-col items-center justify-end h-14">
+                          <div className="relative flex flex-col items-center justify-end h-24">
                             {booking.signatureData ? (
                               <img
                                 src={booking.signatureData}
                                 alt="ลายมือชื่อผู้อนุญาต"
-                                className="h-12 max-w-[180px] object-contain -mb-1.5 z-10"
+                                className="h-20 max-w-[260px] object-contain -mb-2 z-10"
                               />
                             ) : (
-                              <div className="font-serif italic text-blue-900 font-bold text-[14pt] tracking-wider px-3 -mb-1 z-10">
+                              <div className="font-serif italic text-blue-900 font-bold text-[13pt] tracking-wider px-3 -mb-1 z-10">
                                 (อุไรวรรณ แดงงาม)
                               </div>
                             )}
-                            <p className="font-normal text-[12pt] text-black leading-none">
+                            <p className="font-normal text-[11pt] text-black leading-none">
                               (ลงชื่อ).......................................................ผู้อนุญาต
                             </p>
                           </div>
                           <p className="font-bold mt-0.5">({booking.approvedBy || 'นางสาวอุไรวรรณ แดงงาม'})</p>
-                          <p className="text-[12pt] text-black">วัฒนธรรมจังหวัดพังงา</p>
+                          <p className="text-[11pt] text-black">วัฒนธรรมจังหวัดพังงา</p>
                         </div>
                       ) : (
                         <div className="flex flex-col items-center">
-                          <div className="flex flex-col items-center justify-end h-14">
-                            <p className="font-normal text-[12pt] text-black mb-1">
+                          <div className="flex flex-col items-center justify-end h-24">
+                            <p className="font-normal text-[11pt] text-black mb-1">
                               (ลงชื่อ).......................................................ผู้อนุญาต
                             </p>
                           </div>
                           <p className="font-bold mt-0.5">({booking.approvedBy || 'นางสาวอุไรวรรณ แดงงาม'})</p>
-                          <p className="text-[12pt] text-black">วัฒนธรรมจังหวัดพังงา</p>
+                          <p className="text-[11pt] text-black">วัฒนธรรมจังหวัดพังงา</p>
                         </div>
                       )}
                     </div>

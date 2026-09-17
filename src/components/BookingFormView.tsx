@@ -83,10 +83,19 @@ export const BookingFormView: React.FC<BookingFormViewProps> = ({
   onCancel,
   onUpdateUser
 }) => {
-  // Form fields - Requester
+  // Form fields - Requester (Always pulled automatically from currentUser profile)
   const [name, setName] = useState(editingBooking?.name || currentUser.name);
   const [position, setPosition] = useState(editingBooking?.position || currentUser.position || POSITIONS[0]);
   const [department, setDepartment] = useState(editingBooking?.department || currentUser.department || DEPARTMENTS[0]);
+
+  // Keep synced with currentUser if not editing an existing booking
+  useEffect(() => {
+    if (!editingBooking) {
+      setName(currentUser.name);
+      setPosition(currentUser.position || POSITIONS[0]);
+      setDepartment(currentUser.department || DEPARTMENTS[0]);
+    }
+  }, [currentUser, editingBooking]);
   const [purpose, setPurpose] = useState(editingBooking?.purpose || '');
 
   // Requester Signature State for Memo
@@ -604,51 +613,31 @@ export const BookingFormView: React.FC<BookingFormViewProps> = ({
 
         {/* Section 1: Requester Information */}
         <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-xs space-y-4">
-          <div className="flex items-center space-x-2 border-b border-slate-100 pb-3">
-            <UserCheck className="w-4 h-4 text-orange-600" />
-            <h3 className="font-bold text-xs md:text-sm text-slate-900">๑. ข้อมูลผู้ขอใช้ยานพาหนะ</h3>
+          <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+            <div className="flex items-center space-x-2">
+              <UserCheck className="w-4 h-4 text-orange-600" />
+              <h3 className="font-bold text-xs md:text-sm text-slate-900">๑. ข้อมูลผู้ขอใช้ยานพาหนะ</h3>
+            </div>
+            <span className="text-[11px] bg-emerald-50 text-emerald-700 px-2.5 py-1 rounded-md font-medium border border-emerald-200 flex items-center space-x-1">
+              <Check className="w-3.5 h-3.5" />
+              <span>ดึงชื่อ นามสกุล กลุ่ม ตำแหน่ง จากระบบอัตโนมัติ</span>
+            </span>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <label className="block text-xs font-medium text-slate-700 mb-1.5">ชื่อ-นามสกุล *</label>
-              <input
-                type="text"
-                required
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs md:text-sm text-slate-800 focus:bg-white focus:ring-2 focus:ring-orange-500 focus:outline-none"
-              />
+            <div className="bg-slate-50/90 border border-slate-200 rounded-xl p-3.5 shadow-xs">
+              <span className="text-[11px] text-slate-400 font-medium block mb-1">ชื่อ-นามสกุลผู้ขอ</span>
+              <span className="font-bold text-slate-900 text-sm md:text-base">{currentUser.name}</span>
             </div>
 
-            <div>
-              <label className="block text-xs font-medium text-slate-700 mb-1.5">ตำแหน่ง *</label>
-              <select
-                value={position}
-                onChange={(e) => setPosition(e.target.value)}
-                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs md:text-sm text-slate-800 focus:bg-white focus:ring-2 focus:ring-orange-500 focus:outline-none"
-              >
-                {POSITIONS.map((pos) => (
-                  <option key={pos} value={pos}>
-                    {pos}
-                  </option>
-                ))}
-              </select>
+            <div className="bg-slate-50/90 border border-slate-200 rounded-xl p-3.5 shadow-xs">
+              <span className="text-[11px] text-slate-400 font-medium block mb-1">ตำแหน่ง</span>
+              <span className="font-bold text-slate-900 text-sm md:text-base">{currentUser.position || position || POSITIONS[0]}</span>
             </div>
 
-            <div>
-              <label className="block text-xs font-medium text-slate-700 mb-1.5">ฝ่าย / กลุ่มงาน *</label>
-              <select
-                value={department}
-                onChange={(e) => setDepartment(e.target.value)}
-                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs md:text-sm text-slate-800 focus:bg-white focus:ring-2 focus:ring-orange-500 focus:outline-none"
-              >
-                {DEPARTMENTS.map((dept) => (
-                  <option key={dept} value={dept}>
-                    {dept}
-                  </option>
-                ))}
-              </select>
+            <div className="bg-slate-50/90 border border-slate-200 rounded-xl p-3.5 shadow-xs">
+              <span className="text-[11px] text-slate-400 font-medium block mb-1">ฝ่าย / กลุ่มงาน</span>
+              <span className="font-bold text-slate-900 text-sm md:text-base">{currentUser.department || department || DEPARTMENTS[0]}</span>
             </div>
           </div>
         </div>
