@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, lazy, Suspense } from 'react';
 import {
   BookingRequest,
   FuelLog,
@@ -24,6 +24,7 @@ import {
   getUserAllowedMenus
 } from './data/mockData';
 import { playAppSound } from './utils/thaiDate';
+import { ShieldAlert } from 'lucide-react';
 import {
   VoiceSettings,
   getVoiceSettings,
@@ -62,19 +63,6 @@ import {
 import { HeaderNav } from './components/HeaderNav';
 import { MarqueeTicker } from './components/MarqueeTicker';
 import { Sidebar } from './components/Sidebar';
-import { DashboardView } from './components/DashboardView';
-import { CalendarView } from './components/CalendarView';
-import { BookingFormView } from './components/BookingFormView';
-import { DirectorApprovalView } from './components/DirectorApprovalView';
-import { FuelLogView } from './components/FuelLogView';
-import { GpsTrackingView } from './components/GpsTrackingView';
-import { AnalyticsView } from './components/AnalyticsView';
-import { FleetMaintenanceView } from './components/FleetMaintenanceView';
-import { UserManagementView } from './components/UserManagementView';
-import { BackupRestoreView } from './components/BackupRestoreView';
-import { DriverMissionView } from './components/DriverMissionView';
-import { AssetRegisterView } from './components/AssetRegisterView';
-import { AssetInspectionView } from './components/AssetInspectionView';
 import { AssetInspectionModal } from './components/AssetInspectionModal';
 import { OfficialMemoModal } from './components/OfficialMemoModal';
 import { ApprovalSignatureModal } from './components/ApprovalSignatureModal';
@@ -89,9 +77,6 @@ import { LoginScreen } from './components/LoginScreen';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { LineSimulatorModal } from './components/LineSimulatorModal';
 import { VoiceAlertSettingsModal } from './components/VoiceAlertSettingsModal';
-import { UiCustomizerModal } from './components/UiCustomizerModal';
-import { WebsiteCustomizerView } from './components/WebsiteCustomizerView';
-import { ShieldAlert } from 'lucide-react';
 import { registerServiceWorker, updateAppBadge, clearAppBadge } from './services/badgingService';
 import {
   notifyNewBooking,
@@ -101,6 +86,31 @@ import {
   notifyMissionCompleted,
   notifyMissionToDriver
 } from './services/lineNotificationService';
+import { UiCustomizerModal } from './components/UiCustomizerModal';
+
+// ── Code Splitting: แต่ละเมนู (view) ถูกแบ่งเป็น chunk แยก แล้วโหลดเมื่อเปิดใช้งานครั้งแรก ──
+const DashboardView = lazy(() => import('./components/DashboardView').then((m) => ({ default: m.DashboardView })));
+const CalendarView = lazy(() => import('./components/CalendarView').then((m) => ({ default: m.CalendarView })));
+const BookingFormView = lazy(() => import('./components/BookingFormView').then((m) => ({ default: m.BookingFormView })));
+const DirectorApprovalView = lazy(() => import('./components/DirectorApprovalView').then((m) => ({ default: m.DirectorApprovalView })));
+const FuelLogView = lazy(() => import('./components/FuelLogView').then((m) => ({ default: m.FuelLogView })));
+const GpsTrackingView = lazy(() => import('./components/GpsTrackingView').then((m) => ({ default: m.GpsTrackingView })));
+const AnalyticsView = lazy(() => import('./components/AnalyticsView').then((m) => ({ default: m.AnalyticsView })));
+const FleetMaintenanceView = lazy(() => import('./components/FleetMaintenanceView').then((m) => ({ default: m.FleetMaintenanceView })));
+const UserManagementView = lazy(() => import('./components/UserManagementView').then((m) => ({ default: m.UserManagementView })));
+const BackupRestoreView = lazy(() => import('./components/BackupRestoreView').then((m) => ({ default: m.BackupRestoreView })));
+const DriverMissionView = lazy(() => import('./components/DriverMissionView').then((m) => ({ default: m.DriverMissionView })));
+const AssetRegisterView = lazy(() => import('./components/AssetRegisterView').then((m) => ({ default: m.AssetRegisterView })));
+const AssetInspectionView = lazy(() => import('./components/AssetInspectionView').then((m) => ({ default: m.AssetInspectionView })));
+const WebsiteCustomizerView = lazy(() => import('./components/WebsiteCustomizerView').then((m) => ({ default: m.WebsiteCustomizerView })));
+
+// หน้าโหลดระหว่างรอ chunk ของเมนู (fallback ของ Suspense)
+const ViewLoader = () => (
+  <div className="flex min-h-[40vh] w-full flex-col items-center justify-center gap-3 text-slate-500 dark:text-slate-400">
+    <div className="h-8 w-8 animate-spin rounded-full border-[3px] border-orange-500/30 border-t-orange-500" />
+    <span className="text-xs font-medium">กำลังโหลดหน้านี้...</span>
+  </div>
+);
 
 export default function App() {
   // Authentication State
@@ -1780,6 +1790,7 @@ export default function App() {
       {/* Main Content Area */}
       <main className="flex-grow flex-shrink min-h-0 overflow-y-auto 2xl:overflow-visible max-w-7xl w-full mx-auto px-3 sm:px-4 md:px-8 py-4 sm:py-6 pb-36 2xl:pb-8">
         <ErrorBoundary>
+        <Suspense fallback={<ViewLoader />}>
         {activeTab === 'dashboard' && (
           <DashboardView
             bookings={bookings}
@@ -2019,6 +2030,7 @@ export default function App() {
             </div>
           </div>
         </footer>
+        </Suspense>
         </ErrorBoundary>
       </main>
 
