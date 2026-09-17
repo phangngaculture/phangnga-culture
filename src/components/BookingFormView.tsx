@@ -56,7 +56,15 @@ import {
   CheckCircle2,
   AlertCircle,
   RefreshCw,
-  PenTool
+  PenTool,
+  FileSpreadsheet,
+  Image as ImageIcon,
+  Link as LinkIcon,
+  UploadCloud,
+  Globe,
+  ExternalLink,
+  FileCheck2,
+  FileBox
 } from 'lucide-react';
 import { UserSignatureModal } from './UserSignatureModal';
 
@@ -169,9 +177,41 @@ export const BookingFormView: React.FC<BookingFormViewProps> = ({
   const [newPsgDepartment, setNewPsgDepartment] = useState('สำนักงานวัฒนธรรมจังหวัดพังงา');
   const [newPsgPhone, setNewPsgPhone] = useState('');
 
-  // Attachment
+  // Attachment state
   const [attachmentName, setAttachmentName] = useState(editingBooking?.attachmentName || '');
   const [attachmentUrl, setAttachmentUrl] = useState(editingBooking?.attachmentUrl || '');
+  const [attachmentType, setAttachmentType] = useState<'pdf' | 'word' | 'excel' | 'image' | 'link' | 'other'>(
+    editingBooking?.attachmentType || 'other'
+  );
+  const [attachmentCategory, setAttachmentCategory] = useState<'schedule' | 'order' | 'dispatch' | 'project' | 'other'>(
+    editingBooking?.attachmentCategory || 'schedule'
+  );
+  const [attachmentSize, setAttachmentSize] = useState<string>(editingBooking?.attachmentSize || '');
+  const [attachmentInputMode, setAttachmentInputMode] = useState<'file' | 'link'>('file');
+  const [customLinkUrl, setCustomLinkUrl] = useState('');
+  const [customLinkTitle, setCustomLinkTitle] = useState('');
+  const [isDragOver, setIsDragOver] = useState(false);
+
+  // Helper to auto-detect attachment type from filename or URL
+  const detectFileTypeFromName = (name: string, urlStr?: string): 'pdf' | 'word' | 'excel' | 'image' | 'link' | 'other' => {
+    if (urlStr && (urlStr.startsWith('http://') || urlStr.startsWith('https://'))) {
+      return 'link';
+    }
+    const lower = name.toLowerCase();
+    if (lower.endsWith('.pdf')) return 'pdf';
+    if (lower.endsWith('.doc') || lower.endsWith('.docx') || lower.endsWith('.dotx')) return 'word';
+    if (lower.endsWith('.xls') || lower.endsWith('.xlsx') || lower.endsWith('.csv')) return 'excel';
+    if (lower.match(/\.(jpeg|jpg|png|webp|gif|svg)$/)) return 'image';
+    return 'other';
+  };
+
+  const formatFileSize = (bytes: number): string => {
+    if (bytes === 0) return '0 B';
+    const k = 1024;
+    const sizes = ['B', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+  };
 
   // Helper location objects
   const currentProvinceObj = useMemo(() => {
@@ -237,6 +277,16 @@ export const BookingFormView: React.FC<BookingFormViewProps> = ({
       setPassengerNames(editingBooking.passengerNames || '');
       setAttachmentName(editingBooking.attachmentName || '');
       setAttachmentUrl(editingBooking.attachmentUrl || '');
+      setAttachmentType(editingBooking.attachmentType || detectFileTypeFromName(editingBooking.attachmentName || '', editingBooking.attachmentUrl));
+      setAttachmentCategory(editingBooking.attachmentCategory || 'schedule');
+      setAttachmentSize(editingBooking.attachmentSize || '');
+      if (editingBooking.attachmentUrl && (editingBooking.attachmentUrl.startsWith('http://') || editingBooking.attachmentUrl.startsWith('https://'))) {
+        setAttachmentInputMode('link');
+        setCustomLinkUrl(editingBooking.attachmentUrl);
+        setCustomLinkTitle(editingBooking.attachmentName || '');
+      } else {
+        setAttachmentInputMode('file');
+      }
     }
   }, [editingBooking]);
 
@@ -562,6 +612,9 @@ export const BookingFormView: React.FC<BookingFormViewProps> = ({
         : passengerNames,
       attachmentName: attachmentName || '',
       attachmentUrl: attachmentUrl || '',
+      attachmentType: attachmentName ? (attachmentType || detectFileTypeFromName(attachmentName, attachmentUrl)) : undefined,
+      attachmentCategory: attachmentName ? (attachmentCategory || 'schedule') : undefined,
+      attachmentSize: attachmentName ? attachmentSize : undefined,
       status: editingBooking?.status || 'pending',
       requesterSignature: attachSignature ? (requesterSignature || currentUser.signatureUrl || undefined) : undefined,
       requesterSignatureType: attachSignature ? requesterSignatureType : undefined,
@@ -692,54 +745,293 @@ export const BookingFormView: React.FC<BookingFormViewProps> = ({
               />
             </div>
 
-            {/* Attachment Section (แนบไฟล์เอกสารประกอบ / แบบฟอร์มขออนุมัติ) */}
-            <div className="pt-2">
-              <label className="block font-medium text-slate-700 mb-1.5 text-xs md:text-sm flex items-center justify-between">
-                <span className="flex items-center space-x-1.5">
-                  <Paperclip className="w-4 h-4 text-orange-600" />
-                  <span>แนบไฟล์เอกสารประกอบ / แบบฟอร์มขออนุมัติใช้รถยนต์ราชการ (ถ้ามี)</span>
-                </span>
-                <span className="text-[11px] text-slate-400">รองรับ PDF, DOCX, JPG</span>
-              </label>
-              <div className="flex items-center space-x-3">
-                <label className="cursor-pointer px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-medium transition flex items-center space-x-2 border border-slate-200">
-                  <Paperclip className="w-4 h-4 text-orange-600" />
-                  <span>เลือกไฟล์เอกสาร...</span>
-                  <input
-                    type="file"
-                    onChange={(e) => {
-                      if (e.target.files && e.target.files[0]) {
-                        const file = e.target.files[0];
-                        setAttachmentName(file.name);
-                        const reader = new FileReader();
-                        reader.onload = (uploadEvent) => {
-                          if (uploadEvent.target?.result) {
-                            setAttachmentUrl(uploadEvent.target.result as string);
-                          }
-                        };
-                        reader.readAsDataURL(file);
-                      }
-                    }}
-                    className="hidden"
-                  />
+            {/* Attachment Section (เอกสารแนบจากเครื่อง: กำหนดการ, หนังสือคำสั่ง, หนังสือส่ง, ลิงก์) */}
+            <div className="pt-2 border-t border-slate-100 space-y-3">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5">
+                <label className="font-semibold text-slate-800 text-xs md:text-sm flex items-center space-x-2">
+                  <Paperclip className="w-4 h-4 text-orange-600 shrink-0" />
+                  <span>เอกสารแนบประกอบภารกิจ (ถ้ามี)</span>
                 </label>
+                <span className="text-[11px] text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md font-medium">
+                  รองรับ PDF, Word (.docx), Excel (.xlsx), รูปภาพ และลิงก์ออนไลน์
+                </span>
+              </div>
 
-                {attachmentName ? (
-                  <div className="flex items-center space-x-2 bg-orange-50 border border-orange-200 px-3 py-1.5 rounded-xl text-xs text-orange-800">
-                    <FileText className="w-4 h-4 text-orange-600 shrink-0" />
-                    <span className="font-medium truncate max-w-xs">{attachmentName}</span>
+              {/* Document Category Selector */}
+              <div className="bg-slate-50/80 p-3 rounded-xl border border-slate-200/80 space-y-2">
+                <div className="text-[11px] font-bold text-slate-700 flex items-center justify-between">
+                  <span>เลือกประเภทเอกสารแนบ:</span>
+                  <span className="text-[10px] text-slate-400">เช่น กำหนดการ, หนังสือคำสั่ง, หนังสือส่ง</span>
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
+                  {[
+                    { id: 'schedule', label: '📌 กำหนดการ / แผนงาน', desc: 'ตารางเวลาและกำหนดการ' },
+                    { id: 'order', label: '📜 หนังสือคำสั่ง', desc: 'คำสั่งปฏิบัติราชการ' },
+                    { id: 'dispatch', label: '📨 หนังสือส่ง / เชิญ', desc: 'หนังสือเชิญประชุม/หนังสือส่ง' },
+                    { id: 'project', label: '📋 โครงการ / อื่นๆ', desc: 'เอกสารประกอบโครงการ' },
+                  ].map((cat) => {
+                    const isSelected = attachmentCategory === cat.id;
+                    return (
+                      <button
+                        key={cat.id}
+                        type="button"
+                        onClick={() => setAttachmentCategory(cat.id as any)}
+                        className={`p-2 rounded-xl text-left transition border cursor-pointer ${
+                          isSelected
+                            ? 'bg-orange-600 text-white border-orange-600 shadow-xs'
+                            : 'bg-white hover:bg-slate-100 text-slate-700 border-slate-200'
+                        }`}
+                      >
+                        <div className="text-xs font-bold truncate">{cat.label}</div>
+                        <div className={`text-[10px] truncate ${isSelected ? 'text-orange-100' : 'text-slate-400'}`}>
+                          {cat.desc}
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Input Mode Selector (Upload File vs Cloud Link) */}
+              <div className="flex items-center space-x-2 border-b border-slate-200 pb-2">
+                <button
+                  type="button"
+                  onClick={() => setAttachmentInputMode('file')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center space-x-1.5 cursor-pointer ${
+                    attachmentInputMode === 'file'
+                      ? 'bg-orange-50 text-orange-700 border border-orange-200'
+                      : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  <UploadCloud className="w-3.5 h-3.5" />
+                  <span>อัปโหลดไฟล์จากเครื่อง (PDF / Word / Excel / รูปภาพ)</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setAttachmentInputMode('link')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center space-x-1.5 cursor-pointer ${
+                    attachmentInputMode === 'link'
+                      ? 'bg-orange-50 text-orange-700 border border-orange-200'
+                      : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  <Globe className="w-3.5 h-3.5" />
+                  <span>แนบเป็นลิงก์ (Google Drive / OneDrive / ระบบสารบรรณ)</span>
+                </button>
+              </div>
+
+              {/* Active Attachment Preview Card (If already attached) */}
+              {attachmentName ? (
+                <div className="p-3.5 bg-gradient-to-r from-orange-50/90 via-amber-50/50 to-orange-50/90 border border-orange-200 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xs">
+                  <div className="flex items-center space-x-3 min-w-0">
+                    <div
+                      className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 shadow-2xs ${
+                        attachmentType === 'pdf'
+                          ? 'bg-red-100 text-red-700 border border-red-200'
+                          : attachmentType === 'word'
+                          ? 'bg-blue-100 text-blue-700 border border-blue-200'
+                          : attachmentType === 'excel'
+                          ? 'bg-emerald-100 text-emerald-700 border border-emerald-200'
+                          : attachmentType === 'image'
+                          ? 'bg-purple-100 text-purple-700 border border-purple-200'
+                          : 'bg-teal-100 text-teal-700 border border-teal-200'
+                      }`}
+                    >
+                      {attachmentType === 'pdf' && <FileText className="w-5 h-5 text-red-600" />}
+                      {attachmentType === 'word' && <FileText className="w-5 h-5 text-blue-600" />}
+                      {attachmentType === 'excel' && <FileSpreadsheet className="w-5 h-5 text-emerald-600" />}
+                      {attachmentType === 'image' && <ImageIcon className="w-5 h-5 text-purple-600" />}
+                      {(attachmentType === 'link' || attachmentType === 'other') && <Globe className="w-5 h-5 text-teal-600" />}
+                    </div>
+
+                    <div className="min-w-0">
+                      <div className="flex items-center space-x-1.5 flex-wrap gap-1">
+                        <span className="font-bold text-xs md:text-sm text-slate-900 truncate max-w-xs sm:max-w-md">
+                          {attachmentName}
+                        </span>
+                        <span
+                          className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase ${
+                            attachmentType === 'pdf'
+                              ? 'bg-red-50 text-red-700 border border-red-200'
+                              : attachmentType === 'word'
+                              ? 'bg-blue-50 text-blue-700 border border-blue-200'
+                              : attachmentType === 'excel'
+                              ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                              : attachmentType === 'image'
+                              ? 'bg-purple-50 text-purple-700 border border-purple-200'
+                              : 'bg-teal-50 text-teal-700 border border-teal-200'
+                          }`}
+                        >
+                          {attachmentType === 'pdf'
+                            ? 'PDF Document'
+                            : attachmentType === 'word'
+                            ? 'Word Document (.docx)'
+                            : attachmentType === 'excel'
+                            ? 'Excel Spreadsheet (.xlsx)'
+                            : attachmentType === 'image'
+                            ? 'Image File'
+                            : 'Online Link'}
+                        </span>
+                        {attachmentSize && (
+                          <span className="text-[10px] text-slate-400">({attachmentSize})</span>
+                        )}
+                      </div>
+                      <p className="text-[11px] text-slate-600 mt-0.5 flex items-center space-x-1">
+                        <span>หมวดหมู่:</span>
+                        <span className="font-semibold text-orange-700">
+                          {attachmentCategory === 'schedule'
+                            ? 'กำหนดการ / แผนการเดินทาง'
+                            : attachmentCategory === 'order'
+                            ? 'หนังสือคำสั่งปฏิบัติราชการ'
+                            : attachmentCategory === 'dispatch'
+                            ? 'หนังสือส่ง / หนังสือเชิญ'
+                            : 'โครงการ / เอกสารอื่นๆ'}
+                        </span>
+                        {attachmentUrl && (attachmentUrl.startsWith('http://') || attachmentUrl.startsWith('https://')) && (
+                          <span className="text-teal-600 underline font-mono text-[10px] truncate max-w-[200px]">
+                            {attachmentUrl}
+                          </span>
+                        )}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center space-x-2 shrink-0">
                     <button
                       type="button"
-                      onClick={() => { setAttachmentName(''); setAttachmentUrl(''); }}
-                      className="text-orange-400 hover:text-orange-700 ml-1 font-bold cursor-pointer"
+                      onClick={() => {
+                        setAttachmentName('');
+                        setAttachmentUrl('');
+                        setAttachmentSize('');
+                        setCustomLinkUrl('');
+                        setCustomLinkTitle('');
+                      }}
+                      className="px-3 py-1.5 bg-white hover:bg-rose-50 text-rose-600 hover:text-rose-700 border border-slate-200 hover:border-rose-200 rounded-xl text-xs font-semibold transition flex items-center space-x-1 shadow-2xs cursor-pointer"
                     >
-                      ✕
+                      <Trash2 className="w-3.5 h-3.5" />
+                      <span>ลบออก</span>
                     </button>
                   </div>
-                ) : (
-                  <span className="text-xs text-slate-400 italic">ยังไม่ได้เลือกไฟล์เอกสารแนบ</span>
-                )}
-              </div>
+                </div>
+              ) : null}
+
+              {/* Mode 1: File Upload (Drag and Drop / File Input) */}
+              {attachmentInputMode === 'file' && (
+                <div
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    setIsDragOver(true);
+                  }}
+                  onDragLeave={() => setIsDragOver(false)}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    setIsDragOver(false);
+                    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+                      const file = e.dataTransfer.files[0];
+                      const detected = detectFileTypeFromName(file.name);
+                      setAttachmentName(file.name);
+                      setAttachmentType(detected);
+                      setAttachmentSize(formatFileSize(file.size));
+                      const reader = new FileReader();
+                      reader.onload = (uploadEvent) => {
+                        if (uploadEvent.target?.result) {
+                          setAttachmentUrl(uploadEvent.target.result as string);
+                        }
+                      };
+                      reader.readAsDataURL(file);
+                    }
+                  }}
+                  className={`border-2 border-dashed rounded-2xl p-4 sm:p-5 text-center transition flex flex-col items-center justify-center space-y-2 ${
+                    isDragOver
+                      ? 'border-orange-500 bg-orange-50/80'
+                      : 'border-slate-200 hover:border-orange-300 bg-slate-50/50 hover:bg-orange-50/20'
+                  }`}
+                >
+                  <div className="w-11 h-11 rounded-2xl bg-orange-100 text-orange-600 flex items-center justify-center shadow-xs">
+                    <UploadCloud className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <label className="cursor-pointer inline-flex items-center space-x-1.5 text-xs sm:text-sm font-bold text-orange-600 hover:text-orange-700 hover:underline">
+                      <span>คลิกเพื่อเลือกไฟล์จากคอมพิวเตอร์/มือถือ</span>
+                      <input
+                        type="file"
+                        accept=".pdf,.doc,.docx,.xls,.xlsx,.csv,.jpg,.jpeg,.png,.webp,.txt"
+                        onChange={(e) => {
+                          if (e.target.files && e.target.files[0]) {
+                            const file = e.target.files[0];
+                            const detected = detectFileTypeFromName(file.name);
+                            setAttachmentName(file.name);
+                            setAttachmentType(detected);
+                            setAttachmentSize(formatFileSize(file.size));
+                            const reader = new FileReader();
+                            reader.onload = (uploadEvent) => {
+                              if (uploadEvent.target?.result) {
+                                setAttachmentUrl(uploadEvent.target.result as string);
+                              }
+                            };
+                            reader.readAsDataURL(file);
+                          }
+                        }}
+                        className="hidden"
+                      />
+                    </label>
+                    <p className="text-[11px] text-slate-500 mt-0.5">
+                      หรือลากไฟล์มาวางในบริเวณนี้ (PDF, Word, Excel, รูปภาพสแกน ขนาดไม่เกิน 25 MB)
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* Mode 2: Online / Cloud Link */}
+              {attachmentInputMode === 'link' && (
+                <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-3">
+                  <div className="space-y-1.5">
+                    <label className="block text-xs font-bold text-slate-700">
+                      ระบุที่อยู่ลิงก์เอกสารออนไลน์ (Google Drive / OneDrive / ระบบสารบรรณ) *
+                    </label>
+                    <div className="relative">
+                      <Globe className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                      <input
+                        type="url"
+                        placeholder="https://drive.google.com/... หรือ https://edoc..."
+                        value={customLinkUrl}
+                        onChange={(e) => setCustomLinkUrl(e.target.value)}
+                        className="w-full pl-9 pr-3 py-2 bg-white border border-slate-200 rounded-xl text-xs text-slate-800 focus:ring-2 focus:ring-orange-500 focus:outline-none"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="block text-xs font-bold text-slate-700">
+                      ชื่อเอกสารหรือหัวข้อสำหรับแสดงผล
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="เช่น กำหนดการสัมมนา CPOT.pdf หรือ คำสั่งสำนักงานที่ 142/2569"
+                      value={customLinkTitle}
+                      onChange={(e) => setCustomLinkTitle(e.target.value)}
+                      className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs text-slate-800 focus:ring-2 focus:ring-orange-500 focus:outline-none"
+                    />
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (!customLinkUrl.trim()) return;
+                      const title = customLinkTitle.trim() || 'เอกสารแนบออนไลน์';
+                      setAttachmentName(title);
+                      setAttachmentUrl(customLinkUrl.trim());
+                      setAttachmentType('link');
+                      setAttachmentSize('Cloud Link');
+                    }}
+                    disabled={!customLinkUrl.trim()}
+                    className="px-4 py-2 bg-orange-600 hover:bg-orange-700 disabled:opacity-50 text-white rounded-xl text-xs font-bold transition flex items-center space-x-1.5 shadow-xs cursor-pointer"
+                  >
+                    <Check className="w-4 h-4" />
+                    <span>บันทึกลิงก์เอกสารแนบ</span>
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </div>

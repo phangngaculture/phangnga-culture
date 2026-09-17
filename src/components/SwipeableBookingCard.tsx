@@ -14,7 +14,11 @@ import {
   User as UserIcon,
   Gauge,
   ChevronLeft,
-  Paperclip
+  Paperclip,
+  FileSpreadsheet,
+  FileText,
+  Globe,
+  Image as ImageIcon
 } from 'lucide-react';
 import { canUserExecuteMission } from '../utils/driverPermissions';
 
@@ -352,24 +356,61 @@ export const SwipeableBookingCard: React.FC<SwipeableBookingCardProps> = ({
         {/* Desktop / Non-swiped direct buttons */}
         <div className="w-full sm:w-auto flex flex-wrap items-center gap-2 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-200/60 dark:border-slate-800 shrink-0">
           {b.attachmentName && b.attachmentName.trim() !== '' && (
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                if (onViewAttachment) {
-                  onViewAttachment(b);
-                } else if (b.attachmentUrl) {
-                  window.open(b.attachmentUrl, '_blank');
-                } else {
-                  window.alert(`เอกสารแนบสำหรับคำขอนี้:\n📁 ${b.attachmentName}`);
-                }
-              }}
-              className="flex-1 sm:flex-none px-3.5 py-2 bg-indigo-50 hover:bg-indigo-100 active:scale-95 text-indigo-700 dark:bg-indigo-950/40 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 rounded-xl text-xs font-semibold transition shadow-2xs flex items-center justify-center space-x-1.5 cursor-pointer"
-              title={`เอกสารแนบ: ${b.attachmentName}`}
-            >
-              <Paperclip className="w-3.5 h-3.5 text-indigo-600" />
-              <span>เอกสารแนบ</span>
-            </button>
+            (() => {
+              const lower = (b.attachmentName || '').toLowerCase();
+              const isPdf = b.attachmentType === 'pdf' || lower.endsWith('.pdf');
+              const isWord = b.attachmentType === 'word' || lower.endsWith('.doc') || lower.endsWith('.docx');
+              const isExcel = b.attachmentType === 'excel' || lower.endsWith('.xls') || lower.endsWith('.xlsx') || lower.endsWith('.csv');
+              const isImage = b.attachmentType === 'image' || lower.match(/\.(jpeg|jpg|png|webp|gif)$/i);
+              const isLink = b.attachmentType === 'link' || (b.attachmentUrl && (b.attachmentUrl.startsWith('http://') || b.attachmentUrl.startsWith('https://')));
+
+              let badgeColor = 'bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border-indigo-200 dark:bg-indigo-950/40 dark:text-indigo-300 dark:border-indigo-800';
+              let icon = <Paperclip className="w-3.5 h-3.5 text-indigo-600" />;
+              let label = 'เอกสารแนบ';
+
+              if (isPdf) {
+                badgeColor = 'bg-red-50 hover:bg-red-100 text-red-700 border-red-200 dark:bg-red-950/40 dark:text-red-300 dark:border-red-800';
+                icon = <FileText className="w-3.5 h-3.5 text-red-600" />;
+                label = 'PDF';
+              } else if (isWord) {
+                badgeColor = 'bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-950/40 dark:text-blue-300 dark:border-blue-800';
+                icon = <FileText className="w-3.5 h-3.5 text-blue-600" />;
+                label = 'Word';
+              } else if (isExcel) {
+                badgeColor = 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800';
+                icon = <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-600" />;
+                label = 'Excel';
+              } else if (isImage) {
+                badgeColor = 'bg-purple-50 hover:bg-purple-100 text-purple-700 border-purple-200 dark:bg-purple-950/40 dark:text-purple-300 dark:border-purple-800';
+                icon = <ImageIcon className="w-3.5 h-3.5 text-purple-600" />;
+                label = 'รูปภาพ';
+              } else if (isLink) {
+                badgeColor = 'bg-teal-50 hover:bg-teal-100 text-teal-700 border-teal-200 dark:bg-teal-950/40 dark:text-teal-300 dark:border-teal-800';
+                icon = <Globe className="w-3.5 h-3.5 text-teal-600" />;
+                label = 'ลิงก์แนบ';
+              }
+
+              return (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (onViewAttachment) {
+                      onViewAttachment(b);
+                    } else if (b.attachmentUrl) {
+                      window.open(b.attachmentUrl, '_blank');
+                    } else {
+                      window.alert(`เอกสารแนบสำหรับคำขอนี้:\n📁 ${b.attachmentName}`);
+                    }
+                  }}
+                  className={`flex-1 sm:flex-none px-3 py-2 active:scale-95 border rounded-xl text-xs font-semibold transition shadow-2xs flex items-center justify-center space-x-1.5 cursor-pointer ${badgeColor}`}
+                  title={`เอกสารแนบ: ${b.attachmentName}`}
+                >
+                  {icon}
+                  <span>{label}</span>
+                </button>
+              );
+            })()
           )}
 
           <button

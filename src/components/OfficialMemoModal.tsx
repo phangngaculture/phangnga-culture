@@ -58,7 +58,7 @@ export const OfficialMemoModal: React.FC<OfficialMemoModalProps> = ({
   allBookings = [],
   initialDocType
 }) => {
-  const [useThaiNumerals, setUseThaiNumerals] = useState(false);
+  const [useThaiNumerals, setUseThaiNumerals] = useState(true);
   const [activeDocType, setActiveDocType] = useState<OfficialDocType>(
     initialDocType || (booking && booking.destProvince && booking.destProvince !== 'พังงา' ? 'out_province' : 'memo')
   );
@@ -351,16 +351,20 @@ export const OfficialMemoModal: React.FC<OfficialMemoModalProps> = ({
               </button>
             </div>
 
-            {/* Thai Numerals Toggle (desktop/tablet) */}
-            <label className="hidden lg:flex items-center space-x-1.5 bg-slate-800 px-2.5 py-1 rounded-xl cursor-pointer hover:bg-slate-700 text-slate-300 text-xs">
-              <input
-                type="checkbox"
-                checked={useThaiNumerals}
-                onChange={(e) => setUseThaiNumerals(e.target.checked)}
-                className="rounded text-orange-500 focus:ring-0"
-              />
-              <span>เลขไทย</span>
-            </label>
+            {/* Thai Numerals Toggle (Mobile, Tablet & Desktop) */}
+            <button
+              type="button"
+              onClick={() => setUseThaiNumerals(!useThaiNumerals)}
+              className={`px-2.5 py-1 sm:py-1.5 rounded-xl font-semibold flex items-center space-x-1.5 text-xs transition cursor-pointer active:scale-95 border ${
+                useThaiNumerals
+                  ? 'bg-amber-500/20 text-amber-300 border-amber-500/50 shadow-xs'
+                  : 'bg-slate-800 text-slate-400 border-slate-700 hover:text-white'
+              }`}
+              title="สลับการแสดงผลตัวเลขไทย (๐ ๑ ๒ ๓) และเลขอารบิก (0 1 2 3)"
+            >
+              <span className="font-bold text-xs">{useThaiNumerals ? '๑๒๓' : '123'}</span>
+              <span>{useThaiNumerals ? 'เลขไทย' : 'เลขอารบิก'}</span>
+            </button>
 
             {/* Desktop Close Button */}
             <button
@@ -786,12 +790,6 @@ export const OfficialMemoModal: React.FC<OfficialMemoModalProps> = ({
                       {booking.position}
                     </span>
                   </div>
-                  <div className="col-span-2">
-                    <span className="text-[10px] text-slate-400 block">กลุ่มงาน / ฝ่าย</span>
-                    <span className="font-medium text-slate-700 dark:text-slate-300">
-                      {booking.department}
-                    </span>
-                  </div>
                 </div>
 
                 {/* Requester Signature Box */}
@@ -1053,14 +1051,14 @@ export const OfficialMemoModal: React.FC<OfficialMemoModalProps> = ({
                     minHeight: '297mm',
                     maxHeight: '297mm',
                     boxSizing: 'border-box',
-                    paddingTop: '1.2cm',
-                    paddingRight: '1.5cm',
-                    paddingBottom: '1.2cm',
-                    paddingLeft: '2.5cm',
+                    paddingTop: '2.5cm',
+                    paddingRight: '2.0cm',
+                    paddingBottom: '2.5cm',
+                    paddingLeft: '3.0cm',
                     overflow: 'hidden',
-                    fontSize: '10.5pt',
-                    lineHeight: 1.3,
-                    fontFamily: "'TH Sarabun PSK', 'TH Sarabun New', 'Sarabun', Tahoma, sans-serif",
+                    fontSize: '10pt',
+                    lineHeight: 1.25,
+                    fontFamily: "'TH Sarabun New', 'THSarabunNew', 'TH Sarabun PSK', 'Sarabun', Tahoma, sans-serif",
                     color: '#000000',
                     backgroundColor: '#ffffff'
                   }}
@@ -1102,7 +1100,7 @@ export const OfficialMemoModal: React.FC<OfficialMemoModalProps> = ({
                     {/* Body Text */}
                     <div className="space-y-2 text-justify text-[11.5pt] leading-[1.4] font-normal" style={{ textIndent: '2.5cm' }}>
                       <p>
-                        ด้วยข้าพเจ้า {booking.name} ตำแหน่ง {booking.position} ฝ่าย/กลุ่มงาน {booking.department} มีความจำเป็นต้องเดินทางไปปฏิบัติภารกิจราชการเพื่อ {booking.purpose} ณ สถานที่ {booking.destination} ในวันที่ {memoDateDisplay}{' '}
+                        ด้วยข้าพเจ้า {booking.name} ตำแหน่ง {booking.position} มีความจำเป็นต้องเดินทางไปปฏิบัติภารกิจราชการเพื่อ {booking.purpose} ณ สถานที่ {booking.destination} ในวันที่ {memoDateDisplay}{' '}
                         {booking.startTime && (
                           <span>
                             เวลา {num(booking.startTime)} น. ถึง{' '}
@@ -1356,7 +1354,7 @@ export const OfficialMemoModal: React.FC<OfficialMemoModalProps> = ({
                     overflow: 'hidden',
                     fontSize: '11pt',
                     lineHeight: 1.35,
-                    fontFamily: "'TH Sarabun PSK', 'TH Sarabun New', 'Sarabun', Tahoma, sans-serif",
+                    fontFamily: "'TH Sarabun New', 'THSarabunNew', 'TH Sarabun PSK', 'Sarabun', Tahoma, sans-serif",
                     color: '#000000',
                     backgroundColor: '#ffffff'
                   }}
@@ -1599,14 +1597,14 @@ export const OfficialMemoModal: React.FC<OfficialMemoModalProps> = ({
                     minHeight: '297mm',
                     maxHeight: '297mm',
                     boxSizing: 'border-box',
-                    paddingTop: '2.0cm',
+                    paddingTop: '2.5cm',
                     paddingRight: '2.0cm',
-                    paddingBottom: '2.0cm',
+                    paddingBottom: '2.5cm',
                     paddingLeft: '3.0cm',
                     overflow: 'hidden',
-                    fontSize: '11.5pt',
-                    lineHeight: 1.4,
-                    fontFamily: "'TH Sarabun PSK', 'TH Sarabun New', 'Sarabun', Tahoma, sans-serif",
+                    fontSize: '11pt',
+                    lineHeight: 1.35,
+                    fontFamily: "'TH Sarabun New', 'THSarabunNew', 'TH Sarabun PSK', 'Sarabun', Tahoma, sans-serif",
                     color: '#000000',
                     backgroundColor: '#ffffff'
                   }}

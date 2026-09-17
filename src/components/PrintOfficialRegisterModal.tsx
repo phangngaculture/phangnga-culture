@@ -47,6 +47,10 @@ export const PrintOfficialRegisterModal: React.FC<PrintOfficialRegisterModalProp
   const [showToolbar, setShowToolbar] = useState<boolean>(true);
   const [zoomLevel, setZoomLevel] = useState<number>(100);
   const [floatingMemoBooking, setFloatingMemoBooking] = useState<BookingRequest | null>(null);
+  const [useThaiNumerals, setUseThaiNumerals] = useState<boolean>(true);
+
+  const num = (val: string | number | null | undefined) =>
+    useThaiNumerals ? toThaiNumerals(val ?? '') : (val ?? '');
 
   // Advanced Printing Configurations
   const [docType, setDocType] = useState<'register' | 'request_form'>('register');
@@ -200,8 +204,7 @@ export const PrintOfficialRegisterModal: React.FC<PrintOfficialRegisterModalProp
     (currentYearInt + 1).toString()
   ];
 
-  // Helper numbers for Memo rendering
-  const num = (val: string | number) => toThaiNumerals(val);
+
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/70 backdrop-blur-xs flex items-center justify-center p-2 sm:p-4 print:p-0 print:bg-white">
@@ -276,6 +279,21 @@ export const PrintOfficialRegisterModal: React.FC<PrintOfficialRegisterModalProp
                 </button>
               )}
             </div>
+
+            {/* Thai Numerals Toggle */}
+            <button
+              type="button"
+              onClick={() => setUseThaiNumerals(!useThaiNumerals)}
+              className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition flex items-center justify-center space-x-1.5 cursor-pointer border shrink-0 ${
+                useThaiNumerals
+                  ? 'bg-amber-500/20 text-amber-300 border-amber-500/50 shadow-xs'
+                  : 'bg-slate-800 text-slate-400 border-slate-700 hover:text-white'
+              }`}
+              title="สลับการแสดงผลตัวเลขไทย (๐ ๑ ๒ ๓) และเลขอารบิก (0 1 2 3)"
+            >
+              <span className="font-bold text-xs">{useThaiNumerals ? '๑๒๓' : '123'}</span>
+              <span>{useThaiNumerals ? 'เลขไทย' : 'เลขอารบิก'}</span>
+            </button>
 
             {/* Launch Portrait Memo as Pop-up Window */}
             <button
@@ -560,7 +578,7 @@ export const PrintOfficialRegisterModal: React.FC<PrintOfficialRegisterModalProp
             style={{
               transform: zoomLevel !== 100 ? `scale(${zoomLevel / 100})` : undefined,
               transformOrigin: 'top center',
-              fontFamily: docType === 'register' ? 'inherit' : "'TH Sarabun PSK', 'TH Sarabun New', 'Sarabun', sans-serif"
+              fontFamily: docType === 'register' ? "'TH Sarabun New', 'THSarabunNew', 'TH Sarabun PSK', 'Sarabun', sans-serif" : "'TH Sarabun New', 'THSarabunNew', 'TH Sarabun PSK', 'Sarabun', sans-serif"
             }}
             className={`bg-white shadow-md print:shadow-none p-4 sm:p-12 print:p-0 select-text transition-transform duration-150 ${
               docType === 'register' 
@@ -844,7 +862,7 @@ export const PrintOfficialRegisterModal: React.FC<PrintOfficialRegisterModalProp
                                 </p>
                                 <p className="text-right">
                                   <span className="font-bold text-[14pt]">วันที่:</span>{' '}
-                                  {formatThaiDate(b.date, 'official')}
+                                  {useThaiNumerals ? toThaiNumerals(formatThaiDate(b.date, 'official')) : formatThaiDate(b.date, 'official')}
                                 </p>
                               </div>
                             </div>
@@ -862,10 +880,10 @@ export const PrintOfficialRegisterModal: React.FC<PrintOfficialRegisterModalProp
                             {/* Body Memorandum Details */}
                             <div className="text-justify text-[13pt] leading-relaxed space-y-3" style={{ textIndent: '2.5cm' }}>
                               <p>
-                                ด้วย ข้าพเจ้า <span className="font-bold">{b.name}</span> ตำแหน่ง {b.position || 'เจ้าหน้าที่'} สังกัดกลุ่มงาน {b.department} มีความจำเป็นที่จะต้องเดินทางไปปฏิบัติภารกิจราชการเกี่ยวกับ <span className="font-semibold">{b.purpose}</span> ณ สถานที่ปลายทาง <span className="font-semibold">{b.destination}</span> ในเขตพื้นที่จังหวัด{b.destProvince || 'พังงา'} 
-                                ในวันที่ <span className="font-bold">{formatThaiDate(b.date, 'official')}</span>
+                                ด้วย ข้าพเจ้า <span className="font-bold">{b.name}</span> ตำแหน่ง {b.position || 'เจ้าหน้าที่'} มีความจำเป็นที่จะต้องเดินทางไปปฏิบัติภารกิจราชการเกี่ยวกับ <span className="font-semibold">{b.purpose}</span> ณ สถานที่ปลายทาง <span className="font-semibold">{b.destination}</span> ในเขตพื้นที่จังหวัด{b.destProvince || 'พังงา'} 
+                                ในวันที่ <span className="font-bold">{useThaiNumerals ? toThaiNumerals(formatThaiDate(b.date, 'official')) : formatThaiDate(b.date, 'official')}</span>
                                 {b.startTime && (
-                                  <span> เวลาประมาณ {b.startTime} น. เป็นต้นไป</span>
+                                  <span> เวลาประมาณ {num(b.startTime)} น. เป็นต้นไป</span>
                                 )}
                               </p>
 
@@ -984,7 +1002,7 @@ export const PrintOfficialRegisterModal: React.FC<PrintOfficialRegisterModalProp
                             </p>
                             <p className="text-right">
                               <span className="font-bold text-[14pt]">วันที่:</span>{' '}
-                              {formatThaiDate(activeRequestBooking.date, 'official')}
+                              {useThaiNumerals ? toThaiNumerals(formatThaiDate(activeRequestBooking.date, 'official')) : formatThaiDate(activeRequestBooking.date, 'official')}
                             </p>
                           </div>
                         </div>
@@ -1002,10 +1020,10 @@ export const PrintOfficialRegisterModal: React.FC<PrintOfficialRegisterModalProp
                         {/* Body Memorandum Details */}
                         <div className="text-justify text-[13pt] leading-relaxed space-y-3" style={{ textIndent: '2.5cm' }}>
                           <p>
-                            ด้วย ข้าพเจ้า <span className="font-bold">{activeRequestBooking.name}</span> ตำแหน่ง {activeRequestBooking.position || 'เจ้าหน้าที่'} สังกัดกลุ่มงาน {activeRequestBooking.department} มีความจำเป็นที่จะต้องเดินทางไปปฏิบัติภารกิจราชการเกี่ยวกับ <span className="font-semibold">{activeRequestBooking.purpose}</span> ณ สถานที่ปลายทาง <span className="font-semibold">{activeRequestBooking.destination}</span> ในเขตพื้นที่จังหวัด{activeRequestBooking.destProvince || 'พังงา'} 
-                            ในวันที่ <span className="font-bold">{formatThaiDate(activeRequestBooking.date, 'official')}</span>
+                            ด้วย ข้าพเจ้า <span className="font-bold">{activeRequestBooking.name}</span> ตำแหน่ง {activeRequestBooking.position || 'เจ้าหน้าที่'} มีความจำเป็นที่จะต้องเดินทางไปปฏิบัติภารกิจราชการเกี่ยวกับ <span className="font-semibold">{activeRequestBooking.purpose}</span> ณ สถานที่ปลายทาง <span className="font-semibold">{activeRequestBooking.destination}</span> ในเขตพื้นที่จังหวัด{activeRequestBooking.destProvince || 'พังงา'} 
+                            ในวันที่ <span className="font-bold">{useThaiNumerals ? toThaiNumerals(formatThaiDate(activeRequestBooking.date, 'official')) : formatThaiDate(activeRequestBooking.date, 'official')}</span>
                             {activeRequestBooking.startTime && (
-                              <span> เวลาประมาณ {activeRequestBooking.startTime} น. เป็นต้นไป</span>
+                              <span> เวลาประมาณ {num(activeRequestBooking.startTime)} น. เป็นต้นไป</span>
                             )}
                           </p>
 

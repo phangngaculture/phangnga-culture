@@ -122,6 +122,9 @@ export interface BookingRequest {
   passengerNames?: string;
   attachmentName?: string;
   attachmentUrl?: string;
+  attachmentType?: 'pdf' | 'word' | 'excel' | 'image' | 'link' | 'other';
+  attachmentCategory?: 'schedule' | 'order' | 'dispatch' | 'project' | 'other';
+  attachmentSize?: string;
   status: BookingStatus;
   missionStatus?: MissionSubStatus; // สถานะย่อยของภารกิจงานขับรถ
   directorComment?: string;
