@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { Vehicle, BookingRequest, FuelLog, MaintenanceRecord, User } from '../types';
 import { formatThaiDate } from '../utils/thaiDate';
+import { printElementById } from '../utils/printHelper';
 import {
   FileSpreadsheet,
   Printer,
@@ -151,7 +152,13 @@ export const MonthlyVehicleControlModal: React.FC<MonthlyVehicleControlModalProp
   };
 
   const handlePrint = () => {
-    window.print();
+    // พิมพ์เฉพาะโซนแบบฟอร์ม สตง. (แนวนอน) เพื่อไม่ให้ส่วนอื่นของแอปไปกินพื้นที่กระดาษ
+    // ทำให้เอกสารเริ่มที่หน้า 1 และไม่ถูกตัดแบ่งหลายหน้าโดยไม่จำเป็น
+    printElementById('printMonthlyControlArea', {
+      documentTitle: `บัญชีคุมการใช้รถยนต์และน้ำมันเชื้อเพลิง_${THAI_MONTHS[selectedMonth]}_${selectedYearThai}`,
+      orientation: 'landscape',
+      addPrintableClass: false
+    });
   };
 
   return (
@@ -263,7 +270,7 @@ export const MonthlyVehicleControlModal: React.FC<MonthlyVehicleControlModalProp
         </div>
 
         {/* Modal Printable Content Area */}
-        <div className="p-6 overflow-y-auto flex-1 space-y-6 print:p-0 print:overflow-visible">
+        <div id="printMonthlyControlArea" className="p-6 overflow-y-auto flex-1 space-y-6 print:p-0 print:overflow-visible">
           {/* Official Government Form Heading */}
           <div className="text-center space-y-1 pb-2 border-b-2 border-slate-800 print:border-black">
             <h2 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white print:text-black tracking-wide">

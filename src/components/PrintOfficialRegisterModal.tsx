@@ -832,11 +832,13 @@ export const PrintOfficialRegisterModal: React.FC<PrintOfficialRegisterModalProp
                       {sortedPeriodBookingsForPrint.map((b, idx) => (
                         <div
                           key={b.id}
-                          className={`w-full bg-white flex flex-col justify-between ${
-                            idx > 0 ? 'print:break-before-page border-t-2 border-dashed border-slate-300 pt-10 print:border-none print:pt-0' : ''
+                          className={`w-full bg-white flex flex-col justify-between print-keep-together print-request-form ${
+                            idx > 0 ? 'print:break-before-page print-page-break-before border-t-2 border-dashed border-slate-300 pt-10 print:border-none print:pt-0' : ''
                           }`}
                           style={{
-                            minHeight: '260mm',
+                            /* 260mm เดิมสูงเกินพื้นที่พิมพ์จริง (A4 297mm - ขอบบน/ล่าง 2.5cm = 247mm)
+                               ทำให้ใบขอใช้รถแต่ละใบถูกดันไปหน้าถัดไป 1 หน้า จึงย่อให้พอดี 1 หน้า */
+                            minHeight: '235mm',
                             pageBreakBefore: idx > 0 ? 'always' : 'auto',
                             breakBefore: idx > 0 ? 'page' : 'auto'
                           }}
@@ -895,7 +897,7 @@ export const PrintOfficialRegisterModal: React.FC<PrintOfficialRegisterModalProp
                             </div>
 
                             {/* Requester Signature Box */}
-                            <div className="pt-6 flex justify-end text-center text-[13pt]">
+                            <div className="pt-6 flex justify-end text-center text-[13pt] print-keep-together">
                               <div className="w-[50%] flex flex-col items-center space-y-1">
                                 <div className="h-10 flex items-end justify-center relative">
                                   {b.requesterSignature ? (
@@ -950,7 +952,7 @@ export const PrintOfficialRegisterModal: React.FC<PrintOfficialRegisterModalProp
                               )}
 
                               {/* Director Approved Signature */}
-                              <div className="pt-4 flex justify-end text-center">
+                              <div className="pt-4 flex justify-end text-center print-keep-together">
                                 <div className="w-[50%] flex flex-col items-center space-y-1">
                                   <div className="h-10 flex items-end justify-center">
                                     {b.signatureData ? (
@@ -980,7 +982,7 @@ export const PrintOfficialRegisterModal: React.FC<PrintOfficialRegisterModalProp
                   )
                 ) : (
                   activeRequestBooking ? (
-                    <div className="flex flex-col justify-between" style={{ minHeight: '260mm' }}>
+                    <div className="flex flex-col justify-between print-keep-together print-request-form" style={{ minHeight: '235mm' }}>
                       <div>
                         {/* Garuda Icon / Heading */}
                         <div className="text-center font-bold text-[18pt] tracking-wide mb-4 flex flex-col items-center">
@@ -1035,7 +1037,7 @@ export const PrintOfficialRegisterModal: React.FC<PrintOfficialRegisterModalProp
                         </div>
 
                         {/* Requester Signature Box */}
-                        <div className="pt-6 flex justify-end text-center text-[13pt]">
+                        <div className="pt-6 flex justify-end text-center text-[13pt] print-keep-together">
                           <div className="w-[50%] flex flex-col items-center space-y-1">
                             <div className="h-10 flex items-end justify-center relative">
                               {activeRequestBooking.requesterSignature ? (
@@ -1090,7 +1092,7 @@ export const PrintOfficialRegisterModal: React.FC<PrintOfficialRegisterModalProp
                           )}
 
                           {/* Director Approved Signature */}
-                          <div className="pt-4 flex justify-end text-center">
+                          <div className="pt-4 flex justify-end text-center print-keep-together">
                             <div className="w-[50%] flex flex-col items-center space-y-1">
                               <div className="h-10 flex items-end justify-center">
                                 {activeRequestBooking.signatureData ? (

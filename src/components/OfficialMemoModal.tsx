@@ -112,10 +112,20 @@ export const OfficialMemoModal: React.FC<OfficialMemoModalProps> = ({
   const vehicleBookings = React.useMemo(() => {
     if (!booking) return [];
     if (!allBookings || allBookings.length === 0) return [booking];
-    const list = allBookings.filter(
-      (b) => b.carName && b.carName.trim() === booking.carName?.trim()
-    );
+    // Match by carId when available and fall back to a normalised car name, so a
+    // renamed vehicle (or a record saved with a different name spelling) does not
+    // silently drop missions from the printed ledger/memo.
+    const SPACE = String.fromCharCode(32);
+    const normalise = (value?: string) => (value || '').trim().split(new RegExp('\\s+')).join(SPACE);
+    const targetCarId = booking.carId;
+    const targetCarName = normalise(booking.carName);
+    const list = allBookings.filter((b) => {
+      if (targetCarId && b.carId) return b.carId === targetCarId;
+      return normalise(b.carName) === targetCarName;
+    });
+    // The current booking must always appear, even if it does not match the filter.
     if (list.length === 0) return [booking];
+    if (!list.some((b) => b.id === booking.id)) list.push(booking);
     return [...list].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
   }, [allBookings, booking]);
 
@@ -1123,14 +1133,14 @@ export const OfficialMemoModal: React.FC<OfficialMemoModalProps> = ({
                     </div>
 
                     {/* Requester Signature */}
-                    <div className="pt-2 flex justify-end text-center text-[11.5pt] leading-[1.3]">
+                    <div className="pt-2 flex justify-end text-center text-[11.5pt] leading-[1.3] print-keep-together">
                       <div className="w-[50%] flex flex-col items-center">
                         <div className="relative flex flex-col items-center justify-end h-22">
                           {booking.requesterSignature ? (
                             <img
                               src={booking.requesterSignature}
                               alt={`ลายเซ็น ${booking.name}`}
-                              className="h-18 max-w-[240px] object-contain -mb-2 z-10"
+                              className="h-[4.5rem] max-w-[240px] object-contain -mb-2 z-10"
                             />
                           ) : null}
                           <p className="font-normal text-[11pt] text-black leading-none">
@@ -1182,7 +1192,7 @@ export const OfficialMemoModal: React.FC<OfficialMemoModalProps> = ({
                       )}
 
                       {/* Director Signature Box */}
-                      <div className="pt-1 flex justify-end text-center text-[11.5pt] leading-[1.3]">
+                      <div className="pt-1 flex justify-end text-center text-[11.5pt] leading-[1.3] print-keep-together">
                         <div className="w-[50%] flex flex-col items-center">
                           {booking.status === 'approved' ? (
                             <div className="flex flex-col items-center">
@@ -1191,7 +1201,7 @@ export const OfficialMemoModal: React.FC<OfficialMemoModalProps> = ({
                                   <img
                                     src={booking.signatureData}
                                     alt="ลายมือชื่อผู้อนุมัติ"
-                                    className="h-18 max-w-[240px] object-contain -mb-2 z-10"
+                                    className="h-[4.5rem] max-w-[240px] object-contain -mb-2 z-10"
                                   />
                                 ) : (
                                   <div className="font-serif italic text-blue-900 font-bold text-[12pt] tracking-wider px-2 -mb-1 z-10">
@@ -1311,7 +1321,7 @@ export const OfficialMemoModal: React.FC<OfficialMemoModalProps> = ({
                               <img
                                 src={booking.assetInspectionSignature}
                                 alt="ลายเซ็นผู้ตรวจรับ"
-                                className="h-18 max-w-[220px] object-contain -mb-2 z-10"
+                                className="h-[4.5rem] max-w-[220px] object-contain -mb-2 z-10"
                               />
                             ) : null}
                             <p className="font-normal text-[11pt] text-black leading-none">
@@ -1422,12 +1432,12 @@ export const OfficialMemoModal: React.FC<OfficialMemoModalProps> = ({
                           </tr>
                         </thead>
                         <tbody>
-                          {vehicleBookings.slice(0, 8).map((b, idx) => {
+                          {vehicleBookings.map((b, idx) => {
                             const isCurrent = b.id === booking.id;
-                            const distance = b.totalDistance 
-                              ? b.totalDistance 
-                              : (b.endMileage && b.startMileage) 
-                              ? (b.endMileage - b.startMileage) 
+                            const distance = b.totalDistance
+                              ? b.totalDistance
+                              : (b.endMileage && b.startMileage)
+                              ? (b.endMileage - b.startMileage)
                               : null;
                             return (
                               <tr
@@ -1481,7 +1491,8 @@ export const OfficialMemoModal: React.FC<OfficialMemoModalProps> = ({
                             );
                           })}
 
-                          {/* If less than 6 rows, fill with blank rows for standard government ledger formatting */}
+                          {/* If fewer than 6 rows, pad with blank rows for the standard ledger
+                             format. Rows are never truncated: all missions are printed. */}
                           {vehicleBookings.length < 6 &&
                             Array.from({ length: 6 - vehicleBookings.length }).map((_, fIdx) => (
                               <tr key={`blank-${fIdx}`} className="border-b border-black text-transparent select-none h-6">
@@ -1664,7 +1675,7 @@ export const OfficialMemoModal: React.FC<OfficialMemoModalProps> = ({
                     </div>
                   </div>
 
-                  <div className="pt-2 flex justify-end text-center text-[11.5pt] leading-[1.3]">
+                  <div className="pt-2 flex justify-end text-center text-[11.5pt] leading-[1.3] print-keep-together">
                     <div className="w-[50%] flex flex-col items-center">
                       {booking.status === 'approved' ? (
                         <div className="flex flex-col items-center">

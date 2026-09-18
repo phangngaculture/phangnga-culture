@@ -34,6 +34,7 @@ export const DELETED_VEHICLE_IDS_KEY = 'mculture_deleted_vehicle_ids';
 export const DELETED_FUEL_IDS_KEY = 'mculture_deleted_fuel_ids';
 export const DELETED_MNT_IDS_KEY = 'mculture_deleted_mnt_ids';
 export const DELETED_USER_IDS_KEY = 'mculture_deleted_user_ids';
+export const DELETED_NOTIFICATION_IDS_KEY = 'mculture_deleted_notification_ids';
 
 export const getDeletedIds = (key: string): Set<string> => {
   if (typeof window === 'undefined') return new Set();
@@ -235,167 +236,128 @@ export const subscribeToFirestore = (
   try {
     callbacks.onStatusChange?.('syncing');
 
-    // 1. Bookings collection
-    const bookingsCol = collection(db, 'bookings');
-    const unsubBookings = onSnapshot(
-      bookingsCol,
-      (snapshot) => {
-        const deletedIds = getDeletedIds(DELETED_BOOKING_IDS_KEY);
-        if (!snapshot.empty) {
-          const items: BookingRequest[] = [];
-          snapshot.docs.forEach((d) => {
-            const data = d.data();
-            const id = data.id || d.id;
-            const docId = d.id;
+    // One descriptor per Firestore collection. Each entry declares the collection
+    // name, its tombstone key, how to sort the results, and which callback
+    // receives them, so the whole subscription setup below is a single loop
+    // instead of six near-identical onSnapshot blocks.
+    interface CollectionDescriptor {
+      name: string;
+      tombstoneKey: string | null;
+      sortBy?: string;
+      onData: (items: any[]) => void;
+      // Bookings additionally purge documents whose `memoNo` is tombstoned.
+      matchMemoNo?: boolean;
+      // Bookings keep the raw document id alongside the logical id for later deletes.
+      keepDocId?: boolean;
+      // Notifications re-seed the collection from local data when it is empty.
+      seedWhenEmpty?: () => boolean;
+      // Some collections (bookings) also refresh the global connection status.
+      reportsConnection?: boolean;
+    }
 
-            // If marked as deleted by user, purge from Firestore and exclude from state
-            if (deletedIds.has(id) || deletedIds.has(docId) || (data.memoNo && deletedIds.has(data.memoNo))) {
-              deleteDoc(d.ref).catch(() => {});
-              return;
-            }
-
-            items.push({
-              ...data,
-              id,
-              _docId: docId
-            } as unknown as BookingRequest);
-          });
-
-          // Sort latest first
-          items.sort((a, b) => new Date(b.createdAt || b.date).getTime() - new Date(a.createdAt || a.date).getTime());
-          callbacks.onBookingsChange?.(items);
-        } else {
-          callbacks.onBookingsChange?.([]);
-        }
-        callbacks.onStatusChange?.('connected');
+    const descriptors: CollectionDescriptor[] = [
+      {
+        name: 'bookings',
+        tombstoneKey: DELETED_BOOKING_IDS_KEY,
+        sortBy: 'createdAtOrDate',
+        matchMemoNo: true,
+        keepDocId: true,
+        reportsConnection: true,
+        onData: (items) => callbacks.onBookingsChange?.(items as BookingRequest[])
       },
-      (error: any) => handleSnapshotError('bookings', error)
-    );
-    unsubscribers.push(unsubBookings);
-
-    // 2. Vehicles collection
-    const vehiclesCol = collection(db, 'vehicles');
-    const unsubVehicles = onSnapshot(
-      vehiclesCol,
-      (snapshot) => {
-        const deletedIds = getDeletedIds(DELETED_VEHICLE_IDS_KEY);
-        if (!snapshot.empty) {
-          const items: Vehicle[] = [];
-          snapshot.docs.forEach((d) => {
-            const data = d.data();
-            const id = data.id || d.id;
-            if (deletedIds.has(id) || deletedIds.has(d.id)) {
-              deleteDoc(d.ref).catch(() => {});
-              return;
-            }
-            items.push({ ...data, id } as Vehicle);
-          });
-          callbacks.onVehiclesChange?.(items);
-        } else {
-          callbacks.onVehiclesChange?.([]);
-        }
+      {
+        name: 'vehicles',
+        tombstoneKey: DELETED_VEHICLE_IDS_KEY,
+        onData: (items) => callbacks.onVehiclesChange?.(items as Vehicle[])
       },
-      (error) => handleSnapshotError('vehicles', error)
-    );
-    unsubscribers.push(unsubVehicles);
-
-    // 3. Fuel Logs collection
-    const fuelCol = collection(db, 'fuelLogs');
-    const unsubFuel = onSnapshot(
-      fuelCol,
-      (snapshot) => {
-        const deletedIds = getDeletedIds(DELETED_FUEL_IDS_KEY);
-        if (!snapshot.empty) {
-          const items: FuelLog[] = [];
-          snapshot.docs.forEach((d) => {
-            const data = d.data();
-            const id = data.id || d.id;
-            if (deletedIds.has(id) || deletedIds.has(d.id)) {
-              deleteDoc(d.ref).catch(() => {});
-              return;
-            }
-            items.push({ ...data, id } as FuelLog);
-          });
-          items.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-          callbacks.onFuelLogsChange?.(items);
-        } else {
-          callbacks.onFuelLogsChange?.([]);
-        }
+      {
+        name: 'fuelLogs',
+        tombstoneKey: DELETED_FUEL_IDS_KEY,
+        sortBy: 'date',
+        onData: (items) => callbacks.onFuelLogsChange?.(items as FuelLog[])
       },
-      (error) => handleSnapshotError('fuelLogs', error)
-    );
-    unsubscribers.push(unsubFuel);
-
-    // 4. Maintenance collection
-    const mntCol = collection(db, 'maintenanceRecords');
-    const unsubMnt = onSnapshot(
-      mntCol,
-      (snapshot) => {
-        const deletedIds = getDeletedIds(DELETED_MNT_IDS_KEY);
-        if (!snapshot.empty) {
-          const items: MaintenanceRecord[] = [];
-          snapshot.docs.forEach((d) => {
-            const data = d.data();
-            const id = data.id || d.id;
-            if (deletedIds.has(id) || deletedIds.has(d.id)) {
-              deleteDoc(d.ref).catch(() => {});
-              return;
-            }
-            items.push({ ...data, id } as MaintenanceRecord);
-          });
-          items.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-          callbacks.onMaintenanceChange?.(items);
-        } else {
-          callbacks.onMaintenanceChange?.([]);
-        }
+      {
+        name: 'maintenanceRecords',
+        tombstoneKey: DELETED_MNT_IDS_KEY,
+        sortBy: 'date',
+        onData: (items) => callbacks.onMaintenanceChange?.(items as MaintenanceRecord[])
       },
-      (error) => handleSnapshotError('maintenanceRecords', error)
-    );
-    unsubscribers.push(unsubMnt);
-
-    // 5. Users collection
-    const usersCol = collection(db, 'users');
-    const unsubUsers = onSnapshot(
-      usersCol,
-      (snapshot) => {
-        const deletedIds = getDeletedIds(DELETED_USER_IDS_KEY);
-        if (!snapshot.empty) {
-          const items: User[] = [];
-          snapshot.docs.forEach((d) => {
-            const data = d.data();
-            const id = data.id || d.id;
-            if (deletedIds.has(id) || deletedIds.has(d.id)) {
-              deleteDoc(d.ref).catch(() => {});
-              return;
-            }
-            items.push({ ...data, id } as User);
-          });
-          callbacks.onUsersChange?.(items);
-        } else {
-          callbacks.onUsersChange?.([]);
-        }
+      {
+        name: 'users',
+        tombstoneKey: DELETED_USER_IDS_KEY,
+        onData: (items) => callbacks.onUsersChange?.(items as User[])
       },
-      (error) => handleSnapshotError('users', error)
-    );
-    unsubscribers.push(unsubUsers);
-
-    // 6. Notifications collection
-    const notifCol = collection(db, 'notifications');
-    const unsubNotif = onSnapshot(
-      notifCol,
-      (snapshot) => {
-        if (!snapshot.empty) {
-          const items = snapshot.docs.map((d) => d.data() as NotificationItem);
-          callbacks.onNotificationsChange?.(items);
-        } else if (initialData?.notifications && initialData.notifications.length > 0) {
-          seedCollection('notifications', initialData.notifications);
-        } else {
-          callbacks.onNotificationsChange?.([]);
+      {
+        // Notifications carry no tombstone list; they only re-seed when empty.
+        name: 'notifications',
+        tombstoneKey: null,
+        onData: (items) => callbacks.onNotificationsChange?.(items as NotificationItem[]),
+        seedWhenEmpty: () => {
+          if (initialData?.notifications && initialData.notifications.length > 0) {
+            seedCollection('notifications', initialData.notifications);
+            return true;
+          }
+          return false;
         }
-      },
-      (error) => handleSnapshotError('notifications', error)
-    );
-    unsubscribers.push(unsubNotif);
+      }
+    ];
+
+    const sortItems = (items: any[], sortBy?: string) => {
+      if (sortBy === 'date') {
+        items.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+      } else if (sortBy === 'createdAtOrDate') {
+        items.sort(
+          (a, b) =>
+            new Date(b.createdAt || b.date).getTime() - new Date(a.createdAt || a.date).getTime()
+        );
+      }
+    };
+
+    descriptors.forEach((descriptor) => {
+      const unsubscribe = onSnapshot(
+        collection(db, descriptor.name),
+        (snapshot) => {
+          if (!snapshot.empty) {
+            const deletedIds = descriptor.tombstoneKey
+              ? getDeletedIds(descriptor.tombstoneKey)
+              : null;
+            const items: any[] = [];
+
+            snapshot.docs.forEach((d) => {
+              const data = d.data();
+              const id = data.id || d.id;
+
+              // Purge anything the user deleted locally, so it cannot be resurrected.
+              if (
+                deletedIds &&
+                (deletedIds.has(id) ||
+                  deletedIds.has(d.id) ||
+                  (descriptor.matchMemoNo && data.memoNo && deletedIds.has(data.memoNo)))
+              ) {
+                deleteDoc(d.ref).catch(() => {});
+                return;
+              }
+
+              items.push(
+                descriptor.keepDocId ? { ...data, id, _docId: d.id } : { ...data, id }
+              );
+            });
+
+            sortItems(items, descriptor.sortBy);
+            descriptor.onData(items);
+          } else if (descriptor.seedWhenEmpty) {
+            if (!descriptor.seedWhenEmpty()) descriptor.onData([]);
+          } else {
+            descriptor.onData([]);
+          }
+
+          if (descriptor.reportsConnection) callbacks.onStatusChange?.('connected');
+        },
+        (error) => handleSnapshotError(descriptor.name, error)
+      );
+
+      unsubscribers.push(unsubscribe);
+    });
 
   } catch (err) {
     console.error('Failed to subscribe to Firestore:', err);
@@ -552,160 +514,82 @@ export const clearAllBookingsFromFirestore = async (): Promise<boolean> => {
   }
 };
 
-export const saveVehicleToFirestore = async (vehicle: Vehicle): Promise<boolean> => {
+// Generic save helper shared by all entity saves.
+// 1) Clears any tombstone so a newly created or edited document stays visible.
+// 2) Writes the sanitised entity with `merge: true`, preserving untouched fields.
+// 3) Routes failures through handleFirestoreError and reports success as boolean.
+export const saveEntityToFirestore = async (
+  collectionName: string,
+  tombstoneKey: string,
+  entity: { id?: string } | null | undefined
+): Promise<boolean> => {
   try {
-    if (!vehicle || !vehicle.id) return false;
-    removeDeletedId(DELETED_VEHICLE_IDS_KEY, vehicle.id);
-    const docRef = doc(db, 'vehicles', vehicle.id);
-    await setDoc(docRef, cleanForFirestore(vehicle), { merge: true });
-    console.log(`[Firestore] Successfully saved vehicle: ${vehicle.id}`);
+    if (!entity || !entity.id) return false;
+    removeDeletedId(tombstoneKey, entity.id);
+    await setDoc(doc(db, collectionName, entity.id), cleanForFirestore(entity), { merge: true });
+    console.log(`[Firestore] Successfully saved ${collectionName}: ${entity.id}`);
     return true;
   } catch (err) {
-    handleFirestoreError(err, OperationType.WRITE, `vehicles/${vehicle?.id}`);
+    handleFirestoreError(err, OperationType.WRITE, `${collectionName}/${entity?.id}`);
     return false;
   }
 };
 
-export const deleteVehicleFromFirestore = async (vehicleId: string): Promise<boolean> => {
-  if (!vehicleId) return false;
-  addDeletedId(DELETED_VEHICLE_IDS_KEY, vehicleId);
-  try {
-    const docRef = doc(db, 'vehicles', vehicleId);
-    await deleteDoc(docRef);
+export const saveVehicleToFirestore = async (vehicle: Vehicle): Promise<boolean> =>
+  saveEntityToFirestore('vehicles', DELETED_VEHICLE_IDS_KEY, vehicle);
 
-    const q = query(collection(db, 'vehicles'), where('id', '==', vehicleId));
+// Generic delete helper shared by all entity deletes.
+// 1) Records a tombstone so a pending snapshot cannot resurrect the item.
+// 2) Deletes the document whose Firestore doc id matches the entity id.
+// 3) Also deletes any documents whose `id` field matches (legacy duplicates).
+export const deleteEntityFromFirestore = async (
+  collectionName: string,
+  tombstoneKey: string,
+  entityId: string
+): Promise<boolean> => {
+  if (!entityId) return false;
+  addDeletedId(tombstoneKey, entityId);
+  try {
+    await deleteDoc(doc(db, collectionName, entityId));
+
+    const q = query(collection(db, collectionName), where('id', '==', entityId));
     const snaps = await getDocs(q);
     if (!snaps.empty) {
       const batch = writeBatch(db);
       snaps.docs.forEach((d) => batch.delete(d.ref));
       await batch.commit();
     }
-    console.log(`[Firestore] Successfully deleted vehicle: ${vehicleId}`);
+    console.log(`[Firestore] Successfully deleted ${collectionName}: ${entityId}`);
     return true;
   } catch (err) {
-    handleFirestoreError(err, OperationType.DELETE, `vehicles/${vehicleId}`);
+    handleFirestoreError(err, OperationType.DELETE, `${collectionName}/${entityId}`);
     return false;
   }
 };
 
-export const saveFuelLogToFirestore = async (log: FuelLog): Promise<boolean> => {
-  try {
-    if (!log || !log.id) return false;
-    removeDeletedId(DELETED_FUEL_IDS_KEY, log.id);
-    const docRef = doc(db, 'fuelLogs', log.id);
-    await setDoc(docRef, cleanForFirestore(log), { merge: true });
-    console.log(`[Firestore] Successfully saved fuel log: ${log.id}`);
-    return true;
-  } catch (err) {
-    handleFirestoreError(err, OperationType.WRITE, `fuelLogs/${log?.id}`);
-    return false;
-  }
-};
+export const deleteVehicleFromFirestore = async (vehicleId: string): Promise<boolean> =>
+  deleteEntityFromFirestore('vehicles', DELETED_VEHICLE_IDS_KEY, vehicleId);
 
-export const deleteFuelLogFromFirestore = async (fuelLogId: string): Promise<boolean> => {
-  if (!fuelLogId) return false;
-  addDeletedId(DELETED_FUEL_IDS_KEY, fuelLogId);
-  try {
-    const docRef = doc(db, 'fuelLogs', fuelLogId);
-    await deleteDoc(docRef);
+export const saveFuelLogToFirestore = async (log: FuelLog): Promise<boolean> =>
+  saveEntityToFirestore('fuelLogs', DELETED_FUEL_IDS_KEY, log);
 
-    const q = query(collection(db, 'fuelLogs'), where('id', '==', fuelLogId));
-    const snaps = await getDocs(q);
-    if (!snaps.empty) {
-      const batch = writeBatch(db);
-      snaps.docs.forEach((d) => batch.delete(d.ref));
-      await batch.commit();
-    }
-    console.log(`[Firestore] Successfully deleted fuel log: ${fuelLogId}`);
-    return true;
-  } catch (err) {
-    handleFirestoreError(err, OperationType.DELETE, `fuelLogs/${fuelLogId}`);
-    return false;
-  }
-};
+export const deleteFuelLogFromFirestore = async (fuelLogId: string): Promise<boolean> =>
+  deleteEntityFromFirestore('fuelLogs', DELETED_FUEL_IDS_KEY, fuelLogId);
 
-export const saveMaintenanceToFirestore = async (record: MaintenanceRecord): Promise<boolean> => {
-  try {
-    if (!record || !record.id) return false;
-    removeDeletedId(DELETED_MNT_IDS_KEY, record.id);
-    const docRef = doc(db, 'maintenanceRecords', record.id);
-    await setDoc(docRef, cleanForFirestore(record), { merge: true });
-    console.log(`[Firestore] Successfully saved maintenance record: ${record.id}`);
-    return true;
-  } catch (err) {
-    handleFirestoreError(err, OperationType.WRITE, `maintenanceRecords/${record?.id}`);
-    return false;
-  }
-};
+export const saveMaintenanceToFirestore = async (record: MaintenanceRecord): Promise<boolean> =>
+  saveEntityToFirestore('maintenanceRecords', DELETED_MNT_IDS_KEY, record);
 
-export const deleteMaintenanceFromFirestore = async (recordId: string): Promise<boolean> => {
-  if (!recordId) return false;
-  addDeletedId(DELETED_MNT_IDS_KEY, recordId);
-  try {
-    const docRef = doc(db, 'maintenanceRecords', recordId);
-    await deleteDoc(docRef);
+export const deleteMaintenanceFromFirestore = async (recordId: string): Promise<boolean> =>
+  deleteEntityFromFirestore('maintenanceRecords', DELETED_MNT_IDS_KEY, recordId);
 
-    const q = query(collection(db, 'maintenanceRecords'), where('id', '==', recordId));
-    const snaps = await getDocs(q);
-    if (!snaps.empty) {
-      const batch = writeBatch(db);
-      snaps.docs.forEach((d) => batch.delete(d.ref));
-      await batch.commit();
-    }
-    console.log(`[Firestore] Successfully deleted maintenance record: ${recordId}`);
-    return true;
-  } catch (err) {
-    handleFirestoreError(err, OperationType.DELETE, `maintenanceRecords/${recordId}`);
-    return false;
-  }
-};
+export const saveUserToFirestore = async (user: User): Promise<boolean> =>
+  saveEntityToFirestore('users', DELETED_USER_IDS_KEY, user);
 
-export const saveUserToFirestore = async (user: User): Promise<boolean> => {
-  try {
-    if (!user || !user.id) return false;
-    removeDeletedId(DELETED_USER_IDS_KEY, user.id);
-    const docRef = doc(db, 'users', user.id);
-    await setDoc(docRef, cleanForFirestore(user), { merge: true });
-    console.log(`[Firestore] Successfully saved user: ${user.id}`);
-    return true;
-  } catch (err) {
-    handleFirestoreError(err, OperationType.WRITE, `users/${user?.id}`);
-    return false;
-  }
-};
+export const deleteUserFromFirestore = async (userId: string): Promise<boolean> =>
+  deleteEntityFromFirestore('users', DELETED_USER_IDS_KEY, userId);
 
-export const deleteUserFromFirestore = async (userId: string): Promise<boolean> => {
-  if (!userId) return false;
-  addDeletedId(DELETED_USER_IDS_KEY, userId);
-  try {
-    const docRef = doc(db, 'users', userId);
-    await deleteDoc(docRef);
-
-    const q = query(collection(db, 'users'), where('id', '==', userId));
-    const snaps = await getDocs(q);
-    if (!snaps.empty) {
-      const batch = writeBatch(db);
-      snaps.docs.forEach((d) => batch.delete(d.ref));
-      await batch.commit();
-    }
-    console.log(`[Firestore] Successfully deleted user: ${userId}`);
-    return true;
-  } catch (err) {
-    handleFirestoreError(err, OperationType.DELETE, `users/${userId}`);
-    return false;
-  }
-};
-
-export const saveNotificationToFirestore = async (notification: NotificationItem): Promise<boolean> => {
-  try {
-    const docRef = doc(db, 'notifications', notification.id);
-    await setDoc(docRef, cleanForFirestore(notification), { merge: true });
-    return true;
-  } catch (err) {
-    handleFirestoreError(err, OperationType.WRITE, `notifications/${notification.id}`);
-    return false;
-  }
-};
+export const saveNotificationToFirestore = async (notification: NotificationItem): Promise<boolean> =>
+  saveEntityToFirestore('notifications', DELETED_NOTIFICATION_IDS_KEY, notification);
 
 export const manualForceSyncAllToFirestore = async (
   bookings: BookingRequest[],

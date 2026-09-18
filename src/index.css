@@ -278,6 +278,7 @@
   #printPermitArea, #printPermitArea *,
   #printRegisterArea, #printRegisterArea *,
   #printRegisterSingleArea, #printRegisterSingleArea *,
+  #printMonthlyControlArea, #printMonthlyControlArea *,
   #analyticsReportArea, #analyticsReportArea *,
   .printable-document, .printable-document * {
     visibility: visible !important;
@@ -308,8 +309,6 @@
     width: 100% !important;
     min-width: 100% !important;
     max-width: 100% !important;
-    height: auto !important;
-    min-height: 0 !important;
     box-sizing: border-box !important;
     padding: 0 !important;
     margin: 0 !important;
@@ -319,11 +318,36 @@
     color: #000000 !important;
     transform: none !important;
     font-family: 'TH Sarabun New', 'THSarabunNew', 'TH Sarabun PSK', 'Sarabun', Tahoma, sans-serif !important;
-    font-size: 13pt !important;
-    line-height: 1.45 !important;
     overflow: visible !important;
+    /* Do NOT force a fixed height here. The templates set an on-screen A4 canvas
+       of 297mm/210mm with `overflow: hidden`; if that height survives into print,
+       every block that overflows it is silently clipped and the printed page
+       loses its trailing content. Let the page flow decide the height. */
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    /* Do NOT set `page-break-inside: avoid` / `break-inside: avoid` on the
+       document root. A memo plus the mileage/inspection block is often taller
+       than one A4 page, and forbidding breaks there pushes the overflow off the
+       sheet. Allow natural pagination; protect only the small blocks below. */
+    page-break-inside: auto !important;
+    break-inside: auto !important;
+  }
+
+  /* Keep small, self-contained blocks from being split across pages, while the
+     document root remains free to break so nothing is pushed off the sheet. */
+  #printMemoArea table,
+  #printPermitArea table,
+  #printRegisterSingleArea table,
+  #printMemoArea tr,
+  #printRegisterSingleArea tr {
     page-break-inside: avoid !important;
-    page-break-after: avoid !important;
+    break-inside: avoid !important;
+  }
+
+  /* Elements explicitly marked as atomic must never be split. */
+  .print-keep-together {
+    page-break-inside: avoid !important;
     break-inside: avoid !important;
   }
 
@@ -345,6 +369,10 @@
     width: 100% !important;
     min-width: 100% !important;
     max-width: 100% !important;
+    /* Release the fixed on-screen A4 height so long ledgers are not clipped. */
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
     padding: 0 !important;
     margin: 0 !important;
     background: #ffffff !important;
@@ -355,6 +383,14 @@
     overflow: visible !important;
     page-break-inside: auto !important;
     break-inside: auto !important;
+  }
+
+  /* The register body is the paged element itself, so it must be allowed to
+     flow onto extra sheets instead of being cut off after eight rows. */
+  #printRegisterSingleArea .flex-grow,
+  #printRegisterArea .flex-grow {
+    overflow: visible !important;
+    height: auto !important;
   }
 
   table {
@@ -384,11 +420,129 @@
 
   /* Hide print buttons, controls, and dialog chrome */
   .no-print,
-  button,
   .print-hide,
+  button:not(.print-keep),
   [data-print-hide="true"] {
     display: none !important;
     visibility: hidden !important;
+  }
+
+  /* Loose text should not be truncated by screen-only utilities in print. */
+  #printMemoArea .truncate,
+  #printPermitArea .truncate,
+  #printRegisterSingleArea .truncate {
+    overflow: visible !important;
+    text-overflow: clip !important;
+    white-space: normal !important;
+  }
+
+  /* ==========================================================================
+     PRINT ISOLATION (พิมพ์เฉพาะเอกสารที่เลือก ให้เริ่มที่หน้า 1 และครบใน 1 หน้า)
+     --------------------------------------------------------------------------
+     ปัญหาเดิม: ทุกส่วนของแอปถูกซ่อนด้วย `visibility: hidden` แต่ยังคงกินพื้นที่
+     กระดาษอยู่ (ซ่อนไม่จริง) และโหมดดูมือถือยังวางกระดาษ A4 ไว้ที่ left:-9999px
+     ทำให้เอกสารที่สั่งพิมพ์ไปโผล่หน้าถัดไปและถูกตัดแบ่งเป็นหลายหน้า
+
+     วิธีแก้: printHelper จะติดคลาสให้ <body> (print-sheet-active), ตัวเอกสาร
+     (print-sheet-root) และโซนแม่ทุกชั้น (print-sheet-ancestor) แล้วให้ CSS
+     ด้านล่างซ่อนส่วนอื่นของแอปทั้งหมดแบบ display:none พร้อมล้างระยะขอบ/การซูม
+     ของโซนแม่ เพื่อให้เอกสารเริ่มที่มุมบนซ้ายของกระดาษหน้าแรกเสมอ
+     ========================================================================== */
+
+  /* โซนแม่ทุกชั้นถูกทำให้เป็นกลาง (ไม่มีเงา/ระยะขอบ/กรอบ/การซูม/การซ่อน) */
+  body.print-sheet-active .print-sheet-ancestor {
+    position: static !important;
+    left: 0 !important;
+    top: 0 !important;
+    right: auto !important;
+    bottom: auto !important;
+    inset: auto !important;
+    z-index: auto !important;
+    transform: none !important;
+    transform-origin: top left !important;
+    opacity: 1 !important;
+    filter: none !important;
+    backdrop-filter: none !important;
+    visibility: visible !important;
+    overflow: visible !important;
+    display: block !important;
+    float: none !important;
+    width: auto !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    gap: 0 !important;
+    box-shadow: none !important;
+    background: transparent !important;
+  }
+
+  /* ทุกส่วนที่ไม่ได้อยู่ในเส้นทางของเอกสาร ถูกตัดออกไม่ให้กินพื้นที่กระดาษ */
+  body.print-sheet-active .print-sheet-ancestor > *:not(.print-sheet-ancestor):not(.print-sheet-root),
+  body.print-sheet-active > *:not(.print-sheet-ancestor):not(.print-sheet-root) {
+    display: none !important;
+    visibility: hidden !important;
+  }
+
+  /* ตัวเอกสารพิมพ์เต็มความกว้างพื้นที่พิมพ์ และไม่ถูกตัดด้วยความสูงเดิมของหน้าจอ */
+  .print-sheet-root {
+    position: relative !important;
+    left: 0 !important;
+    top: 0 !important;
+    transform: none !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    overflow: visible !important;
+    box-sizing: border-box !important;
+    width: 100% !important;
+    min-width: 100% !important;
+    max-width: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    margin: 0 !important;
+    box-shadow: none !important;
+    background: #ffffff !important;
+    color: #000000 !important;
+  }
+
+  /* แต่ละใบขอใช้รถ/เอกสาร 1 ฉบับ ไม่ให้ถูกตัดครึ่งข้ามหน้า */
+  .print-page-break-before {
+    page-break-before: always !important;
+    break-before: page !important;
+  }
+
+  /* ใบขอใช้รถ 1 ใบ: ย่อระยะบรรทัด/ระยะขอบในโหมดพิมพ์ลงเล็กน้อย
+     เพื่อให้ส่วนประกอบทั้งหมด (หัวเรื่อง - เนื้อหา - ช่องลงนาม - คำสั่งผู้อำนวยการ)
+     จบอยู่ในกระดาษหน้าเดียว (พื้นที่พิมพ์จริง = 247mm) */
+  .print-request-form {
+    line-height: 1.35 !important;
+  }
+
+  .print-request-form .leading-relaxed,
+  .print-request-form .leading-snug,
+  .print-request-form .leading-tight {
+    line-height: 1.35 !important;
+  }
+
+  .print-request-form .mb-4 {
+    margin-bottom: 3mm !important;
+  }
+
+  .print-request-form .mt-8 {
+    margin-top: 4mm !important;
+  }
+
+  .print-request-form .pt-6 {
+    padding-top: 4mm !important;
+  }
+
+  .print-request-form .pt-4 {
+    padding-top: 3mm !important;
   }
 }
 
