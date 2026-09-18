@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { BookingRequest } from '../types';
+import { BookingRequest, User } from '../types';
 import { formatThaiDate, toThaiNumerals } from '../utils/thaiDate';
 import { printElementById } from '../utils/printHelper';
 import { exportElementToPdf } from '../utils/pdfExport';
+import { canUserApproveBooking, canUserInspectAsset } from '../utils/driverPermissions';
 import {
   Printer,
   X,
@@ -43,6 +44,7 @@ interface OfficialMemoModalProps {
   booking: BookingRequest | null;
   onClose: () => void;
   justApproved?: boolean;
+  currentUser?: User | null;
   onOpenSignatureModal?: (booking: BookingRequest) => void;
   onOpenInspectionModal?: (booking: BookingRequest) => void;
   allBookings?: BookingRequest[];
@@ -53,11 +55,15 @@ export const OfficialMemoModal: React.FC<OfficialMemoModalProps> = ({
   booking,
   onClose,
   justApproved = false,
+  currentUser = null,
   onOpenSignatureModal,
   onOpenInspectionModal,
   allBookings = [],
   initialDocType
 }) => {
+  // ปุ่มอนุมัติ: เฉพาะผู้อนุมัติเท่านั้น / ปุ่มตรวจรับพัสดุ: เฉพาะเจ้าหน้าที่พัสดุเท่านั้น
+  const canApprove = canUserApproveBooking(currentUser);
+  const canInspect = canUserInspectAsset(currentUser);
   const [useThaiNumerals, setUseThaiNumerals] = useState(true);
   const [activeDocType, setActiveDocType] = useState<OfficialDocType>(
     initialDocType || (booking && booking.destProvince && booking.destProvince !== 'พังงา' ? 'out_province' : 'memo')
@@ -900,10 +906,11 @@ export const OfficialMemoModal: React.FC<OfficialMemoModalProps> = ({
                       <p className="text-xs text-amber-700 dark:text-amber-300 font-medium">
                         อยู่ระหว่างรอการลงนามคำสั่งจากวัฒนธรรมจังหวัด
                       </p>
-                      {onOpenSignatureModal && (
+                      {onOpenSignatureModal && canApprove && (
                         <button
                           onClick={() => onOpenSignatureModal(booking)}
                           className="mt-2 px-4 py-2 bg-gradient-to-r from-teal-700 to-emerald-600 hover:from-teal-800 hover:to-emerald-700 text-white text-xs font-bold rounded-xl shadow-xs transition flex items-center space-x-1.5 mx-auto cursor-pointer"
+                          title="เฉพาะผู้อนุมัติเท่านั้น"
                         >
                           <PenTool className="w-3.5 h-3.5" />
                           <span>ลงนามอนุมัติตอนนี้</span>
@@ -1745,8 +1752,8 @@ export const OfficialMemoModal: React.FC<OfficialMemoModalProps> = ({
           </div>
 
           <div className="flex items-center space-x-2 w-full sm:w-auto justify-end">
-            {/* Quick Director Approval Button if pending */}
-            {onOpenSignatureModal && booking.status === 'pending' && (
+            {/* Quick Director Approval Button if pending — เฉพาะผู้อนุมัติเท่านั้น */}
+            {onOpenSignatureModal && canApprove && booking.status === 'pending' && (
               <button
                 type="button"
                 onClick={() => onOpenSignatureModal(booking)}
@@ -1757,8 +1764,8 @@ export const OfficialMemoModal: React.FC<OfficialMemoModalProps> = ({
               </button>
             )}
 
-            {/* Quick Inspection Button if completed */}
-            {onOpenInspectionModal && (booking.status === 'completed' || booking.endMileage) && (
+            {/* Quick Inspection Button if completed — เฉพาะเจ้าหน้าที่พัสดุเท่านั้น */}
+            {onOpenInspectionModal && canInspect && (booking.status === 'completed' || booking.endMileage) && (
               <button
                 type="button"
                 onClick={() => onOpenInspectionModal(booking)}

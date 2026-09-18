@@ -24,6 +24,7 @@ import {
   getUserAllowedMenus
 } from './data/mockData';
 import { playAppSound } from './utils/thaiDate';
+import { canUserApproveBooking, canUserInspectAsset } from './utils/driverPermissions';
 import { ShieldAlert } from 'lucide-react';
 import {
   VoiceSettings,
@@ -1102,8 +1103,12 @@ export default function App() {
     }
   };
 
-  // Handle Open Signature Modal for Director
+  // Handle Open Signature Modal for Director — เฉพาะผู้อนุมัติเท่านั้น
   const handleOpenSignatureModal = (booking: BookingRequest, initialComment?: string) => {
+    if (!canUserApproveBooking(currentUser)) {
+      showToast('ปุ่มอนุมัติสงวนไว้สำหรับผู้อนุมัติเท่านั้น', 'error');
+      return;
+    }
     setSigningBooking(booking);
     setSignatureInitialComment(
       initialComment ||
@@ -1113,7 +1118,7 @@ export default function App() {
     setIsSignatureModalOpen(true);
   };
 
-  // Handle Confirmed Approval with Signature (Draw or Electronic)
+  // Handle Confirmed Approval with Signature (Draw or Electronic) — เฉพาะผู้อนุมัติเท่านั้น
   const handleConfirmApprovalWithSignature = async (
     bookingId: string,
     approvalData: {
@@ -1123,6 +1128,10 @@ export default function App() {
       signerName: string;
     }
   ) => {
+    if (!canUserApproveBooking(currentUser)) {
+      showToast('ปุ่มอนุมัติสงวนไว้สำหรับผู้อนุมัติเท่านั้น', 'error');
+      return;
+    }
     const target = bookings.find((b) => b.id === bookingId);
     if (!target) return;
 
@@ -1213,13 +1222,17 @@ export default function App() {
     }
   };
 
-  // Handle Open Asset Inspection Modal
+  // Handle Open Asset Inspection Modal — เฉพาะเจ้าหน้าที่พัสดุเท่านั้น
   const handleOpenInspectionModal = (booking: BookingRequest) => {
+    if (!canUserInspectAsset(currentUser)) {
+      showToast('ปุ่มตรวจรับพัสดุสงวนไว้สำหรับเจ้าหน้าที่พัสดุเท่านั้น', 'error');
+      return;
+    }
     setInspectingBooking(booking);
     setIsInspectionModalOpen(true);
   };
 
-  // Handle Confirm Asset Inspection by Logistics Officer
+  // Handle Confirm Asset Inspection by Logistics Officer — เฉพาะเจ้าหน้าที่พัสดุเท่านั้น
   const handleConfirmInspection = async (
     bookingId: string,
     data: {
@@ -1233,6 +1246,10 @@ export default function App() {
       assetInspectionSignatureType: 'draw' | 'electronic';
     }
   ) => {
+    if (!canUserInspectAsset(currentUser)) {
+      showToast('ปุ่มตรวจรับพัสดุสงวนไว้สำหรับเจ้าหน้าที่พัสดุเท่านั้น', 'error');
+      return;
+    }
     let updatedTargetBooking: BookingRequest | undefined;
     const updated = bookings.map((b) => {
       if (b.id === bookingId) {
@@ -1288,8 +1305,12 @@ export default function App() {
     }
   };
 
-  // Handle Approve by Director (Direct fallback)
+  // Handle Approve by Director (Direct fallback) — เฉพาะผู้อนุมัติเท่านั้น
   const handleApproveBooking = (bookingId: string, comment: string) => {
+    if (!canUserApproveBooking(currentUser)) {
+      showToast('ปุ่มอนุมัติสงวนไว้สำหรับผู้อนุมัติเท่านั้น', 'error');
+      return;
+    }
     const target = bookings.find((b) => b.id === bookingId);
     if (!target) return;
 
@@ -1297,8 +1318,12 @@ export default function App() {
     handleOpenSignatureModal(target, comment);
   };
 
-  // Handle Reject by Director
+  // Handle Reject by Director — เฉพาะผู้อนุมัติเท่านั้น
   const handleRejectBooking = async (bookingId: string, comment: string) => {
+    if (!canUserApproveBooking(currentUser)) {
+      showToast('ปุ่มอนุมัติสงวนไว้สำหรับผู้อนุมัติเท่านั้น', 'error');
+      return;
+    }
     let targetBooking: BookingRequest | undefined;
     const updated = bookings.map((b) => {
       if (b.id === bookingId) {
@@ -2048,6 +2073,7 @@ export default function App() {
             setMemoJustSigned(false);
           }}
           justApproved={memoJustSigned}
+          currentUser={currentUser}
           onOpenSignatureModal={(b) => {
             setSelectedBookingForMemo(null);
             handleOpenSignatureModal(b);

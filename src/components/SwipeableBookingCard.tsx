@@ -21,7 +21,7 @@ import {
   Image as ImageIcon,
   UserCheck
 } from 'lucide-react';
-import { canUserExecuteMission } from '../utils/driverPermissions';
+import { canUserApproveBooking, canUserExecuteMission } from '../utils/driverPermissions';
 
 interface SwipeableBookingCardProps {
   booking: BookingRequest;
@@ -62,7 +62,7 @@ export const SwipeableBookingCard: React.FC<SwipeableBookingCardProps> = ({
   // Determine user permissions for this booking
   const isOwner = currentUser.id === b.userId || currentUser.username === b.username || currentUser.name === b.name;
   const isAdmin = currentUser.role === 'admin';
-  const isDirector = currentUser.role === 'director' || isAdmin;
+  const isDirector = canUserApproveBooking(currentUser);
   const isPending = b.status === 'pending' || b.status === 'pending_director';
   const canDelete = isAdmin || (isOwner && (isPending || b.status === 'rejected' || b.status === 'cancelled'));
   const canEdit = isAdmin || (isOwner && isPending);

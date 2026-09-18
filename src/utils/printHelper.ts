@@ -13,6 +13,7 @@ export interface PrintOptions {
   /**
    * ย่อเอกสารให้พอดี 1 หน้าโดยอัตโนมัติ (สำหรับเอกสาร A4 หน้าเดียว เช่น ใบคำขอ)
    * ใช้กับเอกสารที่มีหลายหน้าโดยธรรมชาติ (ทะเบียนคุม/รายงาน) ไม่ควรเปิด
+   * ค่าเริ่มต้น: true (กันเอกสารล้นไปหน้า 2 ว่างเหมือนไฟล์ PDF)
    */
   fitToPage?: boolean;
 }
@@ -97,12 +98,24 @@ function measurePrintHeightMm(element: HTMLElement, pageWidthMm: number): number
  */
 function computeFitZoom(element: HTMLElement, orientation: 'portrait' | 'landscape'): number {
   const page = orientation === 'landscape' ? PAGE_SIZE.landscape : PAGE_SIZE.portrait;
-  const contentHeightMm = measurePrintHeightMm(element, page.widthMm);
-  const usableHeightMm = page.heightMm * 0.985;
+  // วัดจากการ์ดเอกสารจริง (ที่ล็อก height: 297mm แบบเดียวกับตอนพิมพ์)
+  // ถ้าวัดจากการ์ดไม่ได้ (clone สูงผิดปกติเพราะ flex/height) ให้ fallback เป็น scrollHeight ของเนื้อหา
+  let contentHeightMm = measurePrintHeightMm(element, page.widthMm);
+
+  if (!contentHeightMm || contentHeightMm > page.heightMm * 1.6) {
+    const fallbackPx = element.scrollHeight || element.getBoundingClientRect().height;
+    if (fallbackPx > 0) {
+      contentHeightMm = pxToMm(fallbackPx);
+    }
+  }
+
+  // พื้นที่พิมพ์จริง = เต็มหน้า A4 หักขอบปลอดภัย ~2% (359.6mm/297mm -> เผื่อปัดเศษ/ฟอนต์โตกว่าต้นฉบับ)
+  const usableHeightMm = page.heightMm * 0.98;
 
   if (!contentHeightMm || contentHeightMm <= usableHeightMm) return 1;
 
-  return Math.max(0.6, usableHeightMm / contentHeightMm);
+  // เอกสารแนวตั้งทุกใบ บีบให้จบหน้าเดียวเหมือนไฟล์ PDF (ย่อได้ถึง 45% กันเนื้อหายาวล้น)
+  return Math.max(0.45, usableHeightMm / contentHeightMm);
 }
 
 
@@ -169,14 +182,14 @@ export function printElementById(elementId: string, options: PrintOptions) {
   const orientation: 'portrait' | 'landscape' = options.orientation === 'landscape' ? 'landscape' : 'portrait';
 
   // Fit the whole document (header, body, signatures and details) into a single page
-  // so that no trailing block spills over to page 2.
+  // so that no trailing block spills over to page 2 — เปิดเป็นค่าเริ่มต้นเสมอ
+  // ยกเว้นเอกสารหลายหน้าตามธรรมชาติ (ทะเบียนคุม landscape / โหมดพิมพ์รวม) ที่ส่ง fitToPage: false มาชัดเจน
+  const shouldFitToPage = options.fitToPage !== false && orientation !== 'landscape';
   let appliedFitZoom = false;
-  if (options.fitToPage) {
+  if (shouldFitToPage) {
     const fitZoom = computeFitZoom(element, orientation);
-    if (fitZoom < 1) {
-      document.documentElement.style.setProperty(FIT_ZOOM_VAR, fitZoom.toFixed(4));
-      appliedFitZoom = true;
-    }
+    document.documentElement.style.setProperty(FIT_ZOOM_VAR, fitZoom.toFixed(4));
+    appliedFitZoom = true;
   }
 
   // Handle landscape orientation printing explicitly by adding temporary page style

@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { BookingRequest, User } from '../types';
 import { formatThaiDate } from '../utils/thaiDate';
+import { canUserApproveBooking } from '../utils/driverPermissions';
 import {
   PenTool,
   ShieldCheck,
@@ -16,7 +17,8 @@ import {
   Stamp,
   Sparkles,
   Info,
-  Check
+  Check,
+  Lock
 } from 'lucide-react';
 
 interface ApprovalSignatureModalProps {
@@ -226,6 +228,36 @@ export const ApprovalSignatureModal: React.FC<ApprovalSignatureModalProps> = ({
   };
 
   if (!isOpen || !booking) return null;
+
+  // กันไว้ชั้นสุดท้าย: โมดัลอนุมัติเปิดได้เฉพาะผู้อนุมัติเท่านั้น
+  if (!canUserApproveBooking(currentUser)) {
+    return (
+      <div className="fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+        <div className="bg-white w-full max-w-md rounded-3xl shadow-2xl border border-slate-200 overflow-hidden">
+          <div className="px-6 py-5 flex items-start space-x-3">
+            <div className="w-10 h-10 rounded-2xl bg-rose-100 text-rose-600 flex items-center justify-center shrink-0">
+              <Lock className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="font-bold text-sm text-slate-900">ไม่มีสิทธิ์ลงนามอนุมัติ</h3>
+              <p className="text-xs text-slate-500 mt-1 leading-relaxed">
+                ปุ่มอนุมัติสงวนไว้สำหรับผู้อนุมัติเท่านั้น — บัญชีของท่าน ({currentUser?.roleTitle || currentUser?.role || 'ไม่ระบุสิทธิ์'}) สามารถดูรายละเอียดได้อย่างเดียว
+              </p>
+            </div>
+          </div>
+          <div className="px-6 py-4 bg-slate-50 border-t border-slate-200 flex justify-end">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2.5 border border-slate-300 hover:bg-white text-slate-700 rounded-xl text-xs font-semibold transition"
+            >
+              ปิด
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // Pointer Handlers for Mouse / Stylus
   const handlePointerDown = (e: React.PointerEvent<HTMLCanvasElement>) => {

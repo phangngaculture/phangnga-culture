@@ -489,29 +489,59 @@
     visibility: hidden !important;
   }
 
+  /* รีเซ็ตกล่องแม่ทุกชั้น (modal overlay / preview wrapper) ให้ไม่กินพื้นที่กระดาษ
+     สาเหตุหลักของ "หน้า 2 ว่าง": wrapper บนจอมี padding + transform: scale(a4Zoom)
+     ติดไปถึงตอนพิมพ์ ทำให้ layout สูงเกิน A4 แม้เอกสารจริงจะพอดีหน้าเดียว */
+  body.print-sheet-active .print-sheet-ancestor {
+    display: block !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    gap: 0 !important;
+    border: none !important;
+    box-shadow: none !important;
+    background: #ffffff !important;
+    transform: none !important;
+    zoom: 1 !important;
+    width: auto !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    overflow: visible !important;
+    position: static !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+  }
+
   /* ตัวเอกสารพิมพ์เต็มความกว้างพื้นที่พิมพ์ และไม่ถูกตัดด้วยความสูงเดิมของหน้าจอ
-     (คง padding/ขนาด A4 เดิมของการ์ดเอกสารไว้ เพื่อให้ขอบสารบรรณถูกต้อง) */
+     (คง padding/ขนาด A4 เดิมของการ์ดเอกสารไว้ เพื่อให้ขอบสารบรรณถูกต้อง)
+     หมายเหตุ: การ์ดเอกสารล็อก height: 297mm อยู่แล้ว จึงไม่ตัด height ทิ้ง —
+     เคยมีบั๊กที่ height:auto ทำให้การ์ดยืดเกินหน้าตามเนื้อหาแล้วล้นไปหน้า 2 */
   .print-sheet-root {
     position: relative !important;
     left: 0 !important;
     top: 0 !important;
+    margin: 0 auto !important;
+    float: none !important;
     transform: none !important;
     /* ย่อเอกสารให้พอดี 1 หน้า (printHelper คำนวณและตั้งค่า --print-fit-zoom ให้ชั่วคราว)
-       หมายเหตุ: zoom ยังคงทำให้ความกว้าง 100% เต็มพื้นที่พิมพ์ตามปกติ */
-    zoom: var(--print-fit-zoom, 1) !important;
+       ใช้ transform:scale แทน zoom เพื่อให้ Chrome/Edge คำนวณเลข pagination ตรง
+       (zoom ทำให้บางเครื่องยังเห็นเอกสารสูงเท่าเดิมแล้วตัดหน้า 2 ว่าง) */
+    zoom: 1 !important;
+    scale: var(--print-fit-zoom, 1) !important;
+    transform-origin: top center !important;
     opacity: 1 !important;
     visibility: visible !important;
     overflow: hidden !important;
     box-sizing: border-box !important;
-    width: 100% !important;
-    min-width: 0 !important;
-    max-width: 100% !important;
-    height: auto !important;
-    min-height: 0 !important;
-    max-height: none !important;
-    margin: 0 !important;
+    width: 210mm !important;
+    min-width: 210mm !important;
+    max-width: 210mm !important;
     page-break-after: avoid !important;
     break-after: avoid !important;
+    page-break-before: avoid !important;
+    break-before: avoid !important;
     box-shadow: none !important;
     background: #ffffff !important;
     color: #000000 !important;
