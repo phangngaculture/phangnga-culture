@@ -501,7 +501,7 @@
     zoom: var(--print-fit-zoom, 1) !important;
     opacity: 1 !important;
     visibility: visible !important;
-    overflow: visible !important;
+    overflow: hidden !important;
     box-sizing: border-box !important;
     width: 100% !important;
     min-width: 0 !important;

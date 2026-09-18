@@ -46,18 +46,18 @@ function pxToMm(px: number): number {
 
 /**
  * วัดความสูงจริงของเอกสารเมื่ออยู่ใน "สภาพพร้อมพิมพ์"
- * (กว้าง = พื้นที่พิมพ์จริง, padding 0, height อัตโนมัติ, ไม่ถูก clip ด้วยความสูงหน้าจอ)
+ * (คง padding/ขอบเดิมของการ์ดเอกสารไว้ แล้ววัดบนความกว้างเท่ากระดาษจริง
+ * เพื่อให้ได้ความสูงรวมขอบที่ตรงกับตอนพิมพ์ ไม่ใช่ความสูงเนื้อหาเพียว ๆ)
  * ใช้สำเนาที่ซ่อนไว้ จึงไม่กระทบเอกสารบนจอ
  */
-function measurePrintHeightMm(element: HTMLElement, printableWidthMm: number): number {
+function measurePrintHeightMm(element: HTMLElement, pageWidthMm: number): number {
   const holder = document.createElement('div');
-  holder.className = 'printable-document';
   holder.setAttribute('data-print-measure', 'true');
   holder.style.cssText = [
     'position:absolute',
     'left:-100000px',
     'top:0',
-    `width:${printableWidthMm}mm`,
+    `width:${pageWidthMm}mm`,
     'padding:0',
     'margin:0',
     'box-sizing:border-box',
@@ -69,15 +69,13 @@ function measurePrintHeightMm(element: HTMLElement, printableWidthMm: number): n
 
   const clone = element.cloneNode(true) as HTMLElement;
   clone.removeAttribute('id');
-  clone.classList.add('printable-document');
   clone.style.width = '100%';
   clone.style.minWidth = '0';
   clone.style.maxWidth = '100%';
+  // คง padding/margin เดิมของการ์ด (ขอบสารบรรณ) ไว้เพื่อให้วัดรวมขอบจริง
   clone.style.height = 'auto';
   clone.style.minHeight = '0';
   clone.style.maxHeight = 'none';
-  clone.style.padding = '0';
-  clone.style.margin = '0';
   clone.style.overflow = 'visible';
   clone.style.transform = 'none';
   clone.style.zoom = '1';
@@ -93,15 +91,18 @@ function measurePrintHeightMm(element: HTMLElement, printableWidthMm: number): n
 
 /**
  * คำนวณอัตราการย่อเพื่อให้เอกสารทั้งหมดจบใน 1 หน้า
- * (คืนค่า 1 = ไม่ต้องย่อ เมื่อเอกสารพอดีหน้าอยู่แล้ว)
+ * (วัดรวมขอบ/ความสูงจริงของเอกสาร แล้วเผื่อขอบปลอดภัย ~1.5%
+ * กันเศษทศนิยมของเบราว์เซอร์ดันเนื้อหาล้นไปหน้า 2)
+ * คืนค่า 1 = ไม่ต้องย่อ เมื่อเอกสารพอดีหน้าอยู่แล้ว
  */
 function computeFitZoom(element: HTMLElement, orientation: 'portrait' | 'landscape'): number {
-  const printable = orientation === 'landscape' ? PAGE_SIZE.landscape : PAGE_SIZE.portrait;
-  const contentHeightMm = measurePrintHeightMm(element, printable.widthMm);
+  const page = orientation === 'landscape' ? PAGE_SIZE.landscape : PAGE_SIZE.portrait;
+  const contentHeightMm = measurePrintHeightMm(element, page.widthMm);
+  const usableHeightMm = page.heightMm * 0.985;
 
-  if (!contentHeightMm || contentHeightMm <= printable.heightMm) return 1;
+  if (!contentHeightMm || contentHeightMm <= usableHeightMm) return 1;
 
-  return Math.max(0.6, printable.heightMm / contentHeightMm);
+  return Math.max(0.6, usableHeightMm / contentHeightMm);
 }
 
 
