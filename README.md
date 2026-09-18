@@ -2,18 +2,19 @@
 <img width="1200" height="475" alt="GHBanner" src="https://ai.google.dev/static/site-assets/images/share-ais-513315318.png" />
 </div>
 
-# Connect GitHub + Vercel
+# Run and deploy your AI Studio app
 
-Already done locally:
-- `git init`
-- `git remote add origin https://github.com/phangngaculture/phangnga-culture.git`
+This contains everything you need to run your app locally.
 
-Next: connect this repo on Vercel dashboard and deploy.
+View your app in AI Studio: https://ai.studio/apps/7504aae0-1c9e-48b3-953b-6c02d078f96b
 
-## Local run
+## Run Locally
 
-**Prerequisites:** Node.js
+**Prerequisites:**  Node.js
 
-1. Install dependencies: `npm install`
-2. Set env vars in `.env.local` (e.g. any API keys this app needs)
-3. Run: `npm run dev`
+
+1. Install dependencies:
+   `npm install`
+2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
+3. Run the app:
+   `npm run dev`

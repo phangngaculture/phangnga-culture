@@ -1,7 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { Vehicle, BookingRequest, FuelLog, MaintenanceRecord, User } from '../types';
 import { formatThaiDate } from '../utils/thaiDate';
-import { printElementById } from '../utils/printHelper';
 import {
   FileSpreadsheet,
   Printer,
@@ -59,12 +58,12 @@ export const MonthlyVehicleControlModal: React.FC<MonthlyVehicleControlModalProp
   const filteredBookings = useMemo(() => {
     return bookings
       .filter((b) => {
-        if (selectedVehicleId && b.vehicleId !== selectedVehicleId) return false;
-        if (!b.usageDate) return false;
-        const d = new Date(b.usageDate);
+        if (selectedVehicleId && b.carId !== selectedVehicleId) return false;
+        if (!b.date) return false;
+        const d = new Date(b.date);
         return d.getMonth() === selectedMonth && d.getFullYear() === targetYearCE;
       })
-      .sort((a, b) => new Date(a.usageDate).getTime() - new Date(b.usageDate).getTime());
+      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
   }, [bookings, selectedVehicleId, selectedMonth, targetYearCE]);
 
   // Aggregate monthly stats
@@ -79,13 +78,13 @@ export const MonthlyVehicleControlModal: React.FC<MonthlyVehicleControlModalProp
   // Filter fuel logs for this vehicle and month
   const filteredFuelLogs = useMemo(() => {
     return fuelLogs.filter((f) => {
-      if (selectedVehicleId && f.vehicleId !== selectedVehicleId) return false;
+      if (selectedVehicleId && f.carPlate !== selectedVehicle?.plate) return false;
       const d = new Date(f.date);
       return d.getMonth() === selectedMonth && d.getFullYear() === targetYearCE;
     });
   }, [fuelLogs, selectedVehicleId, selectedMonth, targetYearCE]);
 
-  const totalFuelLiters = filteredFuelLogs.reduce((sum, f) => sum + (f.liters || 0), 0);
+  const totalFuelLiters = filteredFuelLogs.reduce((sum, f) => sum + (f.litres || 0), 0);
   const totalFuelCost = filteredFuelLogs.reduce((sum, f) => sum + (f.cost || 0), 0);
   const avgKmPerLiter = totalFuelLiters > 0 ? (totalDistanceKm / totalFuelLiters).toFixed(2) : '-';
 
@@ -113,20 +112,20 @@ export const MonthlyVehicleControlModal: React.FC<MonthlyVehicleControlModalProp
       const dist = (b.startMileage && b.endMileage && b.endMileage > b.startMileage)
         ? (b.endMileage - b.startMileage)
         : '-';
-      const fuelMatch = filteredFuelLogs.find((f) => f.bookingId === b.id || f.date === b.usageDate);
+      const fuelMatch = filteredFuelLogs.find((f) => f.bookingId === b.id || f.date === b.date);
 
       return [
         idx + 1,
-        formatThaiDate(b.usageDate),
-        b.bookingNumber || `REQ-${b.id.slice(0, 6)}`,
+        formatThaiDate(b.date),
+        b.memoNo || `REQ-${b.id.slice(0, 6)}`,
         `${b.startTime || '08:30'} - ${b.endTime || '16:30'}`,
-        `"${b.userName} (${b.department})"`,
+        `"${b.name} (${b.department})"`,
         `"${b.driverName || 'พนักงานขับรถ'}"`,
         `"${b.purpose} ณ ${b.destination}"`,
         startKm,
         endKm,
         dist,
-        fuelMatch ? fuelMatch.liters : '0',
+        fuelMatch ? fuelMatch.litres : '0',
         fuelMatch ? fuelMatch.cost : '0',
         b.status === 'completed' ? 'เสร็จสิ้นภารกิจ' : b.status === 'approved' ? 'อนุมัติแล้ว' : 'ระหว่างดำเนินการ'
       ].join(',');
@@ -134,7 +133,7 @@ export const MonthlyVehicleControlModal: React.FC<MonthlyVehicleControlModalProp
 
     const csvContent = '\uFEFF' + [
       `"บัญชีคุมการใช้รถยนต์และน้ำมันเชื้อเพลิง ประจำเดือน ${THAI_MONTHS[selectedMonth]} พ.ศ. ${selectedYearThai}"`,
-      `"สำนักงานวัฒนธรรมจังหวัดพังงา | รถยนต์หมายเลขทะเบียน ${selectedVehicle?.licensePlate || ''} ${selectedVehicle?.model || ''}"`,
+      `"สำนักงานวัฒนธรรมจังหวัดพังงา | รถยนต์หมายเลขทะเบียน ${selectedVehicle?.plate || ''} ${selectedVehicle?.name || ''}"`,
       `"สรุป: จำนวน ${totalTrips} เที่ยว | ระยะทางรวม ${totalDistanceKm} กม. | น้ำมัน ${totalFuelLiters} ลิตร (${totalFuelCost.toLocaleString()} บาท) | อัตราสิ้นเปลือง ${avgKmPerLiter} กม./ลิตร"`,
       '',
       headers.join(','),
@@ -145,20 +144,14 @@ export const MonthlyVehicleControlModal: React.FC<MonthlyVehicleControlModalProp
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.setAttribute('href', url);
-    link.setAttribute('download', `บัญชีคุมการใช้รถ_สตง_${selectedVehicle?.licensePlate || 'all'}_${THAI_MONTHS[selectedMonth]}_${selectedYearThai}.csv`);
+    link.setAttribute('download', `บัญชีคุมการใช้รถ_สตง_${selectedVehicle?.plate || 'all'}_${THAI_MONTHS[selectedMonth]}_${selectedYearThai}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
   };
 
   const handlePrint = () => {
-    // พิมพ์เฉพาะโซนแบบฟอร์ม สตง. (แนวนอน) เพื่อไม่ให้ส่วนอื่นของแอปไปกินพื้นที่กระดาษ
-    // ทำให้เอกสารเริ่มที่หน้า 1 และไม่ถูกตัดแบ่งหลายหน้าโดยไม่จำเป็น
-    printElementById('printMonthlyControlArea', {
-      documentTitle: `บัญชีคุมการใช้รถยนต์และน้ำมันเชื้อเพลิง_${THAI_MONTHS[selectedMonth]}_${selectedYearThai}`,
-      orientation: 'landscape',
-      addPrintableClass: false
-    });
+    window.print();
   };
 
   return (
@@ -226,7 +219,7 @@ export const MonthlyVehicleControlModal: React.FC<MonthlyVehicleControlModalProp
               >
                 {vehicles.map((v) => (
                   <option key={v.id} value={v.id}>
-                    {v.licensePlate} - {v.brand} {v.model} ({v.type})
+                    {v.plate} - {v.name} ({v.type})
                   </option>
                 ))}
               </select>
@@ -270,7 +263,7 @@ export const MonthlyVehicleControlModal: React.FC<MonthlyVehicleControlModalProp
         </div>
 
         {/* Modal Printable Content Area */}
-        <div id="printMonthlyControlArea" className="p-6 overflow-y-auto flex-1 space-y-6 print:p-0 print:overflow-visible">
+        <div className="p-6 overflow-y-auto flex-1 space-y-6 print:p-0 print:overflow-visible">
           {/* Official Government Form Heading */}
           <div className="text-center space-y-1 pb-2 border-b-2 border-slate-800 print:border-black">
             <h2 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white print:text-black tracking-wide">
@@ -280,10 +273,10 @@ export const MonthlyVehicleControlModal: React.FC<MonthlyVehicleControlModalProp
               สำนักงานวัฒนธรรมจังหวัดพังงา ประจำเดือน {THAI_MONTHS[selectedMonth]} พ.ศ. {selectedYearThai}
             </h3>
             <div className="flex flex-wrap justify-center items-center gap-4 text-xs text-slate-600 dark:text-slate-400 print:text-black pt-1">
-              <span><strong>หมายเลขทะเบียน:</strong> {selectedVehicle?.licensePlate || '-'}</span>
-              <span><strong>ยี่ห้อ/รุ่น:</strong> {selectedVehicle?.brand} {selectedVehicle?.model}</span>
+              <span><strong>หมายเลขทะเบียน:</strong> {selectedVehicle?.plate || '-'}</span>
+              <span><strong>ยี่ห้อ/รุ่น:</strong> {selectedVehicle?.name}</span>
               <span><strong>ประเภท:</strong> {selectedVehicle?.type}</span>
-              <span><strong>พนักงานขับรถประจำ:</strong> {selectedVehicle?.defaultDriver || 'นายศราวุธ เกตุรักษ์'}</span>
+              <span><strong>พนักงานขับรถประจำ:</strong> {selectedVehicle?.driverName || 'นายศราวุธ เกตุรักษ์'}</span>
             </div>
           </div>
 
@@ -338,7 +331,7 @@ export const MonthlyVehicleControlModal: React.FC<MonthlyVehicleControlModalProp
                     const dist = (b.startMileage && b.endMileage && b.endMileage > b.startMileage)
                       ? (b.endMileage - b.startMileage)
                       : (b.destination.includes('ตะกั่วป่า') ? 130 : 65);
-                    const fuelMatch = filteredFuelLogs.find((f) => f.bookingId === b.id || f.date === b.usageDate);
+                    const fuelMatch = filteredFuelLogs.find((f) => f.bookingId === b.id || f.date === b.date);
 
                     return (
                       <tr
@@ -346,10 +339,10 @@ export const MonthlyVehicleControlModal: React.FC<MonthlyVehicleControlModalProp
                         className="hover:bg-slate-50 dark:hover:bg-slate-800/40 text-slate-800 dark:text-slate-200 print:text-black"
                       >
                         <td className="p-2 text-center border-r border-slate-200 dark:border-slate-800 print:border-black font-mono">{idx + 1}</td>
-                        <td className="p-2 text-center border-r border-slate-200 dark:border-slate-800 print:border-black whitespace-nowrap">{formatThaiDate(b.usageDate).slice(0, 10)}</td>
-                        <td className="p-2 text-center border-r border-slate-200 dark:border-slate-800 print:border-black font-mono text-[10px]">{b.bookingNumber || `REQ-${b.id.slice(0, 5)}`}</td>
+                        <td className="p-2 text-center border-r border-slate-200 dark:border-slate-800 print:border-black whitespace-nowrap">{formatThaiDate(b.date).slice(0, 10)}</td>
+                        <td className="p-2 text-center border-r border-slate-200 dark:border-slate-800 print:border-black font-mono text-[10px]">{b.memoNo || `REQ-${b.id.slice(0, 5)}`}</td>
                         <td className="p-2 text-center border-r border-slate-200 dark:border-slate-800 print:border-black font-mono text-[10px]">{b.startTime || '08:30'} - {b.endTime || '16:30'}</td>
-                        <td className="p-2 border-r border-slate-200 dark:border-slate-800 print:border-black font-medium">{b.userName} <span className="text-[9px] text-slate-500 block">({b.department})</span></td>
+                        <td className="p-2 border-r border-slate-200 dark:border-slate-800 print:border-black font-medium">{b.name} <span className="text-[9px] text-slate-500 block">({b.department})</span></td>
                         <td className="p-2 border-r border-slate-200 dark:border-slate-800 print:border-black text-[10px]">{b.driverName || 'พนักงานขับรถ'}</td>
                         <td className="p-2 border-r border-slate-200 dark:border-slate-800 print:border-black">
                           <div className="font-medium truncate max-w-xs">{b.purpose}</div>
@@ -359,7 +352,7 @@ export const MonthlyVehicleControlModal: React.FC<MonthlyVehicleControlModalProp
                         <td className="p-2 text-right border-r border-slate-200 dark:border-slate-800 print:border-black font-mono">{b.endMileage ? b.endMileage.toLocaleString() : '-'}</td>
                         <td className="p-2 text-right border-r border-slate-200 dark:border-slate-800 print:border-black font-mono font-bold text-blue-600 print:text-black">{dist.toLocaleString()}</td>
                         <td className="p-2 text-center border-r border-slate-200 dark:border-slate-800 print:border-black text-[10px] font-mono">
-                          {fuelMatch ? `${fuelMatch.liters} ล. (${fuelMatch.cost} บ.)` : '-'}
+                          {fuelMatch ? `${fuelMatch.litres} ล. (${fuelMatch.cost} บ.)` : '-'}
                         </td>
                         <td className="p-2 text-center text-[10px] text-slate-400 print:text-black">
                           {b.status === 'completed' ? (
@@ -396,7 +389,7 @@ export const MonthlyVehicleControlModal: React.FC<MonthlyVehicleControlModalProp
           <div className="pt-8 grid grid-cols-1 sm:grid-cols-3 gap-6 text-center text-xs text-slate-800 dark:text-slate-200 print:text-black print:pt-12">
             <div className="space-y-1">
               <div>ลงชื่อ..........................................................</div>
-              <div className="font-semibold">({selectedVehicle?.defaultDriver || 'นายศราวุธ เกตุรักษ์'})</div>
+              <div className="font-semibold">({selectedVehicle?.driverName || 'นายศราวุธ เกตุรักษ์'})</div>
               <div className="text-[11px] text-slate-500 print:text-black">พนักงานขับรถยนต์ประจำสำนักงาน</div>
               <div className="text-[10px] text-slate-400 print:text-black">วันที่ ....../....../......</div>
             </div>

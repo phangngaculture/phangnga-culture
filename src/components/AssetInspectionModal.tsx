@@ -6,7 +6,6 @@ import {
   AssetInspectionCondition
 } from '../types';
 import { formatThaiDate } from '../utils/thaiDate';
-import { canUserInspectAsset } from '../utils/driverPermissions';
 import {
   X,
   ShieldCheck,
@@ -20,8 +19,7 @@ import {
   Clock,
   MapPin,
   Calendar,
-  FileCheck,
-  Lock
+  FileCheck
 } from 'lucide-react';
 
 interface AssetInspectionModalProps {
@@ -300,36 +298,6 @@ export const AssetInspectionModal: React.FC<AssetInspectionModalProps> = ({
   };
 
   if (!isOpen || !booking) return null;
-
-  // กันไว้ชั้นสุดท้าย: โมดัลตรวจรับเปิดได้เฉพาะเจ้าหน้าที่พัสดุเท่านั้น
-  if (!canUserInspectAsset(currentUser)) {
-    return (
-      <div className="fixed inset-0 bg-slate-900/70 backdrop-blur-xs flex items-center justify-center z-50 p-3 sm:p-4 overflow-y-auto animate-fadeIn">
-        <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden border border-slate-200 my-auto">
-          <div className="p-5 flex items-start space-x-3">
-            <div className="w-10 h-10 rounded-xl bg-rose-100 text-rose-600 flex items-center justify-center shrink-0">
-              <Lock className="w-5 h-5" />
-            </div>
-            <div>
-              <h2 className="font-bold text-sm text-slate-900">ไม่มีสิทธิ์ตรวจรับพัสดุ</h2>
-              <p className="text-xs text-slate-500 mt-1 leading-relaxed">
-                ปุ่มตรวจรับพัสดุสงวนไว้สำหรับเจ้าหน้าที่พัสดุเท่านั้น — บัญชีของท่าน ({currentUser?.roleTitle || currentUser?.role || 'ไม่ระบุสิทธิ์'}) สามารถดูรายละเอียดได้อย่างเดียว
-              </p>
-            </div>
-          </div>
-          <div className="p-4 bg-slate-50 border-t border-slate-200 flex justify-end">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-semibold text-xs rounded-xl transition"
-            >
-              ปิด
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   const startMile = booking.startMileage || 0;
   const endMile = booking.endMileage || 0;

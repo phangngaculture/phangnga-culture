@@ -33,7 +33,7 @@ import {
   Check
 } from 'lucide-react';
 import { getUserAllowedMenus } from '../data/mockData';
-import { canUserApproveBooking, canUserExecuteMission } from '../utils/driverPermissions';
+import { canUserExecuteMission } from '../utils/driverPermissions';
 import { SwipeableBookingCard } from './SwipeableBookingCard';
 
 interface DashboardViewProps {
@@ -92,9 +92,6 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       onSubViewChange(newView);
     }
   };
-
-  // ปุ่มอนุมัติ: เฉพาะผู้อนุมัติเท่านั้น — บทบาทอื่นเห็นเป็นปุ่มดูรายการได้อย่างเดียว
-  const canApprove = canUserApproveBooking(currentUser);
 
   // Booking list filters and search
   const [filterStatus, setFilterStatus] = useState<string>('all');
@@ -369,15 +366,14 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                   <span>บันทึกไมล์/น้ำมัน</span>
                 </button>
 
-                {(canApprove || currentUser.role === 'admin') && pendingCount > 0 && (
+                {(currentUser.role === 'director' || currentUser.role === 'admin') && pendingCount > 0 && (
                   <button
                     type="button"
                     onClick={onOpenDirectorApproval}
                     className="px-3 py-2 sm:px-4 sm:py-2.5 bg-teal-600 hover:bg-teal-700 text-white rounded-xl text-[11px] sm:text-xs font-semibold transition shadow-md shadow-teal-600/30 flex items-center space-x-1 sm:space-x-1.5 animate-pulse cursor-pointer"
-                    title={canApprove ? 'เปิดแผงอนุมัติผู้บริหาร' : 'ดูรายการรออนุมัติ (สิทธิ์อนุมัติเฉพาะผู้อนุมัติ)'}
                   >
                     <FileCheck2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                    <span>{canApprove ? `แผงอนุมัติ (${pendingCount})` : `ดูรายการรออนุมัติ (${pendingCount})`}</span>
+                    <span>แผงอนุมัติ ({pendingCount})</span>
                   </button>
                 )}
 
@@ -529,7 +525,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
             <div
               onClick={() => {
-                if (canApprove || currentUser.role === 'admin') {
+                if (currentUser.role === 'director' || currentUser.role === 'admin') {
                   onOpenDirectorApproval();
                 } else {
                   handleSubViewChange('bookings');

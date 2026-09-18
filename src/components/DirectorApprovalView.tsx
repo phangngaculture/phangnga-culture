@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { BookingRequest, User } from '../types';
 import { formatThaiDate } from '../utils/thaiDate';
-import { canUserApproveBooking } from '../utils/driverPermissions';
 import {
   ShieldCheck,
   CheckCircle2,
@@ -46,8 +45,6 @@ export const DirectorApprovalView: React.FC<DirectorApprovalViewProps> = ({
   onViewMemo,
   onViewAttachment
 }) => {
-  // ปุ่มอนุมัติ/ไม่อนุมัติ: เฉพาะผู้อนุมัติ (director) เท่านั้น — บทบาทอื่นดูได้อย่างเดียว
-  const canApprove = canUserApproveBooking(currentUser);
   const pendingBookings = bookings.filter((b) => b.status === 'pending');
   const [selectedBookingId, setSelectedBookingId] = useState<string>(
     pendingBookings[0]?.id || bookings[0]?.id || ''
@@ -469,8 +466,7 @@ export const DirectorApprovalView: React.FC<DirectorApprovalViewProps> = ({
                       </span>
                     </div>
 
-                    {/* Approval Action Buttons — เฉพาะผู้อนุมัติเท่านั้น */}
-                    {canApprove ? (
+                    {/* Approval Action Buttons */}
                     <div className="flex justify-end items-center space-x-3 pt-2">
                       <button
                         onClick={handleReject}
@@ -488,11 +484,6 @@ export const DirectorApprovalView: React.FC<DirectorApprovalViewProps> = ({
                         <span>เลือกลายเซ็น & ลงนามอนุมัติคำขอ</span>
                       </button>
                     </div>
-                    ) : (
-                    <div className="bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-[11px] text-slate-500 leading-relaxed">
-                      สิทธิ์การอนุมัติสงวนไว้สำหรับผู้อนุมัติเท่านั้น — บัญชีของท่าน ({currentUser?.roleTitle || currentUser?.role}) สามารถดูรายละเอียดได้อย่างเดียว
-                    </div>
-                    )}
                   </>
                 )}
 

@@ -1,16 +1,5 @@
 import { BookingRequest, User } from '../types';
 
-export const APPROVER_ROLE: User['role'] = 'director';
-export const ASSET_OFFICER_ROLE: User['role'] = 'officer';
-
-export function isApproverRole(role: User['role'] | string | undefined): boolean {
-  return role === APPROVER_ROLE;
-}
-
-export function isAssetOfficerRole(role: User['role'] | string | undefined): boolean {
-  return role === ASSET_OFFICER_ROLE;
-}
-
 export function isSelfDriveBooking(booking: BookingRequest): boolean {
   return booking.driverType === 'self';
 }
@@ -79,18 +68,6 @@ export function getMissionPermissionDetails(
     reason,
     isSelfDrive
   };
-}
-
-export function canUserApproveBooking(currentUser: User | null | undefined): boolean {
-  if (!currentUser) return false;
-  // ปุ่มอนุมัติ: สิทธิ์เฉพาะ "ผู้อนุมัติ" (role = director) เท่านั้น — admin/officer/driver กดไม่ได้
-  return isApproverRole(currentUser.role);
-}
-
-export function canUserInspectAsset(currentUser: User | null | undefined): boolean {
-  if (!currentUser) return false;
-  // ปุ่มตรวจรับพัสดุ: สิทธิ์เฉพาะ "เจ้าหน้าที่พัสดุ" (role = officer) เท่านั้น — admin/director/driver กดไม่ได้
-  return isAssetOfficerRole(currentUser.role);
 }
 
 export function checkVehicleMissionConflict(
