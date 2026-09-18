@@ -162,7 +162,9 @@ export const PrintOfficialRegisterModal: React.FC<PrintOfficialRegisterModalProp
   const handlePrint = () => {
     printElementById(printAreaId, {
       documentTitle: docTitle,
-      orientation: orientation
+      orientation: orientation,
+      // ใบขอใช้รถทีละใบ (แนวตั้ง) ให้ย่อพอดี 1 หน้า / ทะเบียนคุมและโหมดพิมพ์รวมเป็นหลายหน้าตามธรรมชาติ
+      fitToPage: docType === 'request_form' && !isBulkPrint
     });
   };
 

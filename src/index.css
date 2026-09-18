@@ -300,9 +300,9 @@
   }
 
   /* Standard Official Thai Government A4 Printable Document Container */
-  .printable-document,
-  #printMemoArea,
-  #printPermitArea {
+  .printable-document:not(.print-sheet-root),
+  #printMemoArea:not(.print-sheet-root),
+  #printPermitArea:not(.print-sheet-root) {
     position: relative !important;
     left: 0 !important;
     top: 0 !important;
@@ -460,6 +460,7 @@
     z-index: auto !important;
     transform: none !important;
     transform-origin: top left !important;
+    zoom: 1 !important;
     opacity: 1 !important;
     filter: none !important;
     backdrop-filter: none !important;
@@ -488,23 +489,29 @@
     visibility: hidden !important;
   }
 
-  /* ตัวเอกสารพิมพ์เต็มความกว้างพื้นที่พิมพ์ และไม่ถูกตัดด้วยความสูงเดิมของหน้าจอ */
+  /* ตัวเอกสารพิมพ์เต็มความกว้างพื้นที่พิมพ์ และไม่ถูกตัดด้วยความสูงเดิมของหน้าจอ
+     (คง padding/ขนาด A4 เดิมของการ์ดเอกสารไว้ เพื่อให้ขอบสารบรรณถูกต้อง) */
   .print-sheet-root {
     position: relative !important;
     left: 0 !important;
     top: 0 !important;
     transform: none !important;
+    /* ย่อเอกสารให้พอดี 1 หน้า (printHelper คำนวณและตั้งค่า --print-fit-zoom ให้ชั่วคราว)
+       หมายเหตุ: zoom ยังคงทำให้ความกว้าง 100% เต็มพื้นที่พิมพ์ตามปกติ */
+    zoom: var(--print-fit-zoom, 1) !important;
     opacity: 1 !important;
     visibility: visible !important;
     overflow: visible !important;
     box-sizing: border-box !important;
     width: 100% !important;
-    min-width: 100% !important;
+    min-width: 0 !important;
     max-width: 100% !important;
     height: auto !important;
     min-height: 0 !important;
     max-height: none !important;
     margin: 0 !important;
+    page-break-after: avoid !important;
+    break-after: avoid !important;
     box-shadow: none !important;
     background: #ffffff !important;
     color: #000000 !important;

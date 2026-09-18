@@ -169,9 +169,13 @@ export const OfficialMemoModal: React.FC<OfficialMemoModalProps> = ({
   };
 
   const handlePrint = () => {
+    // ใบคำขอ/ใบอนุญาต (แนวตั้ง A4) เปิดโหมด "พอดี 1 หน้า" เพื่อให้รายละเอียดทั้งหมด
+    // (หัวเอกสาร - เนื้อหา - ช่องลงนาม - คำสั่งผู้อำนวยการ - การบันทึกเลขไมล์/ตรวจรับ)
+    // จบในกระดาษหน้าเดียว ส่วนทะเบียนคุม (แนวนอน) เป็นเอกสารหลายหน้าตามธรรมชาติ
     printElementById(activeDocId, {
       documentTitle: docTitle,
-      orientation: isLandscape ? 'landscape' : 'portrait'
+      orientation: isLandscape ? 'landscape' : 'portrait',
+      fitToPage: !isLandscape
     });
   };
 
