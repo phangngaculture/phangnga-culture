@@ -32,7 +32,8 @@ import {
   Shield,
   FileCheck,
   Volume2,
-  Palette
+  Palette,
+  BookOpen
 } from 'lucide-react';
 import { getUserAllowedMenus } from '../data/mockData';
 
@@ -318,6 +319,18 @@ export const Sidebar: React.FC<SidebarProps> = ({
         icon: Palette,
         gradient: 'from-pink-500 to-rose-500',
         allowed: allowedMenus.includes('website_customizer')
+      },
+      {
+        id: 'user_manual',
+        category: 'system',
+        label: 'คู่มือการใช้งานระบบ (PDF)',
+        subLabel: 'User Manual & Guides',
+        desc: 'คู่มือขั้นตอนการใช้งานระบบ พร้อมดาวน์โหลดและเปิดดูไฟล์ PDF',
+        icon: BookOpen,
+        gradient: 'from-indigo-500 to-violet-600',
+        badge: 'PDF',
+        badgeColor: 'bg-indigo-500/20 text-indigo-300 border-indigo-500/30',
+        allowed: allowedMenus.includes('user_manual')
       }
     ].filter((item) => item.allowed);
   }, [allowedMenus, canAccessDirector, canAccessUsers, pendingDirectorCount]);

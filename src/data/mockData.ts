@@ -98,28 +98,35 @@ export const APP_MENUS: MenuDefinition[] = [
     desc: 'ปรับแต่งดีไซน์เมนูข้าง สไตล์สี และความโปร่งแสงไล่ระดับโทนสี',
     badge: 'ตกแต่งเว็บ',
     color: 'text-amber-500 bg-amber-500/10'
+  },
+  {
+    id: 'user_manual',
+    label: 'คู่มือการใช้งานระบบ (PDF)',
+    desc: 'คู่มือขั้นตอนการใช้งานระบบเบิกใช้รถยนต์ราชการ เปิดดูและดาวน์โหลดเอกสาร PDF',
+    badge: 'คู่มือ & PDF',
+    color: 'text-indigo-500 bg-indigo-500/10'
   }
 ];
 
 export const DEFAULT_ROLE_MENUS: Record<string, MenuKey[]> = {
-  admin: ['dashboard', 'calendar', 'booking', 'director', 'driver_mission', 'asset_register', 'asset_inspection', 'fuel', 'fleet', 'analytics', 'tracking', 'backup', 'users', 'website_customizer'],
-  director: ['dashboard', 'calendar', 'booking', 'director', 'driver_mission', 'asset_register', 'asset_inspection', 'analytics', 'tracking', 'backup', 'website_customizer'],
-  officer: ['dashboard', 'calendar', 'booking', 'asset_register', 'asset_inspection', 'tracking', 'website_customizer'],
-  driver: ['driver_mission', 'dashboard', 'calendar', 'fuel', 'fleet', 'tracking', 'website_customizer']
+  admin: ['dashboard', 'calendar', 'booking', 'director', 'driver_mission', 'asset_register', 'asset_inspection', 'fuel', 'fleet', 'analytics', 'tracking', 'backup', 'users', 'website_customizer', 'user_manual'],
+  director: ['dashboard', 'calendar', 'booking', 'director', 'driver_mission', 'asset_register', 'asset_inspection', 'analytics', 'tracking', 'backup', 'website_customizer', 'user_manual'],
+  officer: ['dashboard', 'calendar', 'booking', 'asset_register', 'asset_inspection', 'tracking', 'website_customizer', 'user_manual'],
+  driver: ['driver_mission', 'dashboard', 'calendar', 'fuel', 'fleet', 'tracking', 'website_customizer', 'user_manual']
 };
 
 export function getUserAllowedMenus(user?: User | null): MenuKey[] {
-  if (!user) return ['dashboard', 'calendar', 'booking'];
+  if (!user) return ['dashboard', 'calendar', 'booking', 'user_manual'];
+  let menus: MenuKey[] = [];
   if (Array.isArray(user.allowedMenus)) {
-    if (user.role === 'admin') {
-      const finalMenus = [...user.allowedMenus];
-      if (!finalMenus.includes('users')) finalMenus.push('users');
-      if (!finalMenus.includes('website_customizer')) finalMenus.push('website_customizer');
-      return finalMenus;
-    }
-    return user.allowedMenus;
+    menus = [...user.allowedMenus];
+  } else {
+    menus = [...(DEFAULT_ROLE_MENUS[user.role] || ['dashboard', 'calendar', 'booking', 'user_manual'])];
   }
-  return DEFAULT_ROLE_MENUS[user.role] || ['dashboard', 'calendar', 'booking'];
+  if (user.role === 'admin' && !menus.includes('users')) menus.push('users');
+  if (!menus.includes('website_customizer')) menus.push('website_customizer');
+  if (!menus.includes('user_manual')) menus.push('user_manual');
+  return menus;
 }
 
 export const SYSTEM_USERS: User[] = [
@@ -135,7 +142,7 @@ export const SYSTEM_USERS: User[] = [
     phone: '076-481-482 ต่อ 11',
     email: 'admin.phangnga@m-culture.go.th',
     status: 'active',
-    allowedMenus: ['dashboard', 'calendar', 'booking', 'director', 'driver_mission', 'asset_register', 'asset_inspection', 'fuel', 'fleet', 'analytics', 'tracking', 'users', 'website_customizer'],
+    allowedMenus: ['dashboard', 'calendar', 'booking', 'director', 'driver_mission', 'asset_register', 'asset_inspection', 'fuel', 'fleet', 'analytics', 'tracking', 'users', 'website_customizer', 'user_manual'],
     lineUserId: 'Ue3609b77d75e903ea3e3a4868b236e6f',
     lineNotificationEnabled: true
   },
@@ -151,7 +158,7 @@ export const SYSTEM_USERS: User[] = [
     phone: '076-481-482 ต่อ 15',
     email: 'officer.phangnga@m-culture.go.th',
     status: 'active',
-    allowedMenus: ['dashboard', 'calendar', 'booking', 'asset_register', 'asset_inspection', 'tracking'],
+    allowedMenus: ['dashboard', 'calendar', 'booking', 'asset_register', 'asset_inspection', 'tracking', 'website_customizer', 'user_manual'],
     lineUserId: 'Ue3609b77d75e903ea3e3a4868b236e7a',
     lineNotificationEnabled: true
   },
@@ -167,7 +174,7 @@ export const SYSTEM_USERS: User[] = [
     phone: '076-481-482 ต่อ 20',
     email: 'director.phangnga@m-culture.go.th',
     status: 'active',
-    allowedMenus: ['dashboard', 'calendar', 'booking', 'director', 'driver_mission', 'asset_register', 'asset_inspection', 'analytics', 'tracking', 'backup'],
+    allowedMenus: ['dashboard', 'calendar', 'booking', 'director', 'driver_mission', 'asset_register', 'asset_inspection', 'analytics', 'tracking', 'backup', 'website_customizer', 'user_manual'],
     lineUserId: 'Ue3609b77d75e903ea3e3a4868b236e7b',
     lineNotificationEnabled: true
   },
@@ -183,7 +190,7 @@ export const SYSTEM_USERS: User[] = [
     phone: '081-234-5678',
     email: 'driver1.phangnga@m-culture.go.th',
     status: 'active',
-    allowedMenus: ['driver_mission', 'dashboard', 'calendar', 'fuel', 'fleet', 'tracking'],
+    allowedMenus: ['driver_mission', 'dashboard', 'calendar', 'fuel', 'fleet', 'tracking', 'website_customizer', 'user_manual'],
     lineUserId: 'Ue3609b77d75e903ea3e3a4868b236e7c',
     lineNotificationEnabled: true
   }

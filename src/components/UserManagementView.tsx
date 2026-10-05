@@ -75,7 +75,8 @@ const MENU_ICONS: Record<MenuKey, React.ComponentType<{ className?: string }>> =
   tracking: Navigation,
   backup: Database,
   users: Users,
-  website_customizer: Palette
+  website_customizer: Palette,
+  user_manual: BookOpen
 };
 
 const ROLE_LABELS: Record<UserRole, { label: string; title: string; color: string; bg: string; border: string }> = {

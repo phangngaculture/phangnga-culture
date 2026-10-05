@@ -26,7 +26,8 @@ import {
   Sun,
   Moon,
   Mic,
-  Sliders
+  Sliders,
+  BookOpen
 } from 'lucide-react';
 import {
   isBadgingSupported,
@@ -513,6 +514,20 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
             </>
           )}
 
+          {/* Quick Manual Button */}
+          <button
+            onClick={() => onTabChange('user_manual')}
+            className={`flex h-9 px-2.5 rounded-xl items-center space-x-1.5 transition border text-xs font-semibold cursor-pointer ${
+              activeTab === 'user_manual'
+                ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm'
+                : 'bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800 hover:bg-indigo-100 dark:hover:bg-indigo-900/60'
+            }`}
+            title="เปิดคู่มือการใช้งานระบบ พร้อมดาวน์โหลดเป็น PDF"
+          >
+            <BookOpen className="w-3.5 h-3.5" />
+            <span className="hidden md:inline">คู่มือ (PDF)</span>
+          </button>
+
           {/* Notifications Dropdown */}
           <div className="relative">
             <button
@@ -753,6 +768,20 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
                     </button>
                   </div>
                 )}
+
+                {/* User Manual Shortcut */}
+                <div className="p-2 border-t border-slate-100 dark:border-slate-800">
+                  <button
+                    onClick={() => {
+                      onTabChange('user_manual');
+                      setShowUserMenu(false);
+                    }}
+                    className="w-full flex items-center justify-center space-x-1.5 p-2 rounded-xl bg-indigo-50 dark:bg-indigo-950/40 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300 text-xs font-semibold transition cursor-pointer"
+                  >
+                    <BookOpen className="w-3.5 h-3.5" />
+                    <span>คู่มือการใช้งานระบบ (PDF)</span>
+                  </button>
+                </div>
 
                 {/* Logout Button */}
                 {onLogout && (

@@ -275,6 +275,7 @@
   #printPermitArea, #printPermitArea *,
   #printRegisterArea, #printRegisterArea *,
   #printRegisterSingleArea, #printRegisterSingleArea *,
+  #printUserManualArea, #printUserManualArea *,
   #analyticsReportArea, #analyticsReportArea *,
   .printable-document, .printable-document * {
     visibility: visible !important;

@@ -104,6 +104,7 @@ const DriverMissionView = lazy(() => import('./components/DriverMissionView').th
 const AssetRegisterView = lazy(() => import('./components/AssetRegisterView').then((m) => ({ default: m.AssetRegisterView })));
 const AssetInspectionView = lazy(() => import('./components/AssetInspectionView').then((m) => ({ default: m.AssetInspectionView })));
 const WebsiteCustomizerView = lazy(() => import('./components/WebsiteCustomizerView').then((m) => ({ default: m.WebsiteCustomizerView })));
+const UserManualView = lazy(() => import('./components/UserManualView').then((m) => ({ default: m.UserManualView })));
 
 // หน้าโหลดระหว่างรอ chunk ของเมนู (fallback ของ Suspense)
 const ViewLoader = () => (
@@ -151,7 +152,7 @@ export default function App() {
         password: normalized[adminIndex].password || 'dekcom2537',
         role: 'admin',
         status: 'active',
-        allowedMenus: ['dashboard', 'calendar', 'booking', 'director', 'driver_mission', 'asset_register', 'asset_inspection', 'fuel', 'fleet', 'analytics', 'tracking', 'backup', 'users', 'website_customizer']
+        allowedMenus: ['dashboard', 'calendar', 'booking', 'director', 'driver_mission', 'asset_register', 'asset_inspection', 'fuel', 'fleet', 'analytics', 'tracking', 'backup', 'users', 'website_customizer', 'user_manual']
       };
     } else {
       const defaultAdmin = SYSTEM_USERS.find((su) => su.username.toLowerCase() === 'admin');
@@ -180,7 +181,7 @@ export default function App() {
       const adminUser: User = {
         ...loaded,
         role: 'admin',
-        allowedMenus: ['dashboard', 'calendar', 'booking', 'director', 'driver_mission', 'asset_register', 'asset_inspection', 'fuel', 'fleet', 'analytics', 'tracking', 'backup', 'users', 'website_customizer']
+        allowedMenus: ['dashboard', 'calendar', 'booking', 'director', 'driver_mission', 'asset_register', 'asset_inspection', 'fuel', 'fleet', 'analytics', 'tracking', 'backup', 'users', 'website_customizer', 'user_manual']
       };
       saveLocalData(STORAGE_KEYS.CURRENT_USER, adminUser);
       return adminUser;
@@ -1993,6 +1994,14 @@ export default function App() {
             landingTheme={landingTheme}
             onSetLandingTheme={setLandingTheme}
             soundEnabled={soundEnabled}
+          />
+        )}
+
+        {activeTab === 'user_manual' && (
+          <UserManualView
+            currentUser={currentUser}
+            onNavigateTab={(tab) => handleTabChange(tab as MenuKey)}
+            onShowToast={showToast}
           />
         )}
 
