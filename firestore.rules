@@ -33,7 +33,7 @@ service cloud.firestore {
     function isValidUser(data) {
       return data.username is string &&
              data.name is string &&
-             data.role in ['admin', 'director', 'user', 'driver'];
+             data.role in ['admin', 'director', 'officer', 'user', 'driver'];
     }
 
     // Official vehicle management collections - Phangnga Provincial Cultural Office

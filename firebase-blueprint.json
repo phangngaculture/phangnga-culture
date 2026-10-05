@@ -82,7 +82,7 @@
         "id": { "type": "string" },
         "username": { "type": "string" },
         "name": { "type": "string" },
-        "role": { "type": "string" }
+        "role": { "type": "string", "enum": ["admin", "director", "officer", "user", "driver"] }
       },
       "required": ["username", "name", "role"]
     },

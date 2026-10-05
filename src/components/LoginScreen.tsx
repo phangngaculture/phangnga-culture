@@ -13,6 +13,8 @@ import {
   KeyRound
 } from 'lucide-react';
 import { verifyPassword } from '../utils/security';
+import { db } from '../services/firestoreService';
+import { collection, getDocs } from 'firebase/firestore';
 
 interface LoginScreenProps {
   users: User[];
@@ -47,38 +49,82 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ users, onLogin, landin
 
     setIsSubmitting(true);
 
-    // Simulate authenticating against registered users
+    // Authenticate against registered users with real-time Firestore fallback
     setTimeout(async () => {
-      const foundUser = users.find(
-        (u) =>
-          u.username.toLowerCase() === trimmedUsername ||
-          (u.email && u.email.toLowerCase() === trimmedUsername) ||
-          (u.phone && u.phone.replace(/[^0-9]/g, '') === trimmedUsername.replace(/[^0-9]/g, ''))
-      );
+      try {
+        let foundUser = users.find(
+          (u) =>
+            u.username.toLowerCase() === trimmedUsername ||
+            (u.email && u.email.toLowerCase() === trimmedUsername) ||
+            (u.phone && u.phone.replace(/[^0-9]/g, '') === trimmedUsername.replace(/[^0-9]/g, ''))
+        );
 
-      if (!foundUser) {
-        setErrorMsg('ไม่พบบัญชีผู้ใช้งานนี้ในระบบ กรุณาตรวจสอบชื่อผู้ใช้หรือติดต่อแอดมิน');
+        let isMatch = false;
+
+        if (foundUser) {
+          isMatch = await verifyPassword(trimmedPassword, foundUser.password);
+        }
+
+        // If not found in local memory, or if password did not match local cache, check Firestore directly
+        if (!foundUser || !isMatch) {
+          try {
+            const snap = await getDocs(collection(db, 'users'));
+            if (!snap.empty) {
+              const cloudUsers: User[] = [];
+              snap.docs.forEach((d) => {
+                const data = d.data();
+                cloudUsers.push({ ...data, id: data.id || d.id } as User);
+              });
+
+              const cloudMatch = cloudUsers.find(
+                (u) =>
+                  u.username.toLowerCase() === trimmedUsername ||
+                  (u.email && u.email.toLowerCase() === trimmedUsername) ||
+                  (u.phone && u.phone.replace(/[^0-9]/g, '') === trimmedUsername.replace(/[^0-9]/g, ''))
+              );
+
+              if (cloudMatch) {
+                const cloudPassMatch = await verifyPassword(trimmedPassword, cloudMatch.password);
+                if (cloudPassMatch) {
+                  foundUser = cloudMatch;
+                  isMatch = true;
+                } else if (!foundUser) {
+                  // Found account in cloud, but password incorrect
+                  foundUser = cloudMatch;
+                  isMatch = false;
+                }
+              }
+            }
+          } catch {
+            // Ignore cloud lookup network error and proceed with local check
+          }
+        }
+
+        if (!foundUser) {
+          setErrorMsg('ไม่พบบัญชีผู้ใช้งานนี้ในระบบ กรุณาตรวจสอบชื่อผู้ใช้หรือติดต่อแอดมิน');
+          setIsSubmitting(false);
+          return;
+        }
+
+        if (foundUser.status === 'inactive') {
+          setErrorMsg('บัญชีผู้ใช้นี้ถูกระงับการใช้งานชั่วคราว กรุณาติดต่อผู้ดูแลระบบยานพาหนะ');
+          setIsSubmitting(false);
+          return;
+        }
+
+        if (!isMatch) {
+          setErrorMsg('รหัสผ่านไม่ถูกต้อง กรุณาลองใหม่อีกครั้ง');
+          setIsSubmitting(false);
+          return;
+        }
+
         setIsSubmitting(false);
-        return;
-      }
-
-      if (foundUser.status === 'inactive') {
-        setErrorMsg('บัญชีผู้ใช้นี้ถูกระงับการใช้งานชั่วคราว กรุณาติดต่อผู้ดูแลระบบยานพาหนะ');
+        onLogin(foundUser);
+      } catch {
+        setErrorMsg('เกิดข้อผิดพลาดในการตรวจสอบสิทธิ์ กรุณาลองใหม่');
         setIsSubmitting(false);
-        return;
       }
-
-      // Check password securely
-      const isMatch = await verifyPassword(trimmedPassword, foundUser.password);
-      if (!isMatch) {
-        setErrorMsg('รหัสผ่านไม่ถูกต้อง กรุณาลองใหม่อีกครั้ง');
-        setIsSubmitting(false);
-        return;
-      }
-
-      setIsSubmitting(false);
-      onLogin(foundUser);
-    }, 350);
+    }, 250);
   };
 
   return (

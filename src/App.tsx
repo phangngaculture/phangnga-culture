@@ -171,20 +171,21 @@ export default function App() {
 
   const [currentUser, setCurrentUser] = useState<User>(() => {
     const loaded = loadSavedData<User>(STORAGE_KEYS.CURRENT_USER, SYSTEM_USERS[0]);
-    if (!loaded || loaded.username.toLowerCase() !== 'admin') {
+    if (!loaded) {
       const defaultAdmin = { ...SYSTEM_USERS[0] };
       saveLocalData(STORAGE_KEYS.CURRENT_USER, defaultAdmin);
       return defaultAdmin;
     }
-    const adminUser: User = {
-      ...loaded,
-      // Preserve the password the admin actually set; only fall back when unset.
-      password: loaded.password || 'dekcom2537',
-      role: 'admin',
-      allowedMenus: ['dashboard', 'calendar', 'booking', 'director', 'driver_mission', 'asset_register', 'asset_inspection', 'fuel', 'fleet', 'analytics', 'tracking', 'backup', 'users', 'website_customizer']
-    };
-    saveLocalData(STORAGE_KEYS.CURRENT_USER, adminUser);
-    return adminUser;
+    if (loaded.username.toLowerCase() === 'admin') {
+      const adminUser: User = {
+        ...loaded,
+        role: 'admin',
+        allowedMenus: ['dashboard', 'calendar', 'booking', 'director', 'driver_mission', 'asset_register', 'asset_inspection', 'fuel', 'fleet', 'analytics', 'tracking', 'backup', 'users', 'website_customizer']
+      };
+      saveLocalData(STORAGE_KEYS.CURRENT_USER, adminUser);
+      return adminUser;
+    }
+    return loaded;
   });
 
   const [bookings, setBookings] = useState<BookingRequest[]>(() => {

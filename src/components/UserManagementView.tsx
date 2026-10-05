@@ -214,7 +214,7 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({
     const userMenus = getUserAllowedMenus(user);
     setFormData({
       username: user.username,
-      password: user.password || (user.username === 'admin' ? 'dekcom2537' : `${user.username}123`),
+      password: '', // Leave blank initially so hashed passwords are not displayed
       name: user.name,
       position: user.position,
       department: user.department,
@@ -305,10 +305,23 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({
     }
 
     const roleInfo = ROLE_LABELS[formData.role];
-    const rawPassword = formData.password.trim() || (formData.username.trim() === 'admin' ? 'dekcom2537' : `${formData.username.trim()}123`);
-    const securedPassword = await hashPassword(rawPassword);
 
     if (editingUserId) {
+      // Check username duplicate against OTHER users
+      const duplicate = users.some(
+        (u) => u.id !== editingUserId && u.username.toLowerCase() === formData.username.trim().toLowerCase()
+      );
+      if (duplicate) {
+        alert(`ชื่อผู้ใช้งาน "${formData.username.trim()}" มีอยู่ในระบบแล้ว กรุณาเลือกชื่ออื่น`);
+        return;
+      }
+
+      const existingUser = users.find((u) => u.id === editingUserId);
+      let securedPassword = existingUser?.password || (formData.username.trim() === 'admin' ? 'dekcom2537' : '1234');
+      if (formData.password.trim()) {
+        securedPassword = await hashPassword(formData.password.trim());
+      }
+
       onUpdateUser(editingUserId, {
         username: formData.username.trim(),
         password: securedPassword,
@@ -333,6 +346,9 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({
         alert(`ชื่อผู้ใช้งาน "${formData.username.trim()}" มีอยู่ในระบบแล้ว กรุณาเลือกชื่ออื่น`);
         return;
       }
+
+      const rawPassword = formData.password.trim() || (formData.username.trim() === 'admin' ? 'dekcom2537' : '1234');
+      const securedPassword = await hashPassword(rawPassword);
 
       onAddUser({
         username: formData.username.trim(),
@@ -930,21 +946,22 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({
                   <div className="space-y-1">
                     <div className="flex justify-between items-center">
                       <label className="text-xs font-semibold text-slate-700">
-                        รหัสผ่าน (Password) <span className="text-red-500">*</span>
+                        {editingUserId ? 'รหัสผ่านใหม่ (เว้นว่างไว้หากไม่ต้องการเปลี่ยน)' : 'รหัสผ่าน (Password)'}{' '}
+                        {!editingUserId && <span className="text-red-500">*</span>}
                       </label>
                       <button
                         type="button"
-                        onClick={() => setFormData({ ...formData, password: `${formData.username || 'user'}123` })}
-                        className="text-[10px] text-purple-600 hover:text-purple-800 underline"
+                        onClick={() => setFormData({ ...formData, password: '1234' })}
+                        className="text-[10px] text-purple-600 hover:text-purple-800 underline cursor-pointer"
                       >
-                        สุ่มรหัสเริ่มต้น
+                        ตั้งเป็น 1234
                       </button>
                     </div>
                     <input
                       type="text"
                       value={formData.password}
                       onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                      placeholder="เช่น user123 หรือ 1234"
+                      placeholder={editingUserId ? 'กรอกรหัสผ่านใหม่ หรือเว้นว่างเพื่อใช้รหัสเดิม' : 'เช่น 1234 หรือ dekcom2537'}
                       className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:bg-white focus:outline-none focus:ring-2 focus:ring-purple-500 font-mono"
                     />
                   </div>

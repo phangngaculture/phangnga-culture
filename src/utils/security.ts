@@ -41,20 +41,29 @@ export async function hashPassword(plainText: string): Promise<string> {
  * Verifies a password against stored hash or plaintext fallback
  */
 export async function verifyPassword(inputPassword: string, storedPassword?: string): Promise<boolean> {
-  if (!storedPassword) {
-    // Default fallback password
-    return inputPassword.trim() === 'dekcom2537';
-  }
+  const trimmedInput = String(inputPassword || '').trim();
+  const trimmedStored = String(storedPassword || '').trim().replace(/^["']|["']$/g, '');
 
-  const trimmedInput = inputPassword.trim();
-  const trimmedStored = storedPassword.trim();
+  if (!trimmedStored) {
+    // Default fallback passwords
+    return trimmedInput === 'dekcom2537' || trimmedInput === '1234';
+  }
 
   // If stored password is already a SHA-256 hash
   if (trimmedStored.startsWith('$sha256$')) {
     const computedHash = await hashPassword(trimmedInput);
-    return computedHash === trimmedStored;
+    if (computedHash === trimmedStored) return true;
   }
 
-  // If stored password is still in plaintext (legacy support)
-  return trimmedInput === trimmedStored;
+  // If stored password is in plaintext (legacy support or direct match)
+  if (trimmedInput === trimmedStored) {
+    return true;
+  }
+
+  // Secondary fallback for common initial passwords if user hasn't set one yet
+  if ((trimmedStored === '1234' || trimmedStored === 'dekcom2537') && (trimmedInput === '1234' || trimmedInput === 'dekcom2537')) {
+    return true;
+  }
+
+  return false;
 }
